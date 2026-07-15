@@ -10,6 +10,7 @@
     --sans:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
   }
   *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
   html,body{ margin:0; }
   body{
     background:var(--paper); color:var(--ink);
@@ -33,39 +34,91 @@
   nav a{ opacity:0.6; transition:opacity 0.15s; }
   nav a:hover, nav a.current{ opacity:1; }
 
+  .category-nav{
+    position:sticky; top:4.5rem; z-index:9;
+    display:flex; gap:2rem;
+    padding:1rem 2rem;
+    background:var(--paper);
+    border-bottom:1px solid rgba(23,24,28,0.1);
+  }
+  .category-nav button{
+    font-family:var(--sans);
+    color:var(--ink);
+    background:none;
+    border:none;
+    padding:0;
+    cursor:pointer;
+    text-decoration:none;
+    font-size:0.9rem;
+    opacity:0.65;
+    transition:opacity 0.15s;
+  }
+  .category-nav button:hover{ opacity:1; }
+  .category-nav button.active{ opacity:1; font-weight:600; }
+
   .intro{
+    position:relative;
+    overflow:hidden;
+    width:100%;
+    min-height:90vh;
+    display:flex;
+    align-items:flex-end;
     padding:5rem 2rem 3rem;
+  }
+  .intro-content{
+    position:relative;
+    z-index:2;
     max-width:760px;
   }
-  .intro h1{
-    font-family:var(--sans);
-    font-weight:400;
-    font-size:clamp(2rem,5vw,3.2rem);
-    margin:0 0 1.25rem;
+  .intro-video{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover; z-index:0;
   }
-  .intro p{
-    font-size:0.95rem;
+  .intro-overlay{
+    position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0.5));
+    z-index:1;
+  }
+  .intro-content{ position:relative; z-index:2; }
+  .intro-content h1{
+    color:#fff;
+    font-weight:500;
+    font-size:clamp(2.6rem, 7vw, 5.5rem);
+    line-height:1.05;
+    letter-spacing:-0.01em;
+    margin:0;
+  }
+  .intro-content p{
+    color:rgba(255,255,255,0.85);
+    font-size:1.15rem;
     line-height:1.7;
     max-width:56ch;
-    color:rgba(23,24,28,0.75);
-    margin:0 0 0.75rem;
+    margin:1.25rem 0 0;
   }
+  .intro-content .scroll-arrow{
+    display:inline-block;
+    margin-top:1.5rem;
+    font-size:1.5rem;
+    line-height:1;
+    color:#fff;
+    text-decoration:none;
+    opacity:0.8;
+    transition:opacity 0.15s, transform 0.15s;
+  }
+  .intro-content .scroll-arrow:hover{ opacity:1; transform:translateY(3px); }
 
-  .category-label{
-    font-size:0.8rem;
-    font-weight:500;
-    letter-spacing:0.08em;
-    text-transform:uppercase;
-    padding:2.5rem 2rem 1rem;
+  .category-empty{
+    padding:2rem 2rem 3rem;
     max-width:1400px;
     margin:0 auto;
-    opacity:0.55;
+    font-size:0.9rem;
+    opacity:0.5;
   }
-  .category:first-of-type .category-label{ padding-top:0; }
 
   .grid{
     display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(160px, 200px));
+    grid-template-columns:repeat(auto-fit, minmax(200px, 250px));
     gap:1px;
     background:rgba(23,24,28,0.1);
     border-top:1px solid rgba(23,24,28,0.1);
@@ -104,9 +157,12 @@
     position:relative;
     padding:1.25rem;
     display:flex; justify-content:space-between; width:100%;
-    font-size:0.8rem;
+    font-size:0.7rem;
     letter-spacing:0.02em;
+    color:var(--ink);
+    transition:color 0.35s ease;
   }
+  .piece:hover .caption{ color:#fff; }
   .piece .caption .year{ opacity:0.5; }
 
   footer{
@@ -131,7 +187,7 @@
     stroke-linecap:round;
     stroke-linejoin:round;
   }
-  .top-btn:hover{ background:var(--accent); border-color:var(--accent); color:var(--paper); }
+  .top-btn:hover{ background:#14213D; border-color:#14213D; color:var(--paper); }
 
   @media (max-width:600px){
     header{ padding:1.25rem 1.25rem; }
@@ -159,11 +215,20 @@
     <div class="intro-content">
         <h1>Jewelry</h1>
         <p>From delicate everyday rings to statement necklaces, the designs blend classic elegance with a modern touch.</p>
+        <a class="scroll-arrow" href="#earrings" aria-label="Scroll down">↓</a>
     </div>
   </section>
 
-  <div class="category">
-    <h2 class="category-label">Earrings</h2>
+  <nav class="category-nav">
+    <button class="cat-filter active" data-filter="all">All</button>
+    <button class="cat-filter" data-filter="earrings">Earrings</button>
+    <button class="cat-filter" data-filter="rings">Rings</button>
+    <button class="cat-filter" data-filter="bracelets">Bracelets</button>
+    <button class="cat-filter" data-filter="necklaces">Necklaces</button>
+    <button class="cat-filter" data-filter="glasses">Glasses</button>
+  </nav>
+
+  <div class="category" id="earrings">
     <section class="grid">
       <article class="piece">
         <div class="art" role="img" aria-label="Line illustration of the Drift Earrings">
@@ -185,17 +250,19 @@
       <article class="piece">
         <div class="art" role="img" aria-label="Line illustration of the Petal Studs">
           <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="55" r="4"/>
-            <ellipse cx="50" cy="38" rx="8" ry="15"/>
-            <ellipse cx="50" cy="72" rx="8" ry="15"/>
-            <ellipse cx="33" cy="55" rx="15" ry="8"/>
-            <ellipse cx="67" cy="55" rx="15" ry="8"/>
+            <circle cx="32" cy="50" r="2"/>
+            <ellipse cx="32" cy="50" rx="5" ry="9"/>
+            <ellipse cx="32" cy="50" rx="9" ry="5"/>
+            <circle cx="68" cy="50" r="2"/>
+            <ellipse cx="68" cy="50" rx="5" ry="9"/>
+            <ellipse cx="68" cy="50" rx="9" ry="5"/>
           </svg>
         </div>
         <div class="art-hover" role="img" aria-label="Alternate view of the Petal Studs">
           <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="58" r="5"/>
-            <ellipse cx="50" cy="34" rx="12" ry="22"/>
+            <circle cx="50" cy="52" r="4"/>
+            <ellipse cx="50" cy="52" rx="11" ry="20"/>
+            <ellipse cx="50" cy="52" rx="20" ry="11"/>
           </svg>
         </div>
         <div class="caption"><span>Petal Studs</span></div>
@@ -218,8 +285,7 @@
     </section>
   </div>
 
-  <div class="category">
-    <h2 class="category-label">Rings</h2>
+  <div class="category" id="rings">
     <section class="grid">
       <article class="piece">
         <div class="art" role="img" aria-label="Line illustration of the Wave Ring">
@@ -272,8 +338,57 @@
     </section>
   </div>
 
-  <div class="category">
-    <h2 class="category-label">Necklaces</h2>
+  <div class="category" id="bracelets">
+    <section class="grid">
+      <article class="piece">
+        <div class="art" role="img" aria-label="Line illustration of the Knot Bracelet">
+          <svg viewBox="0 0 100 100">
+            <ellipse cx="50" cy="58" rx="36" ry="18"/>
+            <circle cx="41" cy="48" r="13"/>
+            <circle cx="59" cy="48" r="13"/>
+          </svg>
+        </div>
+        <div class="art-hover" role="img" aria-label="Alternate view of the Knot Bracelet">
+          <svg viewBox="0 0 100 100">
+            <path d="M15 40 Q50 20 85 40"/>
+            <path d="M15 76 Q50 96 85 76"/>
+            <circle cx="50" cy="55" r="11"/>
+          </svg>
+        </div>
+        <div class="caption"><span>Knot Bracelet</span></div>
+      </article>
+      <article class="piece">
+        <div class="art" role="img" aria-label="Line illustration of the Arc Cuff">
+          <svg viewBox="0 0 100 100">
+            <path d="M62 20 A38 38 0 1 0 62 96"/>
+          </svg>
+        </div>
+        <div class="art-hover" role="img" aria-label="Alternate view of the Arc Cuff">
+          <svg viewBox="0 0 100 100">
+            <ellipse cx="50" cy="58" rx="32" ry="14"/>
+            <ellipse cx="50" cy="58" rx="22" ry="6"/>
+          </svg>
+        </div>
+        <div class="caption"><span>Arc Cuff</span></div>
+      </article>
+      <article class="piece">
+        <div class="art" role="img" aria-label="Line illustration of the Ember Bangle">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="58" r="28"/>
+            <path d="M50 24 C46 30 46 34 50 38 C54 34 54 30 50 24 Z"/>
+          </svg>
+        </div>
+        <div class="art-hover" role="img" aria-label="Alternate view of the Ember Bangle">
+          <svg viewBox="0 0 100 100">
+            <ellipse cx="50" cy="58" rx="34" ry="16"/>
+          </svg>
+        </div>
+        <div class="caption"><span>Ember Bangle</span></div>
+      </article>
+    </section>
+  </div>
+
+  <div class="category" id="necklaces">
     <section class="grid">
       <article class="piece">
         <div class="art" role="img" aria-label="Line illustration of the Halo Necklace">
@@ -331,55 +446,8 @@
     </section>
   </div>
 
-  <div class="category">
-    <h2 class="category-label">Bracelets</h2>
-    <section class="grid">
-      <article class="piece">
-        <div class="art" role="img" aria-label="Line illustration of the Knot Bracelet">
-          <svg viewBox="0 0 100 100">
-            <ellipse cx="50" cy="58" rx="36" ry="18"/>
-            <circle cx="41" cy="48" r="13"/>
-            <circle cx="59" cy="48" r="13"/>
-          </svg>
-        </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Knot Bracelet">
-          <svg viewBox="0 0 100 100">
-            <path d="M15 40 Q50 20 85 40"/>
-            <path d="M15 76 Q50 96 85 76"/>
-            <circle cx="50" cy="55" r="11"/>
-          </svg>
-        </div>
-        <div class="caption"><span>Knot Bracelet</span></div>
-      </article>
-      <article class="piece">
-        <div class="art" role="img" aria-label="Line illustration of the Arc Cuff">
-          <svg viewBox="0 0 100 100">
-            <path d="M62 20 A38 38 0 1 0 62 96"/>
-          </svg>
-        </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Arc Cuff">
-          <svg viewBox="0 0 100 100">
-            <ellipse cx="50" cy="58" rx="32" ry="14"/>
-            <ellipse cx="50" cy="58" rx="22" ry="6"/>
-          </svg>
-        </div>
-        <div class="caption"><span>Arc Cuff</span></div>
-      </article>
-      <article class="piece">
-        <div class="art" role="img" aria-label="Line illustration of the Ember Bangle">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="58" r="28"/>
-            <path d="M50 24 C46 30 46 34 50 38 C54 34 54 30 50 24 Z"/>
-          </svg>
-        </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Ember Bangle">
-          <svg viewBox="0 0 100 100">
-            <ellipse cx="50" cy="58" rx="34" ry="16"/>
-          </svg>
-        </div>
-        <div class="caption"><span>Ember Bangle</span></div>
-      </article>
-    </section>
+  <div class="category" id="glasses">
+    <p class="category-empty">New styles coming soon.</p>
   </div>
 
   <footer>
@@ -387,6 +455,21 @@
       <svg viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
     </button>
   </footer>
+
+  <script>
+    const filterButtons = document.querySelectorAll('.cat-filter');
+    const categories = document.querySelectorAll('.category');
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const target = btn.dataset.filter;
+        categories.forEach(cat => {
+          cat.style.display = (target === 'all' || cat.id === target) ? '' : 'none';
+        });
+      });
+    });
+  </script>
 
 </body>
 </html>
