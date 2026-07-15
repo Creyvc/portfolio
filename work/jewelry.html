@@ -133,28 +133,39 @@
     display:flex; align-items:flex-end;
     overflow:hidden;
   }
-  .piece .art, .piece .art-hover{
+  .piece .art{
     position:absolute; inset:0;
     display:flex; align-items:center; justify-content:center;
     padding:1.5rem;
     background:rgba(23,24,28,0.03);
     transition:opacity 0.35s ease;
   }
-  .piece .art-hover{
+  .piece .art-video{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover;
     opacity:0;
-    background:rgba(180,55,31,0.05);
+    transition:opacity 0.35s ease;
+  }
+  .piece::after{
+    content:'';
+    position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.45));
+    opacity:0;
+    transition:opacity 0.35s ease;
+    pointer-events:none;
   }
   .piece:hover .art{ opacity:0; }
-  .piece:hover .art-hover{ opacity:1; }
-  .piece .art svg, .piece .art-hover svg{
+  .piece:hover .art-video{ opacity:1; }
+  .piece:hover::after{ opacity:1; }
+  .piece .art svg{
     width:100%; height:100%;
     fill:none;
     stroke-width:1.2;
     stroke-linecap:round;
     stroke-linejoin:round;
+    stroke:var(--ink);
   }
-  .piece .art svg{ stroke:var(--ink); }
-  .piece .art-hover svg{ stroke:var(--accent); }
   .piece .caption{
     position:relative;
     padding:1.25rem;
@@ -242,12 +253,9 @@
             <path d="M65 30 C65 44 55 49 55 64 C55 74 75 74 75 64 C75 49 65 44 65 30 Z"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Drift Earrings">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="18" r="8"/>
-            <path d="M50 26 C50 44 34 52 34 70 C34 84 66 84 66 70 C66 52 50 44 50 26 Z"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Drift Earrings">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Drift Earrings</span></div>
       </article>
 
@@ -262,13 +270,9 @@
             <ellipse cx="68" cy="50" rx="9" ry="5"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Petal Studs">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="52" r="4"/>
-            <ellipse cx="50" cy="52" rx="11" ry="20"/>
-            <ellipse cx="50" cy="52" rx="20" ry="11"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Petal Studs">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Petal Studs</span></div>
       </article>
 
@@ -279,12 +283,9 @@
             <circle cx="65" cy="55" r="14"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Orb Studs">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="55" r="26"/>
-            <path d="M38 44 Q46 36 56 40"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Orb Studs">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Orb Studs</span></div>
       </article>
 
@@ -295,11 +296,9 @@
             <circle cx="68" cy="52" r="18"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Hoop Earrings">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="52" r="34"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Hoop Earrings">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Hoop Earrings</span></div>
       </article>
 
@@ -316,14 +315,9 @@
             <path d="M70 26 L80 50"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Chandelier Earrings">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="18" r="6"/>
-            <path d="M50 24 L30 62"/>
-            <path d="M50 24 L50 68"/>
-            <path d="M50 24 L70 62"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Chandelier Earrings">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Chandelier Earrings</span></div>
       </article>
 
@@ -336,12 +330,9 @@
             <path d="M68 30 L78 46 L68 66 L58 46 Z"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Crystal Drops">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="20" r="6"/>
-            <path d="M50 26 L74 50 L50 82 L26 50 Z"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Crystal Drops">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Crystal Drops</span></div>
       </article>
 
@@ -354,12 +345,9 @@
             <line x1="68" y1="26" x2="68" y2="64"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Feather Earrings">
-          <svg viewBox="0 0 100 100">
-            <path d="M50 14 Q68 40 50 86 Q32 40 50 14 Z"/>
-            <line x1="50" y1="20" x2="50" y2="80"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Feather Earrings">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Feather Earrings</span></div>
       </article>
 
@@ -370,11 +358,9 @@
             <path d="M68 30 L80 58 L56 58 Z"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Geo Triangles">
-          <svg viewBox="0 0 100 100">
-            <path d="M50 20 L74 70 L26 70 Z"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Geo Triangles">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Geo Triangles</span></div>
       </article>
 
@@ -387,12 +373,9 @@
             <circle cx="68" cy="50" r="14"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Pearl Studs">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="12"/>
-            <circle cx="50" cy="50" r="26"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Pearl Studs">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Pearl Studs</span></div>
       </article>
 
@@ -411,15 +394,9 @@
             <line x1="62" y1="32" x2="60" y2="66"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Tassel Earrings">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="16" r="6"/>
-            <line x1="38" y1="24" x2="34" y2="84"/>
-            <line x1="46" y1="24" x2="44" y2="88"/>
-            <line x1="54" y1="24" x2="56" y2="88"/>
-            <line x1="62" y1="24" x2="66" y2="84"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Tassel Earrings">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Tassel Earrings</span></div>
       </article>
 
@@ -430,11 +407,9 @@
             <path d="M68 34 L72 46 L84 50 L72 54 L68 66 L64 54 L52 50 L64 46 Z"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Star Studs">
-          <svg viewBox="0 0 100 100">
-            <path d="M50 16 L57 40 L82 50 L57 60 L50 84 L43 60 L18 50 L43 40 Z"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Star Studs">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Star Studs</span></div>
       </article>
 
@@ -447,12 +422,9 @@
             <path d="M62 52 a6 6 0 1 1 12 0"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Spiral Hoops">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="52" r="30"/>
-            <path d="M50 52 m-10,0 a10,10 0 1,1 20,0"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Spiral Hoops">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Spiral Hoops</span></div>
       </article>
 
@@ -465,12 +437,9 @@
             <path d="M68 30 Q68 46 68 62"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Leaf Earrings">
-          <svg viewBox="0 0 100 100">
-            <path d="M50 14 Q70 40 50 86 Q30 40 50 14 Z"/>
-            <path d="M50 20 Q50 50 50 80"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Leaf Earrings">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Leaf Earrings</span></div>
       </article>
 
@@ -481,12 +450,9 @@
             <path d="M24 32 Q32 20 40 32 T56 32 T72 32"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Wave Ring">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="58" r="26"/>
-            <path d="M24 58 Q32 46 40 58 T56 58 T72 58"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Wave Ring">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Wave Ring</span></div>
       </article>
 
@@ -498,13 +464,9 @@
             <path d="M28 58 Q40 68 50 58 T72 58"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Twist Band">
-          <svg viewBox="0 0 100 100">
-            <path d="M15 40 Q30 25 45 40 T75 40"/>
-            <path d="M15 60 Q30 75 45 60 T75 60"/>
-            <path d="M15 50 Q30 50 45 50 T75 50"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Twist Band">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Twist Band</span></div>
       </article>
 
@@ -514,14 +476,9 @@
             <path d="M50 58 m-8,0 a8,8 0 1,1 16,0 a14,14 0 1,1 -28,0 a20,20 0 1,1 40,0"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Coil Ring">
-          <svg viewBox="0 0 100 100">
-            <line x1="20" y1="34" x2="80" y2="34"/>
-            <line x1="20" y1="48" x2="80" y2="48"/>
-            <line x1="20" y1="62" x2="80" y2="62"/>
-            <line x1="20" y1="76" x2="80" y2="76"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Coil Ring">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Coil Ring</span></div>
       </article>
 
@@ -532,11 +489,9 @@
             <path d="M50 22 L58 34 L50 46 L42 34 Z"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Solitaire Ring">
-          <svg viewBox="0 0 100 100">
-            <path d="M50 20 L66 40 L50 60 L34 40 Z"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Solitaire Ring">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Solitaire Ring</span></div>
       </article>
 
@@ -551,14 +506,9 @@
             <circle cx="68" cy="34" r="3"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Eternity Band">
-          <svg viewBox="0 0 100 100">
-            <circle cx="25" cy="50" r="6"/>
-            <circle cx="42" cy="50" r="6"/>
-            <circle cx="59" cy="50" r="6"/>
-            <circle cx="76" cy="50" r="6"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Eternity Band">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Eternity Band</span></div>
       </article>
 
@@ -569,11 +519,9 @@
             <ellipse cx="50" cy="28" rx="14" ry="10"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Signet Ring">
-          <svg viewBox="0 0 100 100">
-            <ellipse cx="50" cy="50" rx="26" ry="18"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Signet Ring">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Signet Ring</span></div>
       </article>
 
@@ -585,12 +533,9 @@
             <circle cx="50" cy="64" r="24"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Stack Ring">
-          <svg viewBox="0 0 100 100">
-            <circle cx="42" cy="50" r="22"/>
-            <circle cx="58" cy="50" r="22"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Stack Ring">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Stack Ring</span></div>
       </article>
 
@@ -603,13 +548,9 @@
             <circle cx="50" cy="22" r="5"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Cluster Ring">
-          <svg viewBox="0 0 100 100">
-            <circle cx="40" cy="45" r="10"/>
-            <circle cx="60" cy="45" r="10"/>
-            <circle cx="50" cy="30" r="10"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Cluster Ring">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Cluster Ring</span></div>
       </article>
 
@@ -621,12 +562,9 @@
             <circle cx="56" cy="26" r="6"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Infinity Ring">
-          <svg viewBox="0 0 100 100">
-            <circle cx="38" cy="50" r="14"/>
-            <circle cx="62" cy="50" r="14"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Infinity Ring">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Infinity Ring</span></div>
       </article>
 
@@ -638,12 +576,9 @@
             <path d="M25 66 Q34 74 43 66 T61 66 T79 66"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Braided Ring">
-          <svg viewBox="0 0 100 100">
-            <path d="M15 40 Q28 28 41 40 T67 40 T93 40"/>
-            <path d="M15 56 Q28 68 41 56 T67 56 T93 56"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Braided Ring">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Braided Ring</span></div>
       </article>
 
@@ -654,11 +589,9 @@
             <rect x="40" y="20" width="20" height="20" rx="2"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Bezel Ring">
-          <svg viewBox="0 0 100 100">
-            <rect x="26" y="26" width="48" height="48" rx="4"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Bezel Ring">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Bezel Ring</span></div>
       </article>
 
@@ -671,12 +604,9 @@
             <path d="M24 55 Q30 47 36 55"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Vine Ring">
-          <svg viewBox="0 0 100 100">
-            <path d="M20 40 Q35 20 50 40"/>
-            <path d="M50 40 Q65 20 80 40"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Vine Ring">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Vine Ring</span></div>
       </article>
 
@@ -687,11 +617,9 @@
             <path d="M34 38 A16 16 0 0 1 66 38"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Dome Ring">
-          <svg viewBox="0 0 100 100">
-            <path d="M20 55 A30 30 0 0 1 80 55"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Dome Ring">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Dome Ring</span></div>
       </article>
 
@@ -703,13 +631,9 @@
             <circle cx="59" cy="48" r="13"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Knot Bracelet">
-          <svg viewBox="0 0 100 100">
-            <path d="M15 40 Q50 20 85 40"/>
-            <path d="M15 76 Q50 96 85 76"/>
-            <circle cx="50" cy="55" r="11"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Knot Bracelet">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Knot Bracelet</span></div>
       </article>
 
@@ -719,12 +643,9 @@
             <path d="M62 20 A38 38 0 1 0 62 96"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Arc Cuff">
-          <svg viewBox="0 0 100 100">
-            <ellipse cx="50" cy="58" rx="32" ry="14"/>
-            <ellipse cx="50" cy="58" rx="22" ry="6"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Arc Cuff">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Arc Cuff</span></div>
       </article>
 
@@ -735,11 +656,9 @@
             <path d="M50 24 C46 30 46 34 50 38 C54 34 54 30 50 24 Z"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Ember Bangle">
-          <svg viewBox="0 0 100 100">
-            <ellipse cx="50" cy="58" rx="34" ry="16"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Ember Bangle">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Ember Bangle</span></div>
       </article>
 
@@ -752,12 +671,9 @@
             <ellipse cx="76" cy="55" rx="9" ry="14"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Chain Bracelet">
-          <svg viewBox="0 0 100 100">
-            <ellipse cx="35" cy="50" rx="18" ry="26"/>
-            <ellipse cx="65" cy="50" rx="18" ry="26"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Chain Bracelet">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Chain Bracelet</span></div>
       </article>
 
@@ -772,12 +688,9 @@
             <circle cx="76" cy="74" r="5"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Charm Bracelet">
-          <svg viewBox="0 0 100 100">
-            <line x1="50" y1="24" x2="50" y2="46"/>
-            <circle cx="50" cy="62" r="16"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Charm Bracelet">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Charm Bracelet</span></div>
       </article>
 
@@ -792,14 +705,9 @@
             <circle cx="74" cy="44" r="3"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Tennis Bracelet">
-          <svg viewBox="0 0 100 100">
-            <circle cx="20" cy="50" r="6"/>
-            <circle cx="38" cy="50" r="6"/>
-            <circle cx="56" cy="50" r="6"/>
-            <circle cx="74" cy="50" r="6"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Tennis Bracelet">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Tennis Bracelet</span></div>
       </article>
 
@@ -813,12 +721,9 @@
             <circle cx="84" cy="55" r="9"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Beaded Bracelet">
-          <svg viewBox="0 0 100 100">
-            <circle cx="35" cy="50" r="18"/>
-            <circle cx="65" cy="50" r="18"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Beaded Bracelet">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Beaded Bracelet</span></div>
       </article>
 
@@ -830,11 +735,9 @@
             <ellipse cx="50" cy="58" rx="34" ry="26"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Wrap Bracelet">
-          <svg viewBox="0 0 100 100">
-            <path d="M50 58 m-10,0 a10,10 0 1,1 20,0 a16,16 0 1,1 -32,0 a22,22 0 1,1 44,0"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Wrap Bracelet">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Wrap Bracelet</span></div>
       </article>
 
@@ -847,12 +750,9 @@
             <rect x="68" y="46" width="18" height="20" rx="3"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Link Bracelet">
-          <svg viewBox="0 0 100 100">
-            <rect x="20" y="30" width="26" height="40" rx="4"/>
-            <rect x="54" y="30" width="26" height="40" rx="4"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Link Bracelet">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Link Bracelet</span></div>
       </article>
 
@@ -863,11 +763,9 @@
             <path d="M20 46 L80 70 M20 70 L80 46 M20 58 L80 58"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Woven Bracelet">
-          <svg viewBox="0 0 100 100">
-            <path d="M15 30 L85 70 M15 70 L85 30 M15 50 L85 50"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Woven Bracelet">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Woven Bracelet</span></div>
       </article>
 
@@ -881,13 +779,9 @@
             <circle cx="70" cy="55" r="6"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Pearl Bracelet">
-          <svg viewBox="0 0 100 100">
-            <circle cx="30" cy="60" r="14"/>
-            <circle cx="50" cy="45" r="14"/>
-            <circle cx="70" cy="60" r="14"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Pearl Bracelet">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Pearl Bracelet</span></div>
       </article>
 
@@ -898,11 +792,9 @@
             <path d="M22 48 L34 68 M34 48 L46 68 M46 48 L58 68 M58 48 L70 68 M70 48 L82 68"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Rope Bracelet">
-          <svg viewBox="0 0 100 100">
-            <path d="M20 30 L40 70 M40 30 L60 70 M60 30 L80 70"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Rope Bracelet">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Rope Bracelet</span></div>
       </article>
 
@@ -912,11 +804,9 @@
             <circle cx="50" cy="58" r="30"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Slim Bangle">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="40"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Slim Bangle">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Slim Bangle</span></div>
       </article>
 
@@ -929,12 +819,9 @@
             <circle cx="50" cy="61" r="8"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Halo Necklace">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="33"/>
-            <circle cx="50" cy="50" r="18"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Halo Necklace">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Halo Necklace</span></div>
       </article>
 
@@ -946,11 +833,9 @@
             <path d="M62 48 A20 20 0 1 1 62 88 A26 26 0 0 0 62 48 Z"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Lune Pendant">
-          <svg viewBox="0 0 100 100">
-            <path d="M56 24 A34 34 0 1 1 56 92 A44 44 0 0 0 56 24 Z"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Lune Pendant">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Lune Pendant</span></div>
       </article>
 
@@ -965,14 +850,9 @@
             <path d="M80 30 C80 37 75 39 75 45 C75 50 85 50 85 45 C85 39 80 37 80 30 Z"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Rain Chain">
-          <svg viewBox="0 0 100 100">
-            <path d="M50 20 C50 32 42 36 42 46 C42 54 58 54 58 46 C58 36 50 32 50 20 Z"/>
-            <circle cx="50" cy="72" r="8"/>
-            <circle cx="50" cy="72" r="16"/>
-            <circle cx="50" cy="72" r="24"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Rain Chain">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Rain Chain</span></div>
       </article>
 
@@ -984,11 +864,9 @@
             <circle cx="82" cy="24" r="2"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Choker">
-          <svg viewBox="0 0 100 100">
-            <path d="M10 40 Q50 80 90 40"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Choker">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Choker</span></div>
       </article>
 
@@ -1000,12 +878,9 @@
             <path d="M12 42 Q50 14 88 42" stroke-dasharray="1 6"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Layered Chains">
-          <svg viewBox="0 0 100 100">
-            <path d="M10 40 Q50 10 90 40"/>
-            <path d="M15 55 Q50 25 85 55"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Layered Chains">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Layered Chains</span></div>
       </article>
 
@@ -1017,11 +892,9 @@
             <line x1="30" y1="50" x2="70" y2="50"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Bar Necklace">
-          <svg viewBox="0 0 100 100">
-            <line x1="20" y1="50" x2="80" y2="50"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Bar Necklace">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Bar Necklace</span></div>
       </article>
 
@@ -1033,12 +906,9 @@
             <ellipse cx="50" cy="60" rx="17" ry="21"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Locket Necklace">
-          <svg viewBox="0 0 100 100">
-            <line x1="50" y1="16" x2="50" y2="52"/>
-            <ellipse cx="50" cy="52" rx="30" ry="36"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Locket Necklace">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Locket Necklace</span></div>
       </article>
 
@@ -1051,12 +921,9 @@
             <line x1="36" y1="58" x2="64" y2="58"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Cross Pendant">
-          <svg viewBox="0 0 100 100">
-            <line x1="50" y1="14" x2="50" y2="86"/>
-            <line x1="26" y1="40" x2="74" y2="40"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Cross Pendant">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Cross Pendant</span></div>
       </article>
 
@@ -1072,13 +939,9 @@
             <circle cx="70" cy="46" r="6"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Charm Necklace">
-          <svg viewBox="0 0 100 100">
-            <circle cx="30" cy="55" r="12"/>
-            <circle cx="50" cy="60" r="12"/>
-            <circle cx="70" cy="55" r="12"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Charm Necklace">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Charm Necklace</span></div>
       </article>
 
@@ -1089,11 +952,9 @@
             <path d="M10 30 Q50 46 90 30" stroke-dasharray="1 6"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Collar Necklace">
-          <svg viewBox="0 0 100 100">
-            <path d="M5 45 Q50 85 95 45"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Collar Necklace">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Collar Necklace</span></div>
       </article>
 
@@ -1105,12 +966,9 @@
             <circle cx="50" cy="84" r="5"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Y Necklace">
-          <svg viewBox="0 0 100 100">
-            <path d="M15 20 L50 55 L85 20"/>
-            <line x1="50" y1="55" x2="50" y2="80"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Y Necklace">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Y Necklace</span></div>
       </article>
 
@@ -1124,13 +982,9 @@
             <circle cx="78" cy="28" r="4"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Bead Necklace">
-          <svg viewBox="0 0 100 100">
-            <circle cx="30" cy="45" r="12"/>
-            <circle cx="50" cy="38" r="12"/>
-            <circle cx="70" cy="45" r="12"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Bead Necklace">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Bead Necklace</span></div>
       </article>
 
@@ -1142,11 +996,9 @@
             <path d="M50 40 L72 58 L50 84 L28 58 Z"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Statement Necklace">
-          <svg viewBox="0 0 100 100">
-            <path d="M50 18 L84 50 L50 88 L16 50 Z"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Statement Necklace">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Statement Necklace</span></div>
       </article>
 
@@ -1160,12 +1012,9 @@
             <path d="M84 48 Q92 45 96 48"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Sun Frames">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="52" r="30"/>
-            <path d="M34 40 Q46 30 62 35"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Sun Frames">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Sun Frames</span></div>
       </article>
 
@@ -1177,11 +1026,9 @@
             <path d="M47 50 Q50 46 53 50"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Round Frames">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="52" r="28"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Round Frames">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Round Frames</span></div>
       </article>
 
@@ -1192,11 +1039,9 @@
             <path d="M82 54 Q82 40 66 40 Q52 42 56 56 Q66 64 82 54 Z"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Cat Eye Frames">
-          <svg viewBox="0 0 100 100">
-            <path d="M12 58 Q12 34 40 34 Q64 38 56 62 Q40 76 12 58 Z"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Cat Eye Frames">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Cat Eye Frames</span></div>
       </article>
 
@@ -1207,11 +1052,9 @@
             <path d="M82 42 Q66 36 66 54 Q66 68 78 66 Q86 60 82 42 Z"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Aviators">
-          <svg viewBox="0 0 100 100">
-            <path d="M22 32 Q50 22 50 54 Q50 76 28 72 Q12 62 22 32 Z"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Aviators">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Aviators</span></div>
       </article>
 
@@ -1223,11 +1066,9 @@
             <line x1="46" y1="50" x2="54" y2="50"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Square Frames">
-          <svg viewBox="0 0 100 100">
-            <rect x="22" y="24" width="56" height="52" rx="6"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Square Frames">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Square Frames</span></div>
       </article>
 
@@ -1238,11 +1079,9 @@
             <circle cx="68" cy="52" r="15" stroke-dasharray="2 4"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Rimless Frames">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="52" r="28" stroke-dasharray="2 5"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Rimless Frames">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Rimless Frames</span></div>
       </article>
 
@@ -1253,11 +1092,9 @@
             <circle cx="68" cy="52" r="22"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Oversized Frames">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="52" r="38"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Oversized Frames">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Oversized Frames</span></div>
       </article>
 
@@ -1270,12 +1107,9 @@
             <path d="M53 42 Q68 34 83 42"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Browline Frames">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="56" r="28"/>
-            <path d="M22 36 Q50 22 78 36"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Browline Frames">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Browline Frames</span></div>
       </article>
 
@@ -1286,11 +1120,9 @@
             <path d="M78 42 L58 42 L50 54 L58 66 L78 66 L86 54 Z"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Hexagon Frames">
-          <svg viewBox="0 0 100 100">
-            <path d="M30 30 L70 30 L88 54 L70 78 L30 78 L12 54 Z"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Hexagon Frames">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Hexagon Frames</span></div>
       </article>
 
@@ -1302,11 +1134,9 @@
             <circle cx="50" cy="45" r="2"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Clip Sunglasses">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="55" r="22"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Clip Sunglasses">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Clip Sunglasses</span></div>
       </article>
 
@@ -1321,13 +1151,9 @@
             <circle cx="80" cy="44" r="1.5"/>
           </svg>
         </div>
-        <div class="art-hover" role="img" aria-label="Alternate view of the Vintage Frames">
-          <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="52" r="28"/>
-            <circle cx="30" cy="34" r="2"/>
-            <circle cx="70" cy="34" r="2"/>
-          </svg>
-        </div>
+        <video class="art-video" muted loop playsinline preload="none" aria-label="Video preview of the Vintage Frames">
+          <source src="videos/jewelry-intro.mp4" type="video/mp4">
+        </video>
         <div class="caption"><span>Vintage Frames</span></div>
       </article>
 
@@ -1356,6 +1182,18 @@
         });
 
         categoryNav.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    pieces.forEach(piece => {
+      const video = piece.querySelector('.art-video');
+      if (!video) return;
+      piece.addEventListener('mouseenter', () => {
+        video.currentTime = 0;
+        video.play();
+      });
+      piece.addEventListener('mouseleave', () => {
+        video.pause();
       });
     });
   </script>
