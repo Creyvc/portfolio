@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jewelry — Vuthy Cheam</title>
+<style>
+  :root{
+    --paper:#FFFFFF; --ink:#17181C; --accent:#B4371F;
+    --sans:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:var(--sans);
+  }
+
+  header{
+    position:sticky; top:0; z-index:10;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:1.5rem 2rem;
+    background:var(--paper);
+    border-bottom:1px solid rgba(23,24,28,0.1);
+  }
+  header a{ color:var(--ink); text-decoration:none; }
+  .home-link{
+    font-family:var(--sans);
+    font-weight:500;
+    font-size:0.95rem;
+  }
+  nav{ display:flex; gap:1.5rem; font-size:0.8rem; letter-spacing:0.03em; text-transform:uppercase; }
+  nav a{ opacity:0.6; transition:opacity 0.15s; }
+  nav a:hover, nav a.current{ opacity:1; }
+
+  .intro{
+    padding:5rem 2rem 3rem;
+    max-width:760px;
+  }
+  .intro h1{
+    font-family:var(--sans);
+    font-weight:400;
+    font-size:clamp(2rem,5vw,3.2rem);
+    margin:0 0 1.25rem;
+  }
+  .intro p{
+    font-size:0.95rem;
+    line-height:1.7;
+    max-width:56ch;
+    color:rgba(23,24,28,0.75);
+    margin:0 0 0.75rem;
+  }
+
+  .category-label{
+    font-size:0.8rem;
+    font-weight:500;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    padding:2.5rem 2rem 1rem;
+    max-width:1400px;
+    margin:0 auto;
+    opacity:0.55;
+  }
+  .category:first-of-type .category-label{ padding-top:0; }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(160px, 200px));
+    gap:1px;
+    background:rgba(23,24,28,0.1);
+    border-top:1px solid rgba(23,24,28,0.1);
+    border-bottom:1px solid rgba(23,24,28,0.1);
+  }
+  .piece{
+    position:relative;
+    background:var(--paper);
+    aspect-ratio:4/5;
+    display:flex; align-items:flex-end;
+    overflow:hidden;
+  }
+  .piece .art, .piece .art-hover{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    padding:1.5rem;
+    background:rgba(23,24,28,0.03);
+    transition:opacity 0.35s ease;
+  }
+  .piece .art-hover{
+    opacity:0;
+    background:rgba(180,55,31,0.05);
+  }
+  .piece:hover .art{ opacity:0; }
+  .piece:hover .art-hover{ opacity:1; }
+  .piece .art svg, .piece .art-hover svg{
+    width:100%; height:100%;
+    fill:none;
+    stroke-width:1.2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+  .piece .art svg{ stroke:var(--ink); }
+  .piece .art-hover svg{ stroke:var(--accent); }
+  .piece .caption{
+    position:relative;
+    padding:1.25rem;
+    display:flex; justify-content:space-between; width:100%;
+    font-size:0.8rem;
+    letter-spacing:0.02em;
+  }
+  .piece .caption .year{ opacity:0.5; }
+
+  footer{
+    display:flex; justify-content:center;
+    padding:3rem 2rem 4rem;
+  }
+  .top-btn{
+    display:flex; align-items:center; justify-content:center;
+    width:3rem; height:3rem;
+    border-radius:50%;
+    background:none;
+    cursor:pointer;
+    border:1px solid var(--ink);
+    color:var(--ink);
+    transition:background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .top-btn svg{
+    width:1.1rem; height:1.1rem;
+    stroke:currentColor;
+    fill:none;
+    stroke-width:1.5;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+  .top-btn:hover{ background:var(--accent); border-color:var(--accent); color:var(--paper); }
+
+  @media (max-width:600px){
+    header{ padding:1.25rem 1.25rem; }
+    nav{ gap:1rem; }
+    .intro{ padding:3rem 1.25rem 2rem; }
+    footer{ padding:2rem 1.25rem 3rem; }
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <a class="home-link" href="../index.html">Vuthy Cheam</a>
+    <nav>
+      <a class="current" href="jewelry.html">Jewelry</a>
+      <a href="../index.html">Home</a>
+    </nav>
+  </header>
+
+  <section class="intro">
+    <h1>Jewelry</h1>
+    <p>From delicate everyday rings to statement necklaces, the designs blend classic elegance with a modern touch.</p>
+  </section>
+
+  <div class="category">
+    <h2 class="category-label">Earrings</h2>
+    <section class="grid">
+      <article class="piece">
+        <div class="art" role="img" aria-label="Line illustration of the Drift Earrings">
+          <svg viewBox="0 0 100 100">
+            <circle cx="35" cy="24" r="6"/>
+            <path d="M35 30 C35 44 25 49 25 64 C25 74 45 74 45 64 C45 49 35 44 35 30 Z"/>
+            <circle cx="65" cy="24" r="6"/>
+            <path d="M65 30 C65 44 55 49 55 64 C55 74 75 74 75 64 C75 49 65 44 65 30 Z"/>
+          </svg>
+        </div>
+        <div class="art-hover" role="img" aria-label="Alternate view of the Drift Earrings">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="18" r="8"/>
+            <path d="M50 26 C50 44 34 52 34 70 C34 84 66 84 66 70 C66 52 50 44 50 26 Z"/>
+          </svg>
+        </div>
+        <div class="caption"><span>Drift Earrings</span></div>
+      </article>
+      <article class="piece">
+        <div class="art" role="img" aria-label="Line illustration of the Petal Studs">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="55" r="4"/>
+            <ellipse cx="50" cy="38" rx="8" ry="15"/>
+            <ellipse cx="50" cy="72" rx="8" ry="15"/>
+            <ellipse cx="33" cy="55" rx="15" ry="8"/>
+            <ellipse cx="67" cy="55" rx="15" ry="8"/>
+          </svg>
+        </div>
+        <div class="art-hover" role="img" aria-label="Alternate view of the Petal Studs">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="58" r="5"/>
+            <ellipse cx="50" cy="34" rx="12" ry="22"/>
+          </svg>
+        </div>
+        <div class="caption"><span>Petal Studs</span></div>
+      </article>
+      <article class="piece">
+        <div class="art" role="img" aria-label="Line illustration of the Orb Studs">
+          <svg viewBox="0 0 100 100">
+            <circle cx="35" cy="55" r="14"/>
+            <circle cx="65" cy="55" r="14"/>
+          </svg>
+        </div>
+        <div class="art-hover" role="img" aria-label="Alternate view of the Orb Studs">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="55" r="26"/>
+            <path d="M38 44 Q46 36 56 40"/>
+          </svg>
+        </div>
+        <div class="caption"><span>Orb Studs</span></div>
+      </article>
+    </section>
+  </div>
+
+  <div class="category">
+    <h2 class="category-label">Rings</h2>
+    <section class="grid">
+      <article class="piece">
+        <div class="art" role="img" aria-label="Line illustration of the Wave Ring">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="58" r="26"/>
+            <path d="M24 32 Q32 20 40 32 T56 32 T72 32"/>
+          </svg>
+        </div>
+        <div class="art-hover" role="img" aria-label="Alternate view of the Wave Ring">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="58" r="26"/>
+            <path d="M24 58 Q32 46 40 58 T56 58 T72 58"/>
+          </svg>
+        </div>
+        <div class="caption"><span>Wave Ring</span></div>
+      </article>
+      <article class="piece">
+        <div class="art" role="img" aria-label="Line illustration of the Twist Band">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="58" r="27"/>
+            <path d="M28 46 Q40 36 50 46 T72 46"/>
+            <path d="M28 58 Q40 68 50 58 T72 58"/>
+          </svg>
+        </div>
+        <div class="art-hover" role="img" aria-label="Alternate view of the Twist Band">
+          <svg viewBox="0 0 100 100">
+            <path d="M15 40 Q30 25 45 40 T75 40"/>
+            <path d="M15 60 Q30 75 45 60 T75 60"/>
+            <path d="M15 50 Q30 50 45 50 T75 50"/>
+          </svg>
+        </div>
+        <div class="caption"><span>Twist Band</span></div>
+      </article>
+      <article class="piece">
+        <div class="art" role="img" aria-label="Line illustration of the Coil Ring">
+          <svg viewBox="0 0 100 100">
+            <path d="M50 58 m-8,0 a8,8 0 1,1 16,0 a14,14 0 1,1 -28,0 a20,20 0 1,1 40,0"/>
+          </svg>
+        </div>
+        <div class="art-hover" role="img" aria-label="Alternate view of the Coil Ring">
+          <svg viewBox="0 0 100 100">
+            <line x1="20" y1="34" x2="80" y2="34"/>
+            <line x1="20" y1="48" x2="80" y2="48"/>
+            <line x1="20" y1="62" x2="80" y2="62"/>
+            <line x1="20" y1="76" x2="80" y2="76"/>
+          </svg>
+        </div>
+        <div class="caption"><span>Coil Ring</span></div>
+      </article>
+    </section>
+  </div>
+
+  <div class="category">
+    <h2 class="category-label">Necklaces</h2>
+    <section class="grid">
+      <article class="piece">
+        <div class="art" role="img" aria-label="Line illustration of the Halo Necklace">
+          <svg viewBox="0 0 100 100">
+            <path d="M15 22 Q50 -4 85 22" stroke-dasharray="1 7"/>
+            <line x1="50" y1="22" x2="50" y2="46"/>
+            <circle cx="50" cy="61" r="16"/>
+            <circle cx="50" cy="61" r="8"/>
+          </svg>
+        </div>
+        <div class="art-hover" role="img" aria-label="Alternate view of the Halo Necklace">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="33"/>
+            <circle cx="50" cy="50" r="18"/>
+          </svg>
+        </div>
+        <div class="caption"><span>Halo Necklace</span></div>
+      </article>
+      <article class="piece">
+        <div class="art" role="img" aria-label="Line illustration of the Lune Pendant">
+          <svg viewBox="0 0 100 100">
+            <path d="M15 22 Q50 4 85 22" stroke-dasharray="1 7"/>
+            <line x1="50" y1="22" x2="50" y2="42"/>
+            <path d="M62 48 A20 20 0 1 1 62 88 A26 26 0 0 0 62 48 Z"/>
+          </svg>
+        </div>
+        <div class="art-hover" role="img" aria-label="Alternate view of the Lune Pendant">
+          <svg viewBox="0 0 100 100">
+            <path d="M56 24 A34 34 0 1 1 56 92 A44 44 0 0 0 56 24 Z"/>
+          </svg>
+        </div>
+        <div class="caption"><span>Lune Pendant</span></div>
+      </article>
+      <article class="piece">
+        <div class="art" role="img" aria-label="Line illustration of the Rain Chain">
+          <svg viewBox="0 0 100 100">
+            <line x1="20" y1="15" x2="20" y2="35"/>
+            <path d="M20 35 C20 42 15 44 15 50 C15 55 25 55 25 50 C25 44 20 42 20 35 Z"/>
+            <line x1="50" y1="15" x2="50" y2="45"/>
+            <path d="M50 45 C50 52 45 54 45 60 C45 65 55 65 55 60 C55 54 50 52 50 45 Z"/>
+            <line x1="80" y1="15" x2="80" y2="30"/>
+            <path d="M80 30 C80 37 75 39 75 45 C75 50 85 50 85 45 C85 39 80 37 80 30 Z"/>
+          </svg>
+        </div>
+        <div class="art-hover" role="img" aria-label="Alternate view of the Rain Chain">
+          <svg viewBox="0 0 100 100">
+            <path d="M50 20 C50 32 42 36 42 46 C42 54 58 54 58 46 C58 36 50 32 50 20 Z"/>
+            <circle cx="50" cy="72" r="8"/>
+            <circle cx="50" cy="72" r="16"/>
+            <circle cx="50" cy="72" r="24"/>
+          </svg>
+        </div>
+        <div class="caption"><span>Rain Chain</span></div>
+      </article>
+    </section>
+  </div>
+
+  <div class="category">
+    <h2 class="category-label">Bracelets</h2>
+    <section class="grid">
+      <article class="piece">
+        <div class="art" role="img" aria-label="Line illustration of the Knot Bracelet">
+          <svg viewBox="0 0 100 100">
+            <ellipse cx="50" cy="58" rx="36" ry="18"/>
+            <circle cx="41" cy="48" r="13"/>
+            <circle cx="59" cy="48" r="13"/>
+          </svg>
+        </div>
+        <div class="art-hover" role="img" aria-label="Alternate view of the Knot Bracelet">
+          <svg viewBox="0 0 100 100">
+            <path d="M15 40 Q50 20 85 40"/>
+            <path d="M15 76 Q50 96 85 76"/>
+            <circle cx="50" cy="55" r="11"/>
+          </svg>
+        </div>
+        <div class="caption"><span>Knot Bracelet</span></div>
+      </article>
+      <article class="piece">
+        <div class="art" role="img" aria-label="Line illustration of the Arc Cuff">
+          <svg viewBox="0 0 100 100">
+            <path d="M62 20 A38 38 0 1 0 62 96"/>
+          </svg>
+        </div>
+        <div class="art-hover" role="img" aria-label="Alternate view of the Arc Cuff">
+          <svg viewBox="0 0 100 100">
+            <ellipse cx="50" cy="58" rx="32" ry="14"/>
+            <ellipse cx="50" cy="58" rx="22" ry="6"/>
+          </svg>
+        </div>
+        <div class="caption"><span>Arc Cuff</span></div>
+      </article>
+      <article class="piece">
+        <div class="art" role="img" aria-label="Line illustration of the Ember Bangle">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="58" r="28"/>
+            <path d="M50 24 C46 30 46 34 50 38 C54 34 54 30 50 24 Z"/>
+          </svg>
+        </div>
+        <div class="art-hover" role="img" aria-label="Alternate view of the Ember Bangle">
+          <svg viewBox="0 0 100 100">
+            <ellipse cx="50" cy="58" rx="34" ry="16"/>
+          </svg>
+        </div>
+        <div class="caption"><span>Ember Bangle</span></div>
+      </article>
+    </section>
+  </div>
+
+  <footer>
+    <button class="top-btn" aria-label="Back to top" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+      <svg viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+    </button>
+  </footer>
+
+</body>
+</html>
