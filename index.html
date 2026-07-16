@@ -85,8 +85,30 @@
     border-radius:50%;
     pointer-events:none;
     z-index:9998;
+    display:flex; align-items:center; justify-content:center;
     transform:translate(-50%, -50%);
+    transition:width 0.25s ease, height 0.25s ease, border-radius 0.25s ease, background 0.25s ease;
   }
+  .cursor-box.is-viewing{
+    width:5rem; height:2rem;
+    border-radius:0;
+    background:var(--paper);
+    border:1px solid var(--ink);
+    gap:0.4rem;
+    mix-blend-mode:normal;
+  }
+  .cursor-label, .cursor-arrow{
+    opacity:0;
+    font-family:var(--sans);
+    font-weight:400;
+    font-size:0.7rem;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--ink);
+    transition:opacity 0.2s ease;
+  }
+  .cursor-box.is-viewing .cursor-label,
+  .cursor-box.is-viewing .cursor-arrow{ opacity:1; }
 
   .hello-trail{
     position:fixed;
@@ -109,6 +131,8 @@
 
   .hero{
     position:sticky; top:var(--header-h);
+    z-index:0;
+    isolation:isolate;
     background:var(--paper);
     min-height:calc(100vh - var(--header-h));
     display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -203,21 +227,24 @@
 
   .projects{
     position:sticky; top:var(--header-h);
+    z-index:1;
+    isolation:isolate;
     height:calc(100vh - var(--header-h));
     background:var(--paper);
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
     gap:1.5rem;
-    padding:2rem;
+    padding:3rem 2rem 2rem;
     overflow:hidden;
     border-top:1px solid rgba(23,24,28,0.1);
   }
   .projects h2{
+    align-self:flex-start;
     font-family:var(--sans);
-    font-weight:400;
+    font-weight:300;
     text-transform:uppercase;
-    letter-spacing:0.05em;
-    font-size:0.8rem;
-    opacity:0.5;
+    letter-spacing:0.02em;
+    font-size:clamp(1.8rem, 4.5vw, 3rem);
+    opacity:0.9;
     margin:0;
     flex-shrink:0;
   }
@@ -227,36 +254,64 @@
     flex:1;
     min-height:0;
     display:grid;
-    grid-template-columns:repeat(2, 1fr);
-    grid-template-rows:repeat(2, 1fr);
-    border:1px solid rgba(23,24,28,0.15);
+    grid-template-columns:repeat(12, 1fr);
+    grid-template-rows:repeat(12, 1fr);
+    gap:1rem;
   }
   .project-box{
     position:relative;
     border:1px solid rgba(23,24,28,0.15);
-    margin:-1px;
     padding:1.5rem;
     display:flex; flex-direction:column; justify-content:space-between;
     color:var(--ink);
+    background:transparent;
+    opacity:0.6;
     text-decoration:none;
-    transition:background 0.2s;
+    box-shadow:0 8px 20px rgba(23,24,28,0.06);
+    transition:background 0.2s, transform 0.2s, box-shadow 0.2s, opacity 0.2s;
   }
-  a.project-box:hover{ background:rgba(23,24,28,0.04); }
+  .project-box:nth-child(1){ grid-column:1/8; grid-row:1/7; transform:rotate(-1.4deg); z-index:3; }
+  .project-box:nth-child(2){ grid-column:7/13; grid-row:1/5; transform:rotate(1.1deg) translateY(0.75rem); z-index:2; }
+  .project-box:nth-child(3){ grid-column:2/6; grid-row:6/13; transform:rotate(1deg) translateY(-0.5rem); z-index:1; }
+  .project-box:nth-child(4){ grid-column:6/13; grid-row:5/13; transform:rotate(-0.7deg); z-index:2; }
+  a.project-box:hover{
+    background:var(--ink);
+    color:var(--paper);
+    opacity:1;
+    transform:rotate(0deg) scale(1.03);
+    z-index:10;
+    box-shadow:0 14px 28px rgba(23,24,28,0.14);
+  }
+  a.project-box:hover .num,
+  a.project-box:hover .title{ color:var(--paper); }
   .project-box.is-placeholder{ opacity:0.4; }
   .project-box .num{
     font-family:var(--sans);
+    font-weight:400;
     font-size:0.75rem;
     letter-spacing:0.03em;
-    opacity:0.5;
+    color:var(--ink);
+    transition:color 0.2s;
   }
   .project-box .title{
     font-family:var(--sans);
-    font-weight:700;
+    font-weight:400;
     font-size:clamp(1.2rem, 3vw, 1.7rem);
+    color:var(--ink);
+    transition:color 0.2s;
   }
 
   @media (max-width:600px){
-    .projects-grid{ grid-template-columns:1fr; }
+    .projects-grid{
+      grid-template-columns:1fr;
+      grid-template-rows:none;
+      gap:0.75rem;
+    }
+    .project-box{
+      grid-column:auto !important;
+      grid-row:auto !important;
+      transform:none !important;
+    }
   }
 
   .contact{
@@ -350,7 +405,7 @@
 </head>
 <body class="is-loading">
 
-  <div class="cursor-box"></div>
+  <div class="cursor-box"><span class="cursor-label">View</span><span class="cursor-arrow">→</span></div>
 
   <div class="loader" id="loader">
     <div class="loader-rows">
@@ -366,7 +421,7 @@
       <a href="#projects">Projects</a>
       <a href="#about">About</a>
       <a href="#contact">Contact</a>
-      <a href="#">Showreel</a>
+      <a href="show-reel.html">Showreel</a>
     </nav>
     <span class="time-badge reveal reveal-1">
       <span id="bkk-time">BKK[TH] --:--</span>
@@ -390,22 +445,22 @@
   <section class="projects" id="projects">
     <h2>Projects</h2>
     <div class="projects-grid">
-      <a class="project-box" href="work/jewelry.html">
+      <a class="project-box" href="work/ai-data-science.html">
         <span class="num">01</span>
-        <span class="title">Jewelry Design</span>
+        <span class="title">AI &amp; Data Science</span>
+      </a>
+      <a class="project-box" href="work/full-stack.html">
+        <span class="num">02</span>
+        <span class="title">Full-Stack</span>
       </a>
       <a class="project-box" href="work/ui-ux.html">
-        <span class="num">02</span>
+        <span class="num">03</span>
         <span class="title">UI/UX Design</span>
       </a>
-      <div class="project-box is-placeholder">
-        <span class="num">03</span>
-        <span class="title">Coming Soon</span>
-      </div>
-      <div class="project-box is-placeholder">
+      <a class="project-box" href="work/jewelry.html">
         <span class="num">04</span>
-        <span class="title">Coming Soon</span>
-      </div>
+        <span class="title">Jewelry Design</span>
+      </a>
     </div>
   </section>
 
@@ -468,6 +523,11 @@
       document.addEventListener('mousemove', (e) => {
         box.style.left = e.clientX + 'px';
         box.style.top = e.clientY + 'px';
+      });
+
+      document.querySelectorAll('a.project-box').forEach(link => {
+        link.addEventListener('mouseenter', () => box.classList.add('is-viewing'));
+        link.addEventListener('mouseleave', () => box.classList.remove('is-viewing'));
       });
     })();
 
@@ -543,6 +603,27 @@
           smoothScrollTo(target.getBoundingClientRect().top + window.scrollY, 900);
         });
       });
+    })();
+
+    (function(){
+      const hero = document.querySelector('.hero');
+      const projects = document.getElementById('projects');
+      const header = document.querySelector('header');
+      if (!hero || !projects || !header) return;
+
+      const maxBlur = 10;
+
+      function update(){
+        const headerH = header.getBoundingClientRect().height;
+        const projRect = projects.getBoundingClientRect();
+        const range = window.innerHeight - headerH;
+        const progress = 1 - Math.min(Math.max((projRect.top - headerH) / range, 0), 1);
+        hero.style.filter = `blur(${(progress * maxBlur).toFixed(2)}px)`;
+      }
+
+      window.addEventListener('scroll', update, { passive:true });
+      window.addEventListener('resize', update);
+      update();
     })();
 
     (function(){
