@@ -9,11 +9,15 @@
     --paper:#FFFFFF; --ink:#17181C; --accent:#B4371F;
     --sans:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
   }
-  html,body{ height:100%; margin:0; }
+  html,body{ margin:0; }
   body{
     background:var(--paper); color:var(--ink);
+    font-family:var(--sans);
+  }
+  .hero{
+    min-height:100vh;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:2rem; font-family:var(--sans);
+    gap:2rem;
   }
   h1{
     font-family:var(--sans);
@@ -32,10 +36,59 @@
     transition:background 0.15s, color 0.15s;
   }
   a.btn:hover{ background:var(--accent); border-color:var(--accent); color:var(--paper); }
+
+  .contact{
+    background:#F0F0F0; color:var(--ink);
+    border-top:1px solid rgba(23,24,28,0.1);
+    padding:4rem 2rem;
+  }
+  .contact-inner{ max-width:700px; margin:0; }
+  .contact h2{
+    font-family:var(--sans);
+    font-weight:700;
+    text-transform:uppercase;
+    font-size:clamp(1.5rem, 3.5vw, 2.4rem);
+    letter-spacing:0.01em;
+    margin:0 0 1.25rem;
+  }
+  .contact-links{
+    display:flex; flex-wrap:wrap; gap:1.25rem;
+  }
+  .contact-links a{
+    color:var(--ink);
+    text-decoration:none;
+    font-size:0.75rem;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    opacity:0.7;
+    transition:opacity 0.15s;
+  }
+  .contact-links a:hover{ opacity:1; }
+
+  @media (max-width:600px){
+    .contact{ padding:3rem 1.25rem; }
+  }
 </style>
 </head>
 <body>
-  <h1>Vuthy Cheam</h1>
-  <a class="btn" href="work/jewelry.html">Jewelry Design</a>
+  <section class="hero">
+    <h1>Vuthy Cheam</h1>
+    <a class="btn" href="work/jewelry.html">Jewelry Design</a>
+    <a class="btn" href="work/ui-ux.html">UI/UX Designer</a>
+  </section>
+
+  <footer class="contact">
+    <div class="contact-inner">
+      <h2>Get In Touch</h2>
+      <div class="contact-links">
+        <a href="#">Email</a>
+        <a href="#">LinkedIn</a>
+        <a href="#">Instagram</a>
+        <a href="#">Threads</a>
+        <a href="#">X (Twitter)</a>
+        <a href="#">Facebook</a>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>
