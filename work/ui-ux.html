@@ -4,50 +4,162 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>UI/UX Designer — Vuthy Cheam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
   :root{
     --paper:#FFFFFF; --ink:#17181C; --accent:#B4371F;
+    --panel:#F1F1F1;
     --sans:ui-monospace, 'SF Mono', 'JetBrains Mono', 'IBM Plex Mono', Menlo, Consolas, monospace;
+    --serif: Georgia, 'Times New Roman', serif;
     --header-h: 3.25rem;
   }
   *{ box-sizing:border-box; }
-  html,body{ margin:0; height:100%; }
+  html,body{ margin:0; min-height:100%; }
   body{
     background:var(--paper); color:var(--ink);
     font-family:var(--sans);
     font-weight:300;
   }
+  a{ color:inherit; }
+
   header{
     position:sticky; top:0; z-index:10;
     min-height:var(--header-h);
     display:flex; justify-content:space-between; align-items:center;
     padding:0.6rem 2rem;
-    background:var(--paper);
+    background:rgba(255,255,255,0.22);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
     border-bottom:1px solid rgba(23,24,28,0.1);
   }
   header a{ color:var(--ink); text-decoration:none; }
-  .home-link{ font-family:var(--sans); font-weight:400; font-size:0.8rem; letter-spacing:0.02em; }
+  .home-link{
+    font-family:var(--sans);
+    font-weight:400;
+    font-size:0.8rem;
+    letter-spacing:0.02em;
+  }
   nav{ display:flex; gap:2.5rem; font-size:0.7rem; font-weight:200; letter-spacing:0.03em; text-transform:uppercase; }
   nav a{ opacity:0.6; transition:opacity 0.15s; }
   nav a:hover, nav a.current{ opacity:1; }
+  nav a::before{ content:'['; opacity:0; transition:opacity 0.15s; }
+  nav a::after{ content:']'; opacity:0; transition:opacity 0.15s; }
+  nav a:hover::before, nav a:hover::after{ opacity:1; }
 
-  .placeholder{
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center;
+  .split{
+    display:flex;
     min-height:calc(100vh - var(--header-h));
-    padding:3rem 2rem;
   }
-  .placeholder h1{
-    font-weight:300;
-    font-size:clamp(1.8rem, 4.5vw, 2.7rem);
-    margin:0 0 1rem;
+  .side-panel{
+    order:2;
+    flex:1.6;
+    background:var(--panel);
   }
-  .placeholder p{
-    opacity:0.65;
-    font-size:0.9rem;
-    font-weight:300;
-    max-width:48ch;
-    margin:0;
+  .content{ order:1; }
+  .content{
+    flex:1;
+    padding:3rem 3.5rem 4rem;
+    display:flex; flex-direction:column;
+  }
+  .work-list{
+    display:flex; flex-direction:column;
+    gap:3rem;
+    margin-top:3rem;
+  }
+  .work-item{
+    display:block;
+    text-decoration:none;
+    color:inherit;
+  }
+  .work-item-top{
+    display:flex; align-items:baseline; gap:1rem;
+    padding:0.75rem 2rem;
+    border:1px solid transparent;
+    transition:border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+  }
+  .work-item:hover .work-item-top{
+    border-color:var(--ink);
+  }
+  .work-item:first-child:hover .work-item-top{
+    border-color:#2e5fff;
+    background:#2e5fff;
+    color:var(--paper);
+  }
+  .work-item:nth-child(2):hover .work-item-top{
+    border-color:#E11D48;
+    background:#E11D48;
+    color:var(--paper);
+  }
+  .work-item:nth-child(3):hover .work-item-top{
+    border-color:#33FF57;
+    background:#33FF57;
+    color:var(--ink);
+  }
+  .work-title{
+    font-family:'Press Start 2P', var(--sans);
+    font-size:clamp(0.8rem, 1.6vw, 1.05rem);
+    white-space:nowrap;
+  }
+  .work-rule{
+    flex:1;
+    border-bottom:1px solid rgba(23,24,28,0.15);
+    transform:translateY(-0.4em);
+    transition:border-color 0.2s ease;
+  }
+  .work-item:hover .work-rule{
+    border-bottom-color:var(--ink);
+  }
+  .work-item:first-child:hover .work-rule{
+    border-bottom-color:var(--paper);
+  }
+  .work-item:nth-child(2):hover .work-rule{
+    border-bottom-color:var(--paper);
+  }
+  .work-item:nth-child(3):hover .work-rule{
+    border-bottom-color:var(--ink);
+  }
+  .work-year{
+    position:relative;
+    display:inline-block;
+    width:1em;
+    font-size:0.85rem;
+    opacity:0.5;
+    white-space:nowrap;
+  }
+  .work-year .dash, .work-year .arrow{
+    transition:opacity 0.15s ease;
+  }
+  .work-year .dash{
+    display:inline-block;
+    transform:translateY(-15%);
+  }
+  .work-year .arrow{
+    position:absolute;
+    left:0; top:50%;
+    width:1.6em; height:1em;
+    transform:translateY(-65%);
+    stroke:currentColor;
+    fill:none;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    opacity:0;
+  }
+  .work-item:hover .work-year .dash{ opacity:0; }
+  .work-item:hover .work-year .arrow{ opacity:1; }
+  .work-desc{
+    margin:0.6rem 0 0;
+    font-size:0.85rem;
+    opacity:0.55;
+    max-width:46ch;
+  }
+
+  @media (max-width:800px){
+    .split{ flex-direction:column; }
+    .side-panel{ min-height:14rem; }
+    .content{ padding:2.5rem 1.5rem 3rem; }
   }
 </style>
 </head>
@@ -56,15 +168,42 @@
   <header>
     <a class="home-link" href="../index.html">[VUTHY CHEAM]</a>
     <nav>
-      <a class="current" href="ui-ux.html">UI/UX</a>
+      <a class="current" href="ui-ux.html">UI/UX Designer</a>
       <a href="../index.html">Home</a>
     </nav>
   </header>
 
-  <section class="placeholder">
-    <h1>UI/UX Design</h1>
-    <p>Work coming soon.</p>
-  </section>
+  <div class="split">
+    <aside class="side-panel"></aside>
+
+    <main class="content">
+      <div class="work-list">
+        <a class="work-item" href="#">
+          <div class="work-item-top">
+            <span class="work-title">Project One</span>
+            <span class="work-rule"></span>
+            <span class="work-year"><span class="dash">—</span><svg class="arrow" viewBox="0 0 24 24"><path d="M2 12h19"/><path d="M14 5l7 7-7 7"/></svg></span>
+          </div>
+        </a>
+
+        <a class="work-item" href="#">
+          <div class="work-item-top">
+            <span class="work-title">Project Two</span>
+            <span class="work-rule"></span>
+            <span class="work-year"><span class="dash">—</span><svg class="arrow" viewBox="0 0 24 24"><path d="M2 12h19"/><path d="M14 5l7 7-7 7"/></svg></span>
+          </div>
+        </a>
+
+        <a class="work-item" href="#">
+          <div class="work-item-top">
+            <span class="work-title">Project Three</span>
+            <span class="work-rule"></span>
+            <span class="work-year"><span class="dash">—</span><svg class="arrow" viewBox="0 0 24 24"><path d="M2 12h19"/><path d="M14 5l7 7-7 7"/></svg></span>
+          </div>
+        </a>
+      </div>
+    </main>
+  </div>
 
 </body>
 </html>
