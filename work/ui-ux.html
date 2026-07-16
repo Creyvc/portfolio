@@ -7,26 +7,27 @@
 <style>
   :root{
     --paper:#FFFFFF; --ink:#17181C; --accent:#B4371F;
-    --sans:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    --header-h: 4.75rem;
+    --sans:ui-monospace, 'SF Mono', 'JetBrains Mono', 'IBM Plex Mono', Menlo, Consolas, monospace;
+    --header-h: 3.25rem;
   }
   *{ box-sizing:border-box; }
   html,body{ margin:0; height:100%; }
   body{
     background:var(--paper); color:var(--ink);
     font-family:var(--sans);
+    font-weight:300;
   }
   header{
     position:sticky; top:0; z-index:10;
     min-height:var(--header-h);
     display:flex; justify-content:space-between; align-items:center;
-    padding:1.5rem 2rem;
+    padding:0.6rem 2rem;
     background:var(--paper);
     border-bottom:1px solid rgba(23,24,28,0.1);
   }
   header a{ color:var(--ink); text-decoration:none; }
-  .home-link{ font-family:var(--sans); font-weight:500; font-size:0.95rem; }
-  nav{ display:flex; gap:1.5rem; font-size:0.8rem; letter-spacing:0.03em; text-transform:uppercase; }
+  .home-link{ font-family:var(--sans); font-weight:400; font-size:0.8rem; letter-spacing:0.02em; }
+  nav{ display:flex; gap:2.5rem; font-size:0.7rem; font-weight:200; letter-spacing:0.03em; text-transform:uppercase; }
   nav a{ opacity:0.6; transition:opacity 0.15s; }
   nav a:hover, nav a.current{ opacity:1; }
 
@@ -37,13 +38,14 @@
     padding:3rem 2rem;
   }
   .placeholder h1{
-    font-weight:400;
-    font-size:clamp(2.2rem, 6vw, 3.5rem);
+    font-weight:300;
+    font-size:clamp(1.8rem, 4.5vw, 2.7rem);
     margin:0 0 1rem;
   }
   .placeholder p{
     opacity:0.65;
-    font-size:1.05rem;
+    font-size:0.9rem;
+    font-weight:300;
     max-width:48ch;
     margin:0;
   }
@@ -52,7 +54,7 @@
 <body>
 
   <header>
-    <a class="home-link" href="../index.html">Vuthy Cheam</a>
+    <a class="home-link" href="../index.html">[VUTHY CHEAM]</a>
     <nav>
       <a class="current" href="ui-ux.html">UI/UX</a>
       <a href="../index.html">Home</a>
