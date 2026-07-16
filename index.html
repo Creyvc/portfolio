@@ -26,9 +26,9 @@
     display:grid; grid-template-columns:1fr auto 1fr;
     align-items:center;
     padding:0.6rem 2rem;
-    background:rgba(255,255,255,0.6);
-    backdrop-filter:blur(14px);
-    -webkit-backdrop-filter:blur(14px);
+    background:rgba(255,255,255,0.35);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
     border-bottom:1px solid rgba(23,24,28,0.1);
   }
   header a{ color:var(--ink); text-decoration:none; }
@@ -284,6 +284,30 @@
   }
   a.project-box:hover .num,
   a.project-box:hover .title{ color:var(--paper); }
+  a.project-box:nth-child(1):hover{
+    background:#33FF57;
+    color:var(--ink);
+  }
+  a.project-box:nth-child(1):hover .num,
+  a.project-box:nth-child(1):hover .title{ color:var(--ink); }
+  a.project-box:nth-child(2):hover{
+    background:#FFC300;
+    color:var(--ink);
+  }
+  a.project-box:nth-child(2):hover .num,
+  a.project-box:nth-child(2):hover .title{ color:var(--ink); }
+  a.project-box:nth-child(3):hover{
+    background:#3357FF;
+    color:var(--paper);
+  }
+  a.project-box:nth-child(3):hover .num,
+  a.project-box:nth-child(3):hover .title{ color:var(--paper); }
+  a.project-box:nth-child(4):hover{
+    background:#FF5733;
+    color:var(--paper);
+  }
+  a.project-box:nth-child(4):hover .num,
+  a.project-box:nth-child(4):hover .title{ color:var(--paper); }
   .project-box.is-placeholder{ opacity:0.4; }
   .project-box .num{
     font-family:var(--sans);
@@ -314,7 +338,34 @@
     }
   }
 
+  .about{
+    position:relative; z-index:2;
+    min-height:calc(100vh - var(--header-h));
+    display:flex; flex-direction:column; justify-content:center;
+    background:var(--paper); color:var(--ink);
+    border-top:1px solid rgba(23,24,28,0.1);
+    padding:4rem 2rem;
+  }
+  .about-inner{ max-width:700px; margin:0; }
+  .about h2{
+    font-family:var(--sans);
+    font-weight:400;
+    text-transform:uppercase;
+    font-size:clamp(1.2rem, 2.8vw, 1.9rem);
+    letter-spacing:0.01em;
+    margin:0 0 1.25rem;
+  }
+  .about p{
+    font-size:0.85rem;
+    font-weight:300;
+    line-height:1.7;
+    opacity:0.65;
+    max-width:60ch;
+    margin:0;
+  }
+
   .contact{
+    position:relative; z-index:3;
     min-height:calc(100vh - var(--header-h));
     display:flex; flex-direction:column; justify-content:center;
     background:#232323; color:var(--paper);
@@ -378,27 +429,15 @@
     flex:1;
     background:#000;
     transform:translateY(0%);
-    transition:transform 0.9s cubic-bezier(.16,1,.3,1);
+    transition:transform 0.65s cubic-bezier(.16,1,.3,1);
   }
   .loader-rows span:nth-child(1){ transition-delay:0ms; }
-  .loader-rows span:nth-child(2){ transition-delay:90ms; }
-  .loader-rows span:nth-child(3){ transition-delay:180ms; }
-  .loader-rows span:nth-child(4){ transition-delay:270ms; }
-  .loader-rows span:nth-child(5){ transition-delay:360ms; }
-  .loader-rows span:nth-child(6){ transition-delay:450ms; }
+  .loader-rows span:nth-child(2){ transition-delay:60ms; }
+  .loader-rows span:nth-child(3){ transition-delay:120ms; }
+  .loader-rows span:nth-child(4){ transition-delay:210ms; }
+  .loader-rows span:nth-child(5){ transition-delay:180ms; }
+  .loader-rows span:nth-child(6){ transition-delay:300ms; }
   .loader.is-done .loader-rows span{ transform:translateY(-100%); }
-
-  .loader-counter{
-    position:absolute; top:50%; left:50%;
-    transform:translate(-50%, -50%);
-    font-family:var(--sans);
-    font-size:0.85rem;
-    letter-spacing:0.04em;
-    font-variant-numeric:tabular-nums;
-    color:#fff;
-    transition:opacity 0.3s ease;
-  }
-  .loader.is-done .loader-counter{ opacity:0; }
 
   body.is-loading{ overflow:hidden; }
 </style>
@@ -411,14 +450,12 @@
     <div class="loader-rows">
       <span></span><span></span><span></span><span></span><span></span><span></span>
     </div>
-    <div class="loader-counter" id="loader-counter">0</div>
   </div>
 
   <header>
     <a class="home-link reveal reveal-1" href="index.html" id="home-link">[VUTHY CHEAM]</a>
     <nav class="reveal reveal-2">
       <a href="index.html">Home</a>
-      <a href="#projects">Projects</a>
       <a href="#about">About</a>
       <a href="#contact">Contact</a>
       <a href="show-reel.html">Showreel</a>
@@ -464,6 +501,13 @@
     </div>
   </section>
 
+  <section class="about" id="about">
+    <div class="about-inner">
+      <h2>About Me</h2>
+      <p>Vuthy Cheam is a jewelry and UI/UX designer based in Bangkok, Thailand, working at the intersection of tactile craft and digital interface — drawn to precision, texture, and the quiet details most people scroll past.</p>
+    </div>
+  </section>
+
   <footer class="contact" id="contact">
     <div class="contact-inner">
       <h2>Get In Touch</h2>
@@ -498,24 +542,14 @@
 
     (function(){
       const loader = document.getElementById('loader');
-      const counter = document.getElementById('loader-counter');
-      const duration = 1400;
-      const start = performance.now();
+      const duration = 80;
 
-      function tick(now){
-        const elapsed = now - start;
-        const pct = Math.min(100, Math.round((elapsed / duration) * 100));
-        counter.textContent = pct;
-        if (pct < 100) {
-          requestAnimationFrame(tick);
-        } else {
-          loader.classList.add('is-done');
-          document.body.classList.remove('is-loading');
-          document.body.classList.add('loaded');
-          setTimeout(() => { loader.style.display = 'none'; }, 1400);
-        }
-      }
-      requestAnimationFrame(tick);
+      setTimeout(() => {
+        loader.classList.add('is-done');
+        document.body.classList.remove('is-loading');
+        document.body.classList.add('loaded');
+        setTimeout(() => { loader.style.display = 'none'; }, 1000);
+      }, duration);
     })();
 
     (function(){
@@ -608,6 +642,7 @@
     (function(){
       const hero = document.querySelector('.hero');
       const projects = document.getElementById('projects');
+      const about = document.getElementById('about');
       const header = document.querySelector('header');
       if (!hero || !projects || !header) return;
 
@@ -615,15 +650,56 @@
 
       function update(){
         const headerH = header.getBoundingClientRect().height;
-        const projRect = projects.getBoundingClientRect();
         const range = window.innerHeight - headerH;
-        const progress = 1 - Math.min(Math.max((projRect.top - headerH) / range, 0), 1);
-        hero.style.filter = `blur(${(progress * maxBlur).toFixed(2)}px)`;
+
+        const projRect = projects.getBoundingClientRect();
+        const heroProgress = 1 - Math.min(Math.max((projRect.top - headerH) / range, 0), 1);
+        hero.style.filter = `blur(${(heroProgress * maxBlur).toFixed(2)}px)`;
+
+        if (about){
+          const aboutRect = about.getBoundingClientRect();
+          const projectsProgress = 1 - Math.min(Math.max((aboutRect.top - headerH) / range, 0), 1);
+          projects.style.filter = `blur(${(projectsProgress * maxBlur).toFixed(2)}px)`;
+        }
       }
 
       window.addEventListener('scroll', update, { passive:true });
       window.addEventListener('resize', update);
       update();
+    })();
+
+    (function(){
+      const projects = document.getElementById('projects');
+      const header = document.querySelector('header');
+      if (!projects || !header) return;
+
+      const lockDuration = 1800;
+      let locked = false;
+      let lockTriggered = false;
+      let prevProjTop = projects.getBoundingClientRect().top;
+
+      function onScroll(){
+        if (locked) return;
+        const headerH = header.getBoundingClientRect().height;
+        const projTop = projects.getBoundingClientRect().top;
+
+        const crossedIntoLock = prevProjTop > headerH && projTop <= headerH;
+        if (crossedIntoLock && !lockTriggered){
+          lockTriggered = true;
+          locked = true;
+          document.body.style.overflow = 'hidden';
+          setTimeout(() => {
+            locked = false;
+            document.body.style.overflow = '';
+          }, lockDuration);
+        }
+        if (projTop > headerH + 50){
+          lockTriggered = false;
+        }
+        prevProjTop = projTop;
+      }
+
+      window.addEventListener('scroll', onScroll, { passive:true });
     })();
 
     (function(){

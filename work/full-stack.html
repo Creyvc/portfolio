@@ -4,18 +4,32 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Full-Stack — Vuthy Cheam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
   :root{
     --paper:#FFFFFF; --ink:#17181C; --accent:#B4371F;
     --sans:ui-monospace, 'SF Mono', 'JetBrains Mono', 'IBM Plex Mono', Menlo, Consolas, monospace;
     --header-h: 3.25rem;
   }
-  *{ box-sizing:border-box; }
+  *{ box-sizing:border-box; cursor:none; }
   html,body{ margin:0; height:100%; }
   body{
     background:var(--paper); color:var(--ink);
     font-family:var(--sans);
     font-weight:300;
+  }
+  .cursor-box{
+    position:fixed;
+    top:0; left:0;
+    width:12px; height:12px;
+    background:#fff;
+    mix-blend-mode:difference;
+    border-radius:50%;
+    pointer-events:none;
+    z-index:9998;
+    transform:translate(-50%, -50%);
   }
   header{
     position:sticky; top:0; z-index:10;
@@ -32,39 +46,91 @@
   nav a:hover, nav a.current{ opacity:1; }
 
   .placeholder{
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center;
+    display:flex; align-items:center; justify-content:center;
     min-height:calc(100vh - var(--header-h));
-    padding:3rem 2rem;
+    padding:2rem;
   }
   .placeholder h1{
-    font-weight:300;
-    font-size:clamp(1.8rem, 4.5vw, 2.7rem);
-    margin:0 0 1rem;
-  }
-  .placeholder p{
-    opacity:0.65;
-    font-size:0.9rem;
-    font-weight:300;
-    max-width:48ch;
+    font-family:'Press Start 2P', var(--sans);
+    font-weight:400;
+    font-size:clamp(1.6rem, 7vw, 4.5rem);
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    line-height:1.5;
+    text-align:center;
     margin:0;
   }
+
+  .loader{
+    position:fixed; inset:0; z-index:9999;
+    pointer-events:none;
+    display:none;
+  }
+  .loader.is-active{ display:block; }
+  .loader-rows{
+    position:absolute; inset:0;
+    display:flex; flex-direction:row;
+  }
+  .loader-rows span{
+    flex:1;
+    background:#FFC300;
+    transform:translateY(-100%);
+    transition:transform 0.4s cubic-bezier(.16,1,.3,1);
+  }
+  .loader-rows span:nth-child(1){ transition-delay:0ms; }
+  .loader-rows span:nth-child(2){ transition-delay:35ms; }
+  .loader-rows span:nth-child(3){ transition-delay:70ms; }
+  .loader-rows span:nth-child(4){ transition-delay:120ms; }
+  .loader-rows span:nth-child(5){ transition-delay:105ms; }
+  .loader-rows span:nth-child(6){ transition-delay:175ms; }
+  .loader.is-covering .loader-rows span{ transform:translateY(0%); }
 </style>
 </head>
 <body>
+
+  <div class="cursor-box"></div>
+
+  <div class="loader" id="loader">
+    <div class="loader-rows">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+  </div>
 
   <header>
     <a class="home-link" href="../index.html">[VUTHY CHEAM]</a>
     <nav>
       <a class="current" href="full-stack.html">Full-Stack</a>
-      <a href="../index.html">Home</a>
+      <a href="../index.html#projects" id="home-nav-link">Home</a>
     </nav>
   </header>
 
   <section class="placeholder">
-    <h1>Full-Stack</h1>
-    <p>Work coming soon.</p>
+    <h1>IN PROGRESS</h1>
   </section>
+
+  <script>
+    (function(){
+      const box = document.querySelector('.cursor-box');
+      document.addEventListener('mousemove', (e) => {
+        box.style.left = e.clientX + 'px';
+        box.style.top = e.clientY + 'px';
+      });
+    })();
+  </script>
+
+  <script>
+    (function(){
+      const loader = document.getElementById('loader');
+      const homeLink = document.getElementById('home-nav-link');
+
+      homeLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        loader.classList.add('is-active');
+        requestAnimationFrame(() => loader.classList.add('is-covering'));
+        setTimeout(() => { window.location.href = homeLink.href; }, 580);
+      });
+    })();
+  </script>
 
 </body>
 </html>
