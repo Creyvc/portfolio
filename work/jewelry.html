@@ -39,12 +39,17 @@
   nav{ display:flex; gap:2.5rem; font-size:0.7rem; font-weight:200; letter-spacing:0.03em; text-transform:uppercase; }
   nav a{ opacity:0.6; transition:opacity 0.15s; }
   nav a:hover, nav a.current{ opacity:1; }
+  nav a::before{ content:'['; opacity:0; transition:opacity 0.15s; }
+  nav a::after{ content:']'; opacity:0; transition:opacity 0.15s; }
+  nav a:hover::before, nav a:hover::after{ opacity:1; }
 
 .category-nav{
   position:sticky; top:var(--header-h); z-index:9;
   display:flex; gap:2rem;
   padding:1rem 2rem;
-  background:var(--paper);
+  background:rgba(255,255,255,0.22);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
   border-bottom:1px solid rgba(23,24,28,0.1);
   overflow-x:auto;
   white-space:nowrap;
@@ -67,6 +72,9 @@
   }
   .category-nav button:hover{ opacity:1; }
   .category-nav button.active{ opacity:1; font-weight:400; }
+  .category-nav button::before{ content:'['; opacity:0; transition:opacity 0.15s; }
+  .category-nav button::after{ content:']'; opacity:0; transition:opacity 0.15s; }
+  .category-nav button:hover::before, .category-nav button:hover::after{ opacity:1; }
 
   .intro{
     position:relative;
@@ -122,7 +130,7 @@
   }
   .intro-content .scroll-arrow:hover{ opacity:1; transform:translateY(3px); }
   
-  .category{ padding-top:1.5rem; scroll-margin-top:8rem; }
+  .category{ padding-top:0; scroll-margin-top:8rem; }
 
   .grid{
     display:grid;
@@ -153,8 +161,42 @@
     object-fit:cover;
     object-position:45% 55%;
   }
+  .piece .art-photo img.zoom-out{
+    object-fit:contain;
+    object-position:center center;
+    transform:scale(1.15);
+  }
+  .piece .art-photo img.zoom-in-3{
+    transform:scale(1.15) translateX(3.5%);
+  }
+  .piece .art-photo img.zoom-in-5{
+    transform:scale(1.9) translateX(5%);
+  }
+  .piece .art-photo img.zoom-in-4{
+    object-position:center center;
+    transform:scale(1.7) translateX(6.5%);
+  }
+  .piece .art-photo img.zoom-in-6{
+    transform:scale(1.65) translateX(1.5%);
+  }
+  .piece .art-photo img.zoom-in-7{
+    transform:scale(1.5) translateX(1.5%);
+  }
+  .piece .art-photo img.zoom-in-8{
+    transform:scale(1.9) translateX(1.5%);
+  }
+  .piece .art-photo img.zoom-in-9{
+    transform:scale(1.9) translateX(2.5%);
+  }
   .piece .art-video-zoom{ transform:scale(1.6) translate(-18%, -8%); }
   .piece .art-video-zoom2{ transform:scale(1.2); }
+  .piece .art-video-zoom3{ transform:scale(1); }
+  .piece .art-video-zoom4{ transform:scale(1.4); }
+  .piece .art-video-zoom5{ transform:scale(1.4); }
+  .piece .art-video-zoom6{ transform:scale(1.7); }
+  .piece .art-video-zoom7{ transform:scale(1); }
+  .piece .art-video-zoom8{ transform:scale(1.4); }
+  .piece .art-video-zoom9{ transform:scale(1); }
   .piece .art-video{
     position:absolute; inset:0;
     width:100%; height:100%;
@@ -219,30 +261,6 @@
   }
   .top-btn:hover{ background:#14213D; border-color:#14213D; color:var(--paper); }
 
-  .back-btn{
-    position:fixed; left:2rem; top:calc(var(--header-h) + 1.25rem); z-index:20;
-    display:flex; align-items:center; justify-content:center;
-    width:3rem; height:3rem;
-    border-radius:50%;
-    background:rgba(255,255,255,0.22);
-    backdrop-filter:blur(6px);
-    -webkit-backdrop-filter:blur(6px);
-    cursor:pointer;
-    border:1px solid var(--ink);
-    color:var(--ink);
-    text-decoration:none;
-    transition:background 0.15s, color 0.15s, border-color 0.15s;
-  }
-  .back-btn svg{
-    width:1.1rem; height:1.1rem;
-    stroke:currentColor;
-    fill:none;
-    stroke-width:1.5;
-    stroke-linecap:round;
-    stroke-linejoin:round;
-  }
-  .back-btn:hover{ background:var(--paper); border-color:transparent; color:var(--ink); }
-
   @media (max-width:600px){
     header{ padding:1.25rem 1.25rem; }
     nav{ gap:1rem; }
@@ -260,10 +278,6 @@
       <a href="../index.html">Home</a>
     </nav>
   </header>
-
-  <a class="back-btn" href="../index.html#projects" aria-label="Go back" onclick="if(window.history.length>1){history.back();return false;}">
-    <svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-  </a>
 
   <section class="intro">
     <video class="intro-video" autoplay muted loop playsinline>
@@ -308,6 +322,76 @@
           <source src="videos/2-.mp4" type="video/mp4">
         </video>
         <div class="caption"><span>Wave Ring</span></div>
+      </article>
+
+      <article class="piece" data-category="glasses">
+        <div class="art art-photo" role="img" aria-label="Photo of the piece">
+          <img class="zoom-out zoom-in-3" src="images/3.jpg" alt="Piece">
+        </div>
+        <video class="art-video art-video-zoom3" muted loop playsinline preload="none" aria-label="Video preview of the piece">
+          <source src="videos/3.mp4" type="video/mp4">
+        </video>
+        <div class="caption"><span>Piece 03</span></div>
+      </article>
+
+      <article class="piece" data-category="bracelets">
+        <div class="art art-photo" role="img" aria-label="Photo of the piece">
+          <img class="zoom-out zoom-in-4" src="images/4.jpg" alt="Piece">
+        </div>
+        <video class="art-video art-video-zoom4" muted loop playsinline preload="none" aria-label="Video preview of the piece">
+          <source src="videos/4.mp4" type="video/mp4">
+        </video>
+        <div class="caption"><span>Piece 04</span></div>
+      </article>
+
+      <article class="piece" data-category="hair-clips">
+        <div class="art art-photo" role="img" aria-label="Photo of the piece">
+          <img class="zoom-out zoom-in-5" src="images/5.jpg" alt="Piece">
+        </div>
+        <video class="art-video art-video-zoom5" muted loop playsinline preload="none" aria-label="Video preview of the piece">
+          <source src="videos/5.mp4" type="video/mp4">
+        </video>
+        <div class="caption"><span>Piece 05</span></div>
+      </article>
+
+      <article class="piece" data-category="rings">
+        <div class="art art-photo" role="img" aria-label="Photo of the piece">
+          <img class="zoom-out zoom-in-6" src="images/6.jpg" alt="Piece">
+        </div>
+        <video class="art-video art-video-zoom6" muted loop playsinline preload="none" aria-label="Video preview of the piece">
+          <source src="videos/6.mp4" type="video/mp4">
+        </video>
+        <div class="caption"><span>Piece 06</span></div>
+      </article>
+
+      <article class="piece" data-category="earrings">
+        <div class="art art-photo" role="img" aria-label="Photo of the piece">
+          <img class="zoom-out zoom-in-7" src="images/7.jpg" alt="Piece">
+        </div>
+        <video class="art-video art-video-zoom7" muted loop playsinline preload="none" aria-label="Video preview of the piece">
+          <source src="videos/7.mp4" type="video/mp4">
+        </video>
+        <div class="caption"><span>Piece 07</span></div>
+      </article>
+
+      <article class="piece" data-category="rings">
+        <div class="art art-photo" role="img" aria-label="Photo of the piece">
+          <img class="zoom-out zoom-in-8" src="images/8.jpg" alt="Piece">
+        </div>
+        <video class="art-video art-video-zoom8" muted loop playsinline preload="none" aria-label="Video preview of the piece">
+          <source src="videos/8.mp4" type="video/mp4">
+        </video>
+        <div class="caption"><span>Piece 08</span></div>
+      </article>
+
+      <article class="piece" data-category="necklaces">
+        <div class="art art-photo" role="img" aria-label="Photo of the piece">
+          <img class="zoom-out zoom-in-9" src="images/9.jpg" alt="Piece">
+        </div>
+        <video class="art-video art-video-zoom9" muted loop playsinline preload="none" aria-label="Video preview of the piece">
+          <source src="videos/9.mp4" type="video/mp4">
+        </video>
+        <div class="caption"><span>Piece 09</span></div>
       </article>
 
     </section>
