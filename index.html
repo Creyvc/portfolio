@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vuthy Cheam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500&family=Noto+Sans+Thai:wght@400;500&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
   :root{
     --paper:#FFFFFF; --ink:#17181C; --accent:#B4371F;
@@ -11,7 +14,7 @@
     --header-h: 3.25rem;
   }
   *{ box-sizing:border-box; cursor:none; }
-  html,body{ margin:0; }
+  html,body{ margin:0; scroll-behavior:smooth; }
   body{
     background:var(--paper); color:var(--ink);
     font-family:var(--sans);
@@ -30,11 +33,18 @@
   }
   header a{ color:var(--ink); text-decoration:none; }
   .home-link{
-    font-family:var(--sans);
+    font-family:var(--sans), 'Noto Sans Khmer', 'Noto Sans Thai', sans-serif;
     font-weight:400;
     font-size:0.8rem;
     letter-spacing:0.02em;
     justify-self:start;
+    display:inline-block;
+    width:9rem;
+    white-space:nowrap;
+    overflow:hidden;
+  }
+  .home-link:lang(km), .home-link:lang(th){
+    font-size:0.88rem;
   }
   .time-badge{
     justify-self:end;
@@ -78,21 +88,105 @@
     transform:translate(-50%, -50%);
   }
 
+  .hello-trail{
+    position:fixed;
+    top:0; left:0;
+    font-family:var(--sans), 'Noto Sans Khmer', 'Noto Sans Thai', sans-serif;
+    font-size:4.6rem;
+    font-weight:700;
+    color:#fff;
+    mix-blend-mode:difference;
+    pointer-events:none;
+    z-index:9997;
+    transform:translate(-50%, -50%);
+    opacity:1;
+    transition:opacity 0.9s ease, transform 0.9s ease;
+  }
+  .hello-trail.fade{
+    opacity:0;
+    transform:translate(-50%, -50%) translateY(-24px) scale(0.85);
+  }
+
   .hero{
+    position:sticky; top:var(--header-h);
+    background:var(--paper);
     min-height:calc(100vh - var(--header-h));
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:2rem;
+    overflow:hidden;
+    padding:2rem;
   }
-  .name-block{ text-align:center; }
-  .name-block h1{
-    font-family:var(--sans);
-    font-weight:900;
+  .big-name{
+    font-family:'Press Start 2P', var(--sans);
+    font-weight:400;
     text-transform:uppercase;
-    font-size:clamp(2.2rem, 7vw, 5rem);
-    line-height:1.1;
-    letter-spacing:-0.01em;
+    font-size:clamp(4.2rem, 17vw, 13.5rem);
+    line-height:1.5;
+    letter-spacing:0.15em;
     color:var(--ink);
+    text-align:center;
     margin:0;
+    text-shadow:
+      1px 1px 0 var(--accent),
+      2px 2px 0 var(--accent),
+      3px 3px 0 var(--accent),
+      4px 4px 0 var(--accent),
+      5px 5px 0 var(--accent),
+      6px 6px 0 var(--accent),
+      7px 7px 0 var(--accent),
+      8px 8px 0 var(--accent),
+      9px 9px 0 var(--accent),
+      10px 10px 0 var(--accent),
+      11px 11px 0 var(--accent),
+      12px 12px 0 var(--accent),
+      13px 13px 0 var(--accent),
+      14px 14px 0 var(--accent),
+      15px 15px 0 var(--accent),
+      16px 16px 0 var(--accent),
+      17px 17px 0 var(--accent),
+      18px 18px 0 var(--accent),
+      19px 19px 0 var(--accent),
+      20px 20px 0 var(--accent),
+      21px 21px 0 var(--accent),
+      22px 22px 0 var(--accent),
+      23px 23px 0 var(--accent),
+      24px 24px 0 var(--accent),
+      25px 25px 0 var(--accent),
+      26px 26px 0 var(--accent),
+      27px 27px 0 var(--accent),
+      28px 28px 0 var(--accent);
+  }
+  .scroll-cta{
+    position:absolute;
+    right:2rem; bottom:2.5rem;
+    display:inline-flex; flex-direction:row; align-items:center; gap:0.8rem;
+    font-family:'Press Start 2P', var(--sans);
+    font-size:0.75rem;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--ink);
+    opacity:0.7;
+    text-decoration:none;
+    transition:opacity 0.15s, color 0.15s;
+  }
+  .scroll-cta:hover{ opacity:1; color:var(--accent); }
+  .arrow-wrap{
+    position:relative;
+    display:inline-block;
+    width:1.4em; height:1.4em;
+    overflow:hidden;
+    vertical-align:middle;
+    font-size:1.4rem;
+  }
+  .arrow-stack{
+    display:flex; flex-direction:column;
+    transform:translateY(-1.4em);
+    transition:transform 0.4s ease;
+  }
+  .scroll-cta:hover .arrow-stack{ transform:translateY(0); }
+  .arrow-stack .arrow{
+    height:1.4em; line-height:1.4em;
+    display:block;
   }
   a.btn{
     text-decoration:none;
@@ -107,7 +201,67 @@
   }
   a.btn:hover{ background:var(--accent); border-color:var(--accent); color:var(--paper); }
 
+  .projects{
+    position:sticky; top:var(--header-h);
+    height:calc(100vh - var(--header-h));
+    background:var(--paper);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:1.5rem;
+    padding:2rem;
+    overflow:hidden;
+    border-top:1px solid rgba(23,24,28,0.1);
+  }
+  .projects h2{
+    font-family:var(--sans);
+    font-weight:400;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    font-size:0.8rem;
+    opacity:0.5;
+    margin:0;
+    flex-shrink:0;
+  }
+  .projects-grid{
+    width:100%;
+    max-width:900px;
+    flex:1;
+    min-height:0;
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    grid-template-rows:repeat(2, 1fr);
+    border:1px solid rgba(23,24,28,0.15);
+  }
+  .project-box{
+    position:relative;
+    border:1px solid rgba(23,24,28,0.15);
+    margin:-1px;
+    padding:1.5rem;
+    display:flex; flex-direction:column; justify-content:space-between;
+    color:var(--ink);
+    text-decoration:none;
+    transition:background 0.2s;
+  }
+  a.project-box:hover{ background:rgba(23,24,28,0.04); }
+  .project-box.is-placeholder{ opacity:0.4; }
+  .project-box .num{
+    font-family:var(--sans);
+    font-size:0.75rem;
+    letter-spacing:0.03em;
+    opacity:0.5;
+  }
+  .project-box .title{
+    font-family:var(--sans);
+    font-weight:700;
+    font-size:clamp(1.2rem, 3vw, 1.7rem);
+  }
+
+  @media (max-width:600px){
+    .projects-grid{ grid-template-columns:1fr; }
+  }
+
   .contact{
+    min-height:calc(100vh - var(--header-h));
+    display:flex; flex-direction:column; justify-content:center;
     background:#232323; color:var(--paper);
     border-top:1px solid rgba(255,255,255,0.2);
     padding:4rem 2rem;
@@ -206,7 +360,7 @@
   </div>
 
   <header>
-    <a class="home-link reveal reveal-1" href="index.html">[VUTHY CHEAM]</a>
+    <a class="home-link reveal reveal-1" href="index.html" id="home-link">[VUTHY CHEAM]</a>
     <nav class="reveal reveal-2">
       <a href="index.html">Home</a>
       <a href="#projects">Projects</a>
@@ -220,11 +374,38 @@
     </span>
   </header>
 
-  <section class="hero" id="projects">
-    <div class="name-block reveal reveal-3">
-      <h1 lang="en">Vuthy Cheam</h1>
-      <h1 lang="km">ជាម វុឌ្ឍី</h1>
-      <h1 lang="th">เฟิร์ส</h1>
+  <section class="hero">
+    <h1 class="big-name reveal reveal-3">Vuthy Cheam</h1>
+    <a class="scroll-cta reveal reveal-4" href="#projects">
+      <span>( Scroll )</span>
+      <span class="arrow-wrap">
+        <span class="arrow-stack">
+          <span class="arrow">↓</span>
+          <span class="arrow">↓</span>
+        </span>
+      </span>
+    </a>
+  </section>
+
+  <section class="projects" id="projects">
+    <h2>Projects</h2>
+    <div class="projects-grid">
+      <a class="project-box" href="work/jewelry.html">
+        <span class="num">01</span>
+        <span class="title">Jewelry Design</span>
+      </a>
+      <a class="project-box" href="work/ui-ux.html">
+        <span class="num">02</span>
+        <span class="title">UI/UX Design</span>
+      </a>
+      <div class="project-box is-placeholder">
+        <span class="num">03</span>
+        <span class="title">Coming Soon</span>
+      </div>
+      <div class="project-box is-placeholder">
+        <span class="num">04</span>
+        <span class="title">Coming Soon</span>
+      </div>
     </div>
   </section>
 
@@ -288,6 +469,95 @@
         box.style.left = e.clientX + 'px';
         box.style.top = e.clientY + 'px';
       });
+    })();
+
+    (function(){
+      const hellos = [
+        { text: 'សួស្តី', lang: 'km' },
+        { text: 'สวัสดี', lang: 'th' },
+        { text: 'こんにちは', lang: 'ja' },
+        { text: '안녕하세요', lang: 'ko' },
+        { text: 'Hola', lang: 'es' },
+        { text: 'Hello', lang: 'en' },
+        { text: 'नमस्ते', lang: 'hi' },
+        { text: '你好', lang: 'zh' },
+        { text: 'Bonjour', lang: 'fr' },
+        { text: 'မင်္ဂလာပါ', lang: 'my' },
+        { text: 'سلام', lang: 'ur' },
+        { text: 'Xin chào', lang: 'vi' },
+        { text: 'ສະບາຍດີ', lang: 'lo' }
+      ];
+      let index = 0;
+      let lastSpawn = 0;
+      const spawnGapMs = 90;
+
+      document.addEventListener('mousemove', (e) => {
+        if (!e.target.closest('.hero') || e.target.closest('.scroll-cta')) return;
+
+        const now = performance.now();
+        if (now - lastSpawn < spawnGapMs) return;
+        lastSpawn = now;
+
+        const word = hellos[index % hellos.length];
+        index++;
+
+        const el = document.createElement('span');
+        el.className = 'hello-trail';
+        el.textContent = word.text;
+        el.lang = word.lang;
+        el.style.left = e.clientX + 'px';
+        el.style.top = e.clientY + 'px';
+        document.body.appendChild(el);
+
+        requestAnimationFrame(() => el.classList.add('fade'));
+        setTimeout(() => el.remove(), 950);
+      });
+    })();
+
+    (function(){
+      function easeInOutCubic(t){
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      }
+
+      function smoothScrollTo(targetY, duration){
+        const startY = window.scrollY;
+        const distance = targetY - startY;
+        const startTime = performance.now();
+
+        function step(now){
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          window.scrollTo(0, startY + distance * easeInOutCubic(progress));
+          if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      }
+
+      document.querySelectorAll('a[href^="#"]').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href.length < 2) return;
+        link.addEventListener('click', (e) => {
+          const target = document.querySelector(href);
+          if (!target) return;
+          e.preventDefault();
+          smoothScrollTo(target.getBoundingClientRect().top + window.scrollY, 900);
+        });
+      });
+    })();
+
+    (function(){
+      const homeLink = document.getElementById('home-link');
+      const names = [
+        { text: '[VUTHY CHEAM]', lang: 'en' },
+        { text: '[ជាម វុឌ្ឍី]', lang: 'km' },
+        { text: '[เฟิร์ส]', lang: 'th' }
+      ];
+      let i = 0;
+      setInterval(() => {
+        i = (i + 1) % names.length;
+        homeLink.textContent = names[i].text;
+        homeLink.lang = names[i].lang;
+      }, 1250);
     })();
   </script>
 </body>
