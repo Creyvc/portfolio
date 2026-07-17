@@ -382,7 +382,7 @@
     border-top:1px solid rgba(23,24,28,0.1);
     padding:4rem 2rem;
   }
-  .contact-inner{ max-width:100%; margin:0; transform:translateY(-1.5rem); }
+  .contact-inner{ max-width:100%; margin:0; transform:translateY(-3rem); }
   .contact h2.contact-marquee{
     margin:auto -2rem -4rem;
     overflow:hidden;
@@ -435,6 +435,7 @@
     gap:var(--box-gap);
     max-width:100%;
     margin:3.5rem -2rem 0;
+    padding-top:2.25rem;
     padding-bottom:0.5rem;
     padding-left:max(0px, calc((100vw - var(--box-w)) / 2 - 2rem));
     padding-right:max(0px, calc((100vw - var(--box-w)) / 2 - 2rem));
@@ -447,6 +448,7 @@
     transform:translateY(2.5rem);
   }
   .contact-box{
+    position:relative;
     background:var(--paper);
     color:var(--ink);
     text-decoration:none;
@@ -462,6 +464,18 @@
     letter-spacing:0.03em;
     text-transform:uppercase;
     transition:background 0.15s, color 0.15s, width 0.4s ease-out, min-height 0.4s ease-out, padding 0.4s ease-out, font-size 0.4s ease-out;
+  }
+  .contact-box[data-label]::before{
+    content:attr(data-label);
+    position:absolute;
+    bottom:100%; left:0;
+    margin-bottom:0.6rem;
+    font-size:0.78rem;
+    font-weight:400;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--ink);
+    opacity:0.55;
   }
   .contact-boxes.is-scrolled .contact-box{
     width:calc(var(--box-w) * 0.7);
@@ -644,13 +658,13 @@
           <div class="info-row"><span class="info-label">Timezone</span><span class="info-value">UTC/GMT +7 hours</span></div>
           <div class="info-row"><span class="info-label">City</span><span class="info-value">Bangkok, Thailand</span></div>
         </div>
-        <a class="contact-box" href="#">Email</a>
-        <a class="contact-box" href="#">LinkedIn</a>
-        <a class="contact-box" href="#">GitHub</a>
-        <a class="contact-box" href="#">X</a>
-        <a class="contact-box" href="#">Threads</a>
-        <a class="contact-box" href="#">Instagram</a>
-        <a class="contact-box" href="#">Read.cv</a>
+        <a class="contact-box" href="#" data-label="Email">Email</a>
+        <a class="contact-box" href="#" data-label="LinkedIn">LinkedIn</a>
+        <a class="contact-box" href="#" data-label="GitHub">GitHub</a>
+        <a class="contact-box" href="#" data-label="X">X</a>
+        <a class="contact-box" href="#" data-label="Threads">Threads</a>
+        <a class="contact-box" href="#" data-label="Instagram">Instagram</a>
+        <a class="contact-box" href="#" data-label="Resume/CV">Resume/CV</a>
       </div>
     </div>
 
