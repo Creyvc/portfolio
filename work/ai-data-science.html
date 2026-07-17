@@ -45,6 +45,9 @@
   nav{ display:flex; gap:2.5rem; font-size:0.7rem; font-weight:200; letter-spacing:0.03em; text-transform:uppercase; }
   nav a{ opacity:0.6; transition:opacity 0.15s; }
   nav a:hover, nav a.current{ opacity:1; }
+  nav a::before{ content:'['; opacity:0; transition:opacity 0.15s; }
+  nav a::after{ content:']'; opacity:0; transition:opacity 0.15s; }
+  nav a:hover::before, nav a:hover::after{ opacity:1; }
 
   .placeholder{
     display:flex; align-items:center; justify-content:center;

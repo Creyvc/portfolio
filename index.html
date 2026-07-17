@@ -470,11 +470,24 @@
     font-size:2.24rem;
   }
   .contact-info{
-    flex-direction:column; align-items:flex-start; justify-content:center;
-    gap:0.6rem;
-    font-size:0.75rem;
-    opacity:0.7;
+    flex-direction:column; align-items:stretch; justify-content:center;
+    gap:0;
+    font-size:1.1rem;
+    font-weight:400;
+    letter-spacing:0;
+    text-transform:none;
+    opacity:1;
+    border-top:1px solid rgba(23,24,28,0.2);
   }
+  .info-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:2rem;
+    padding:1.4rem 0;
+    border-bottom:1px solid rgba(23,24,28,0.2);
+  }
+  .info-label{ opacity:0.55; }
   a.contact-box:hover{ background:var(--ink); color:var(--paper); }
   @media (max-width:600px){
     .contact{ padding:3rem 1.25rem; }
@@ -491,8 +504,21 @@
     opacity:0.7;
     transition:color 0.15s, opacity 0.15s;
   }
+  .top-btn-wrap{
+    position:relative;
+    display:inline-block;
+    width:1.8rem; height:1.8rem;
+    overflow:hidden;
+  }
+  .top-btn-stack{
+    display:flex; flex-direction:column;
+    transform:translateY(0);
+    transition:transform 0.4s ease;
+  }
+  .top-btn:hover .top-btn-stack{ transform:translateY(-1.8rem); }
   .top-btn svg{
     width:1.8rem; height:1.8rem;
+    flex-shrink:0;
     stroke:currentColor;
     fill:none;
     stroke-width:1.5;
@@ -614,9 +640,9 @@
       <div class="contact-progress" id="contactProgress"></div>
       <div class="contact-boxes">
         <div class="contact-box contact-info">
-          <span>Availability: Remote</span>
-          <span>Timezone: UTC/GMT +7 hours</span>
-          <span>City: Bangkok, Thailand</span>
+          <div class="info-row"><span class="info-label">Availability</span><span class="info-value">Remote</span></div>
+          <div class="info-row"><span class="info-label">Timezone</span><span class="info-value">UTC/GMT +7 hours</span></div>
+          <div class="info-row"><span class="info-label">City</span><span class="info-value">Bangkok, Thailand</span></div>
         </div>
         <a class="contact-box" href="#">Email</a>
         <a class="contact-box" href="#">LinkedIn</a>
@@ -646,7 +672,12 @@
     </h2>
 
     <button class="top-btn" aria-label="Back to top" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-      <svg viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+      <span class="top-btn-wrap">
+        <span class="top-btn-stack">
+          <svg viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+        </span>
+      </span>
     </button>
   </footer>
 
