@@ -382,7 +382,7 @@
     border-top:1px solid rgba(23,24,28,0.1);
     padding:4rem 2rem;
   }
-  .contact-inner{ max-width:100%; margin:0; }
+  .contact-inner{ max-width:100%; margin:0; transform:translateY(-1.5rem); }
   .contact h2.contact-marquee{
     margin:auto -2rem -4rem;
     overflow:hidden;
@@ -405,10 +405,33 @@
     -webkit-text-stroke:3.5px currentColor;
     paint-order:stroke fill;
   }
+  .contact-progress{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:0.5rem;
+    margin:2rem 0 0;
+  }
+  .contact-progress .tick{
+    width:2px;
+    height:1rem;
+    background:currentColor;
+    opacity:0.3;
+    border-radius:1px;
+    transition:width 0.2s ease-out, opacity 0.2s ease-out, background 0.2s ease-out;
+  }
+  .contact-progress .tick.active{
+    width:2.4rem;
+    height:1rem;
+    background:none;
+    border:1px solid currentColor;
+    opacity:1;
+  }
   .contact-boxes{
     --box-w: 58rem;
     --box-gap: 1.5rem;
     display:flex;
+    align-items:center;
     gap:var(--box-gap);
     max-width:100%;
     margin:3.5rem -2rem 0;
@@ -417,8 +440,12 @@
     padding-right:max(0px, calc((100vw - var(--box-w)) / 2 - 2rem));
     overflow-x:auto;
     scrollbar-width:none;
+    transition:transform 0.4s ease-out;
   }
   .contact-boxes::-webkit-scrollbar{ display:none; }
+  .contact-boxes.is-scrolled{
+    transform:translateY(2.5rem);
+  }
   .contact-box{
     background:var(--paper);
     color:var(--ink);
@@ -434,8 +461,13 @@
     font-weight:400;
     letter-spacing:0.03em;
     text-transform:uppercase;
-    transition:background 0.15s, color 0.15s, transform 0.2s ease-out;
-    will-change:transform;
+    transition:background 0.15s, color 0.15s, width 0.4s ease-out, min-height 0.4s ease-out, padding 0.4s ease-out, font-size 0.4s ease-out;
+  }
+  .contact-boxes.is-scrolled .contact-box{
+    width:calc(var(--box-w) * 0.7);
+    min-height:23.8rem;
+    padding:3.15rem;
+    font-size:2.24rem;
   }
   .contact-info{
     flex-direction:column; align-items:flex-start; justify-content:center;
@@ -579,6 +611,7 @@
 
   <footer class="contact" id="contact">
     <div class="contact-inner">
+      <div class="contact-progress" id="contactProgress"></div>
       <div class="contact-boxes">
         <div class="contact-box contact-info">
           <span>Availability: Remote</span>
@@ -768,7 +801,7 @@
       const header = document.querySelector('header');
       if (!projects || !header) return;
 
-      const lockDuration = 1800;
+      const lockDuration = 1500;
       let locked = false;
       let lockTriggered = false;
 
@@ -841,33 +874,55 @@
 
     (function(){
       const scroller = document.querySelector('.contact-boxes');
-      const boxes = document.querySelectorAll('.contact-box');
-      if (!scroller || !boxes.length) return;
+      if (!scroller) return;
 
-      let ticking = false;
+      const threshold = 20;
 
       function updateScale(){
-        const maxScroll = scroller.scrollWidth - scroller.clientWidth;
-        const progress = maxScroll > 0 ? Math.min(scroller.scrollLeft / maxScroll, 1) : 0;
-        const scale = 1 - progress * 0.3;
+        scroller.classList.toggle('is-scrolled', scroller.scrollLeft > threshold);
+      }
 
-        boxes.forEach(box => {
-          box.style.transform = `scale(${scale.toFixed(3)})`;
+      scroller.addEventListener('scroll', updateScale, { passive:true });
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      scroller.scrollLeft = 0;
+      updateScale();
+    })();
+
+    (function(){
+      const scroller = document.querySelector('.contact-boxes');
+      const progress = document.getElementById('contactProgress');
+      const boxes = document.querySelectorAll('.contact-box');
+      if (!scroller || !progress || !boxes.length) return;
+
+      boxes.forEach(() => {
+        const tick = document.createElement('span');
+        tick.className = 'tick';
+        progress.appendChild(tick);
+      });
+      const ticks = progress.querySelectorAll('.tick');
+
+      let ticking = false;
+      function updateActive(){
+        const center = scroller.scrollLeft + scroller.clientWidth / 2;
+        let closest = 0;
+        let closestDist = Infinity;
+        boxes.forEach((box, i) => {
+          const boxCenter = box.offsetLeft + box.offsetWidth / 2;
+          const dist = Math.abs(boxCenter - center);
+          if (dist < closestDist){
+            closestDist = dist;
+            closest = i;
+          }
         });
+        ticks.forEach((tick, i) => tick.classList.toggle('active', i === closest));
         ticking = false;
       }
 
       scroller.addEventListener('scroll', () => {
-        if (!ticking){
-          requestAnimationFrame(updateScale);
-          ticking = true;
-        }
+        if (!ticking){ requestAnimationFrame(updateActive); ticking = true; }
       }, { passive:true });
-
-      window.addEventListener('resize', updateScale);
-      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-      scroller.scrollLeft = 0;
-      updateScale();
+      window.addEventListener('resize', updateActive);
+      updateActive();
     })();
   </script>
 </body>
