@@ -233,8 +233,8 @@
     height:calc(100vh - var(--header-h));
     background:var(--paper);
     display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
-    gap:1.5rem;
-    padding:3rem 2rem 2rem;
+    gap:0.25rem;
+    padding:0.5rem 2rem 2rem;
     overflow:hidden;
     border-top:1px solid rgba(23,24,28,0.1);
   }
@@ -251,13 +251,20 @@
   }
   .projects-grid{
     width:100%;
-    max-width:900px;
+    max-width:850px;
     flex:1;
     min-height:0;
     display:grid;
     grid-template-columns:repeat(12, 1fr);
     grid-template-rows:repeat(12, 1fr);
-    gap:1rem;
+    gap:1.5rem;
+    transform:scale(2.3);
+    transform-origin:32% 30%;
+    transition:transform 1.5s cubic-bezier(.16,1,.3,1);
+    will-change:transform;
+  }
+  .projects-grid.zoomed{
+    transform:scale(1);
   }
   .project-box{
     position:relative;
@@ -331,6 +338,8 @@
       grid-template-columns:1fr;
       grid-template-rows:none;
       gap:0.75rem;
+      transform:none !important;
+      transition:none !important;
     }
     .project-box{
       grid-column:auto !important;
@@ -369,37 +378,96 @@
     position:relative; z-index:3;
     min-height:calc(100vh - var(--header-h));
     display:flex; flex-direction:column; justify-content:center;
-    background:#232323; color:var(--paper);
-    border-top:1px solid rgba(255,255,255,0.2);
+    background:var(--paper); color:var(--ink);
+    border-top:1px solid rgba(23,24,28,0.1);
     padding:4rem 2rem;
   }
-  .contact-inner{ max-width:700px; margin:0; }
-  .contact h2{
+  .contact-inner{ max-width:100%; margin:0; }
+  .contact h2.contact-marquee{
+    margin:auto -2rem -4rem;
+    overflow:hidden;
+    width:auto;
+  }
+  .contact-marquee-track{
+    display:inline-flex;
+    width:max-content;
+    white-space:nowrap;
+    will-change:transform;
+  }
+  .contact-marquee-track span{
+    display:inline-block;
+    padding:0 0.6rem;
     font-family:var(--sans);
-    font-weight:400;
+    font-weight:900;
     text-transform:uppercase;
-    font-size:clamp(1.2rem, 2.8vw, 1.9rem);
+    font-size:clamp(2.5rem, 8vw, 6rem);
     letter-spacing:0.01em;
-    margin:0 0 1.25rem;
+    -webkit-text-stroke:3.5px currentColor;
+    paint-order:stroke fill;
   }
-  .contact-links{
-    display:flex; flex-wrap:wrap; gap:1.25rem;
+  .contact-boxes{
+    --box-w: 58rem;
+    --box-gap: 1.5rem;
+    display:flex;
+    gap:var(--box-gap);
+    max-width:100%;
+    margin:3.5rem -2rem 0;
+    padding-bottom:0.5rem;
+    padding-left:max(0px, calc((100vw - var(--box-w)) / 2 - 2rem));
+    padding-right:max(0px, calc((100vw - var(--box-w)) / 2 - 2rem));
+    overflow-x:auto;
+    scrollbar-width:none;
   }
-  .contact-links a{
-    color:var(--paper);
+  .contact-boxes::-webkit-scrollbar{ display:none; }
+  .contact-box{
+    background:var(--paper);
+    color:var(--ink);
     text-decoration:none;
-    font-size:0.65rem;
-    font-weight:300;
-    letter-spacing:0.05em;
+    display:flex; align-items:center;
+    flex-shrink:0;
+    width:var(--box-w);
+    min-height:34rem;
+    padding:4.5rem;
+    border:1px solid rgba(23,24,28,0.15);
+    font-family:var(--sans);
+    font-size:3.2rem;
+    font-weight:400;
+    letter-spacing:0.03em;
     text-transform:uppercase;
-    opacity:0.7;
-    transition:opacity 0.15s;
+    transition:background 0.15s, color 0.15s, transform 0.2s ease-out;
+    will-change:transform;
   }
-  .contact-links a:hover{ opacity:1; }
-
+  .contact-info{
+    flex-direction:column; align-items:flex-start; justify-content:center;
+    gap:0.6rem;
+    font-size:0.75rem;
+    opacity:0.7;
+  }
+  a.contact-box:hover{ background:var(--ink); color:var(--paper); }
   @media (max-width:600px){
     .contact{ padding:3rem 1.25rem; }
   }
+
+  .top-btn{
+    position:absolute; right:0.5rem; top:0.5rem; z-index:20;
+    display:flex; align-items:center; justify-content:center;
+    width:4.5rem; height:4.5rem;
+    background:none;
+    cursor:pointer;
+    border:none;
+    color:var(--ink);
+    opacity:0.7;
+    transition:color 0.15s, opacity 0.15s;
+  }
+  .top-btn svg{
+    width:1.8rem; height:1.8rem;
+    stroke:currentColor;
+    fill:none;
+    stroke-width:1.5;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+  .top-btn:hover{ color:var(--accent); opacity:1; }
 
   .reveal{
     opacity:0;
@@ -511,17 +579,42 @@
 
   <footer class="contact" id="contact">
     <div class="contact-inner">
-      <h2>Get In Touch</h2>
-      <div class="contact-links">
-        <a href="#">Email</a>
-        <a href="#">LinkedIn</a>
-        <a href="#">GitHub</a>
-        <a href="#">Instagram</a>
-        <a href="#">Threads</a>
-        <a href="#">X (Twitter)</a>
-        <a href="#">Facebook</a>
+      <div class="contact-boxes">
+        <div class="contact-box contact-info">
+          <span>Availability: Remote</span>
+          <span>Timezone: UTC/GMT +7 hours</span>
+          <span>City: Bangkok, Thailand</span>
+        </div>
+        <a class="contact-box" href="#">Email</a>
+        <a class="contact-box" href="#">LinkedIn</a>
+        <a class="contact-box" href="#">GitHub</a>
+        <a class="contact-box" href="#">X</a>
+        <a class="contact-box" href="#">Threads</a>
+        <a class="contact-box" href="#">Instagram</a>
+        <a class="contact-box" href="#">Read.cv</a>
       </div>
     </div>
+
+    <h2 class="contact-marquee">
+      <span class="contact-marquee-track" id="marqueeTrack">
+        <span>Get</span><span>In</span><span>Touch</span>
+        <span>Get</span><span>In</span><span>Touch</span>
+        <span>Get</span><span>In</span><span>Touch</span>
+        <span>Get</span><span>In</span><span>Touch</span>
+        <span>Get</span><span>In</span><span>Touch</span>
+        <span>Get</span><span>In</span><span>Touch</span>
+        <span>Get</span><span>In</span><span>Touch</span>
+        <span>Get</span><span>In</span><span>Touch</span>
+        <span>Get</span><span>In</span><span>Touch</span>
+        <span>Get</span><span>In</span><span>Touch</span>
+        <span>Get</span><span>In</span><span>Touch</span>
+        <span>Get</span><span>In</span><span>Touch</span>
+      </span>
+    </h2>
+
+    <button class="top-btn" aria-label="Back to top" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+      <svg viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+    </button>
   </footer>
 
   <script>
@@ -671,33 +764,34 @@
 
     (function(){
       const projects = document.getElementById('projects');
+      const projectsGrid = document.querySelector('.projects-grid');
       const header = document.querySelector('header');
       if (!projects || !header) return;
 
       const lockDuration = 1800;
       let locked = false;
       let lockTriggered = false;
-      let prevProjTop = projects.getBoundingClientRect().top;
 
       function onScroll(){
         if (locked) return;
         const headerH = header.getBoundingClientRect().height;
         const projTop = projects.getBoundingClientRect().top;
+        const isPinned = Math.abs(projTop - headerH) < 20;
 
-        const crossedIntoLock = prevProjTop > headerH && projTop <= headerH;
-        if (crossedIntoLock && !lockTriggered){
+        if (isPinned && !lockTriggered){
           lockTriggered = true;
           locked = true;
           document.body.style.overflow = 'hidden';
+          if (projectsGrid) projectsGrid.classList.add('zoomed');
           setTimeout(() => {
             locked = false;
             document.body.style.overflow = '';
           }, lockDuration);
         }
-        if (projTop > headerH + 50){
+        if (!isPinned && Math.abs(projTop - headerH) > 50){
           lockTriggered = false;
+          if (projectsGrid) projectsGrid.classList.remove('zoomed');
         }
-        prevProjTop = projTop;
       }
 
       window.addEventListener('scroll', onScroll, { passive:true });
@@ -716,6 +810,64 @@
         homeLink.textContent = names[i].text;
         homeLink.lang = names[i].lang;
       }, 1250);
+    })();
+
+    (function(){
+      const track = document.getElementById('marqueeTrack');
+      if (!track) return;
+
+      let pos = 0;
+      const speed = 1.6;
+      let halfWidth;
+
+      function measure(){
+        halfWidth = track.scrollWidth / 2;
+      }
+
+      window.addEventListener('load', measure);
+      window.addEventListener('resize', measure);
+      measure();
+
+      function animate(){
+        pos -= speed;
+        if (Math.abs(pos) >= halfWidth){
+          pos += halfWidth;
+        }
+        track.style.transform = `translateX(${pos}px)`;
+        requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+    })();
+
+    (function(){
+      const scroller = document.querySelector('.contact-boxes');
+      const boxes = document.querySelectorAll('.contact-box');
+      if (!scroller || !boxes.length) return;
+
+      let ticking = false;
+
+      function updateScale(){
+        const maxScroll = scroller.scrollWidth - scroller.clientWidth;
+        const progress = maxScroll > 0 ? Math.min(scroller.scrollLeft / maxScroll, 1) : 0;
+        const scale = 1 - progress * 0.3;
+
+        boxes.forEach(box => {
+          box.style.transform = `scale(${scale.toFixed(3)})`;
+        });
+        ticking = false;
+      }
+
+      scroller.addEventListener('scroll', () => {
+        if (!ticking){
+          requestAnimationFrame(updateScale);
+          ticking = true;
+        }
+      }, { passive:true });
+
+      window.addEventListener('resize', updateScale);
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      scroller.scrollLeft = 0;
+      updateScale();
     })();
   </script>
 </body>

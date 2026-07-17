@@ -138,10 +138,36 @@
     color:#fff;
     text-decoration:none;
     opacity:0.8;
-    transition:opacity 0.15s, transform 0.15s;
+    transition:opacity 0.15s;
   }
-  .intro-content .scroll-arrow:hover{ opacity:1; transform:translateY(3px); }
-  
+  .intro-content .scroll-arrow:hover{ opacity:1; }
+  .scroll-arrow-wrap{
+    position:relative;
+    display:inline-block;
+    width:1.5rem; height:2.1rem;
+    overflow:hidden;
+    vertical-align:middle;
+  }
+  .scroll-arrow-stack{
+    display:flex; flex-direction:column;
+    transform:translateY(0);
+    transition:transform 0.4s ease;
+  }
+  .scroll-arrow:hover .scroll-arrow-stack{ transform:translateY(-2.1rem); }
+  .scroll-arrow-stack .arrow{
+    height:2.1rem;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .scroll-arrow-stack svg{
+    width:1.5rem; height:2.1rem;
+    stroke:currentColor;
+    fill:none;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+
   .category{ padding-top:0; scroll-margin-top:8rem; }
 
   .grid{
@@ -259,22 +285,34 @@
   .top-btn{
     display:flex; align-items:center; justify-content:center;
     width:3rem; height:3rem;
-    border-radius:50%;
     background:none;
     cursor:pointer;
-    border:1px solid var(--ink);
+    border:none;
     color:var(--ink);
-    transition:background 0.15s, color 0.15s, border-color 0.15s;
+    transition:color 0.15s;
   }
+  .top-btn-wrap{
+    position:relative;
+    display:inline-block;
+    width:1.8rem; height:1.8rem;
+    overflow:hidden;
+  }
+  .top-btn-stack{
+    display:flex; flex-direction:column;
+    transform:translateY(0);
+    transition:transform 0.4s ease;
+  }
+  .top-btn:hover .top-btn-stack{ transform:translateY(-1.8rem); }
   .top-btn svg{
-    width:1.1rem; height:1.1rem;
+    width:1.8rem; height:1.8rem;
+    flex-shrink:0;
     stroke:currentColor;
     fill:none;
     stroke-width:1.5;
     stroke-linecap:round;
     stroke-linejoin:round;
   }
-  .top-btn:hover{ background:#14213D; border-color:#14213D; color:var(--paper); }
+  .top-btn:hover{ color:var(--accent); }
 
   @media (max-width:600px){
     header{ padding:1.25rem 1.25rem; }
@@ -334,7 +372,14 @@
     <div class="intro-content">
         <h1>Jewelry</h1>
         <p>From delicate everyday rings to statement necklaces, the designs blend classic elegance with a modern touch.</p>
-        <a class="scroll-arrow" href="#pieces" aria-label="Scroll down">↓</a>
+        <a class="scroll-arrow" href="#pieces" aria-label="Scroll down">
+          <span class="scroll-arrow-wrap">
+            <span class="scroll-arrow-stack">
+              <span class="arrow"><svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M19 12l-7 7-7-7"/></svg></span>
+              <span class="arrow"><svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M19 12l-7 7-7-7"/></svg></span>
+            </span>
+          </span>
+        </a>
     </div>
   </section>
 
@@ -446,7 +491,12 @@
 
   <footer>
     <button class="top-btn" aria-label="Back to top" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-      <svg viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+      <span class="top-btn-wrap">
+        <span class="top-btn-stack">
+          <svg viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+        </span>
+      </span>
     </button>
   </footer>
 
