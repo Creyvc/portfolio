@@ -540,15 +540,64 @@
   .contact-box[data-label="LinkedIn"]{
     text-transform:none;
     justify-content:center;
-    overflow:hidden;
+    color:#0A66C2;
     font-size:13rem;
     font-weight:700;
+  }
+  a.contact-box[data-label="LinkedIn"]:hover{
+    background:#0A66C2;
+    color:#fff;
+  }
+  .li-clip{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
   }
   .li-letter{
     display:inline-block;
   }
+  .contact-box[data-label="GitHub"]{
+    justify-content:center;
+  }
+  a.contact-box[data-label="GitHub"]:hover .github-icon{
+    filter:invert(1);
+  }
+  .github-icon{
+    width:11rem;
+    height:11rem;
+    image-rendering:pixelated;
+    image-rendering:crisp-edges;
+  }
   .contact-boxes.is-scrolled .contact-box[data-label="LinkedIn"]{
     font-size:9.5rem;
+  }
+  .contact-box[data-label="Resume/CV"]{
+    padding:1.5rem;
+  }
+  .resume-line{
+    position:absolute;
+    display:block;
+    font-size:2.5rem;
+    font-weight:300;
+    line-height:1;
+  }
+  .resume-line.corner-tl{ top:1.5rem; left:1.5rem; }
+  .resume-line.corner-tr{ top:1.5rem; right:1.5rem; }
+  .resume-line.corner-bl{ bottom:1.5rem; left:1.5rem; }
+  .resume-line.corner-br{ bottom:1.5rem; right:1.5rem; }
+  .contact-box[data-label="Threads"]{
+    justify-content:center;
+  }
+  a.contact-box[data-label="Threads"]:hover{
+    background:#D3D3D3;
+  }
+  .threads-icon{
+    width:22rem;
+    height:12.5rem;
+    border-radius:20%;
   }
   .contact-box[data-label="X"]{
     background:var(--paper);
@@ -567,13 +616,20 @@
   .contact-box[data-label="Email"]{
     justify-content:center;
     text-align:center;
-    overflow:hidden;
     font-size:11.5rem;
     font-weight:900;
     white-space:nowrap;
   }
   .contact-boxes.is-scrolled .contact-box[data-label="Email"]{
     font-size:8.1rem;
+  }
+  .email-clip{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
   }
   .email-glyph{
     display:inline-block;
@@ -734,13 +790,25 @@
           <div class="info-row"><span class="info-label">Timezone</span><span class="info-value">UTC/GMT +7 hours</span></div>
           <div class="info-row"><span class="info-label">City</span><span class="info-value">Bangkok, Thailand</span></div>
         </div>
-        <a class="contact-box" href="#" data-label="Email"><span class="email-glyph">Email</span></a>
-        <a class="contact-box" href="#" data-label="LinkedIn"><span class="li-letter li-i">i</span><span class="li-letter li-n">n</span></a>
-        <a class="contact-box" href="#" data-label="GitHub">GitHub</a>
+        <a class="contact-box" href="#" data-label="Email"><span class="email-clip"><span class="email-glyph">Email</span></span></a>
+        <a class="contact-box" href="#" data-label="LinkedIn"><span class="li-clip"><span class="li-letter li-i">i</span><span class="li-letter li-n">n</span></span></a>
+        <a class="contact-box" href="#" data-label="GitHub">
+          <svg class="github-icon-src" viewBox="0 0 16 16" width="256" height="256" xmlns="http://www.w3.org/2000/svg" style="display:none;">
+            <path fill="#000" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          <img class="github-icon" alt="GitHub">
+        </a>
         <a class="contact-box" href="#" data-label="X"><span class="x-glyph">X</span></a>
-        <a class="contact-box" href="#" data-label="Threads"></a>
+        <a class="contact-box" href="#" data-label="Threads">
+          <img class="threads-icon" src="logo-threads.png" alt="Threads">
+        </a>
         <a class="contact-box" href="#" data-label="Instagram"></a>
-        <a class="contact-box" href="#" data-label="Resume/CV">Resume/CV</a>
+        <a class="contact-box" href="#" data-label="Resume/CV">
+          <span class="resume-line corner-bl">RESUME</span>
+          <span class="resume-line corner-tr">RESUME</span>
+          <span class="resume-line corner-tl">CV</span>
+          <span class="resume-line corner-br">CV</span>
+        </a>
       </div>
     </div>
 
@@ -1175,6 +1243,28 @@
         requestAnimationFrame(loop);
       }
       requestAnimationFrame(loop);
+    })();
+
+    (function(){
+      const src = document.querySelector('.github-icon-src');
+      const img = document.querySelector('.github-icon');
+      if (!src || !img) return;
+
+      const pixelSize = 20;
+      const svgData = new XMLSerializer().serializeToString(src);
+      const svgUrl = 'data:image/svg+xml;base64,' + btoa(svgData);
+
+      const tempImg = new Image();
+      tempImg.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = pixelSize;
+        canvas.height = pixelSize;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(tempImg, 0, 0, pixelSize, pixelSize);
+        img.src = canvas.toDataURL('image/png');
+      };
+      tempImg.src = svgUrl;
     })();
   </script>
 </body>
