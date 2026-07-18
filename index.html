@@ -261,7 +261,7 @@
   }
   .project-box{
     position:relative;
-    border:1px solid rgba(23,24,28,0.15);
+    border:2px solid rgba(23,24,28,0.3);
     padding:1.5rem;
     display:flex; flex-direction:column; justify-content:space-between;
     color:var(--ink);
@@ -271,6 +271,17 @@
     box-shadow:0 8px 20px rgba(23,24,28,0.06);
     transition:background 0.2s, transform 0.2s, box-shadow 0.2s, opacity 0.2s;
   }
+  .corner-dot{
+    position:absolute;
+    width:6px; height:6px;
+    border-radius:50%;
+    background:currentColor;
+    pointer-events:none;
+  }
+  .corner-dot.tl{ top:-4px; left:-4px; }
+  .corner-dot.tr{ top:-4px; right:-4px; }
+  .corner-dot.bl{ bottom:-4px; left:-4px; }
+  .corner-dot.br{ bottom:-4px; right:-4px; }
   .project-box:nth-child(1){ grid-column:1/8; grid-row:1/7; transform:rotate(-1.4deg); z-index:3; }
   .project-box:nth-child(2){ grid-column:7/13; grid-row:1/5; transform:rotate(1.1deg) translateY(0.75rem); z-index:2; }
   .project-box:nth-child(3){ grid-column:2/6; grid-row:6/13; transform:rotate(1deg) translateY(-0.5rem); z-index:1; }
@@ -526,6 +537,19 @@
     50%{ background-position:100% 50%; }
     100%{ background-position:0% 50%; }
   }
+  .contact-box[data-label="LinkedIn"]{
+    text-transform:none;
+    justify-content:center;
+    overflow:hidden;
+    font-size:13rem;
+    font-weight:700;
+  }
+  .li-letter{
+    display:inline-block;
+  }
+  .contact-boxes.is-scrolled .contact-box[data-label="LinkedIn"]{
+    font-size:9.5rem;
+  }
   .contact-box[data-label="X"]{
     background:var(--paper);
     color:#000;
@@ -711,7 +735,7 @@
           <div class="info-row"><span class="info-label">City</span><span class="info-value">Bangkok, Thailand</span></div>
         </div>
         <a class="contact-box" href="#" data-label="Email"><span class="email-glyph">Email</span></a>
-        <a class="contact-box" href="#" data-label="LinkedIn">LinkedIn</a>
+        <a class="contact-box" href="#" data-label="LinkedIn"><span class="li-letter li-i">i</span><span class="li-letter li-n">n</span></a>
         <a class="contact-box" href="#" data-label="GitHub">GitHub</a>
         <a class="contact-box" href="#" data-label="X"><span class="x-glyph">X</span></a>
         <a class="contact-box" href="#" data-label="Threads"></a>
@@ -786,6 +810,16 @@
       document.querySelectorAll('a.project-box').forEach(link => {
         link.addEventListener('mouseenter', () => box.classList.add('is-viewing'));
         link.addEventListener('mouseleave', () => box.classList.remove('is-viewing'));
+      });
+    })();
+
+    (function(){
+      document.querySelectorAll('.project-box').forEach(box => {
+        ['tl', 'tr', 'bl', 'br'].forEach(corner => {
+          const dot = document.createElement('span');
+          dot.className = `corner-dot ${corner}`;
+          box.appendChild(dot);
+        });
       });
     })();
 
@@ -1032,6 +1066,33 @@
         const progress = Math.min(Math.abs(boxCenter - viewCenter) / windowDist, 1);
         const size = originalSize + progress * (bigSize - originalSize);
         glyph.style.fontSize = size.toFixed(2) + 'rem';
+      }
+
+      let ticking = false;
+      scroller.addEventListener('scroll', () => {
+        if (!ticking){ requestAnimationFrame(() => { update(); ticking = false; }); ticking = true; }
+      }, { passive:true });
+      window.addEventListener('resize', update);
+      update();
+    })();
+
+    (function(){
+      const scroller = document.querySelector('.contact-boxes');
+      const liBox = document.querySelector('.contact-box[data-label="LinkedIn"]');
+      const letterI = document.querySelector('.li-i');
+      const letterN = document.querySelector('.li-n');
+      if (!scroller || !liBox || !letterI || !letterN) return;
+
+      function update(){
+        const viewCenter = scroller.scrollLeft + scroller.clientWidth / 2;
+        const boxCenter = liBox.offsetLeft + liBox.offsetWidth / 2;
+        const windowDist = liBox.offsetWidth + 24;
+        const progress = Math.min(Math.abs(boxCenter - viewCenter) / windowDist, 1);
+
+        const maxOffset = Math.max(0, (liBox.clientWidth / 2) - (letterI.offsetWidth / 2));
+        const offset = progress * maxOffset;
+        letterI.style.transform = `translateX(${(-offset).toFixed(2)}px)`;
+        letterN.style.transform = `translateX(${offset.toFixed(2)}px)`;
       }
 
       let ticking = false;
