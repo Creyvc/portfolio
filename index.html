@@ -64,7 +64,7 @@
     width:6px; height:6px; border-radius:50%;
     background:#fff;
     flex-shrink:0;
-    animation:blink-dot 1.4s ease-in-out infinite;
+    animation:blink-dot 0.7s ease-in-out infinite;
   }
   @keyframes blink-dot{
     0%, 100%{ background:#fff; }
@@ -576,6 +576,12 @@
   }
   .contact-box[data-label="Resume/CV"]{
     padding:1.5rem;
+    background:#FFFF00;
+    color:#000;
+  }
+  a.contact-box[data-label="Resume/CV"]:hover{
+    background:#FF0000;
+    color:#B9D7D4;
   }
   .resume-line{
     position:absolute;
