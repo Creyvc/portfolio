@@ -227,15 +227,13 @@
   a.btn:hover{ background:var(--accent); border-color:var(--accent); color:var(--paper); }
 
   .projects{
-    position:sticky; top:var(--header-h);
+    position:relative;
     z-index:1;
-    isolation:isolate;
-    height:calc(100vh - var(--header-h));
+    min-height:calc(130vh - var(--header-h));
     background:var(--paper);
     display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
     gap:0.25rem;
     padding:0.5rem 2rem 2rem;
-    overflow:hidden;
     border-top:1px solid rgba(23,24,28,0.1);
   }
   .projects h2{
@@ -246,25 +244,20 @@
     letter-spacing:0.02em;
     font-size:clamp(1.8rem, 4.5vw, 3rem);
     opacity:0.9;
-    margin:0;
+    margin:2rem 0 0;
     flex-shrink:0;
   }
   .projects-grid{
     width:100%;
-    max-width:850px;
+    max-width:650px;
+    max-height:480px;
+    margin-top:4rem;
     flex:1;
     min-height:0;
     display:grid;
     grid-template-columns:repeat(12, 1fr);
     grid-template-rows:repeat(12, 1fr);
-    gap:1.5rem;
-    transform:scale(2.3);
-    transform-origin:32% 30%;
-    transition:transform 1.5s cubic-bezier(.16,1,.3,1);
-    will-change:transform;
-  }
-  .projects-grid.zoomed{
-    transform:scale(1);
+    gap:0.2rem;
   }
   .project-box{
     position:relative;
@@ -338,8 +331,6 @@
       grid-template-columns:1fr;
       grid-template-rows:none;
       gap:0.75rem;
-      transform:none !important;
-      transition:none !important;
     }
     .project-box{
       grid-column:auto !important;
@@ -428,7 +419,7 @@
     opacity:1;
   }
   .contact-boxes{
-    --box-w: 58rem;
+    --box-w: 42rem;
     --box-gap: 1.5rem;
     display:flex;
     align-items:center;
@@ -455,11 +446,11 @@
     display:flex; align-items:center;
     flex-shrink:0;
     width:var(--box-w);
-    min-height:34rem;
-    padding:4.5rem;
+    min-height:25rem;
+    padding:3.25rem;
     border:1px solid rgba(23,24,28,0.15);
     font-family:var(--sans);
-    font-size:3.2rem;
+    font-size:2.3rem;
     font-weight:400;
     letter-spacing:0.03em;
     text-transform:uppercase;
@@ -479,11 +470,13 @@
   }
   .contact-boxes.is-scrolled .contact-box{
     width:calc(var(--box-w) * 0.7);
-    min-height:23.8rem;
-    padding:3.15rem;
-    font-size:2.24rem;
+    min-height:17.5rem;
+    padding:2.28rem;
+    font-size:1.61rem;
   }
   .contact-info{
+    position:relative;
+    overflow:hidden;
     flex-direction:column; align-items:stretch; justify-content:center;
     gap:0;
     font-size:1.1rem;
@@ -493,7 +486,23 @@
     opacity:1;
     border-top:1px solid rgba(23,24,28,0.2);
   }
+  .info-circle{
+    position:absolute;
+    top:50%;
+    left:0;
+    width:30rem; height:30rem;
+    border-radius:50%;
+    background:#0000FF;
+    transform:translateY(-50%);
+    z-index:0;
+    pointer-events:none;
+  }
+  .info-row span.on-circle{
+    color:#fff;
+  }
   .info-row{
+    position:relative;
+    z-index:1;
     display:flex;
     justify-content:space-between;
     align-items:center;
@@ -503,6 +512,48 @@
   }
   .info-label{ opacity:0.55; }
   a.contact-box:hover{ background:var(--ink); color:var(--paper); }
+  .contact-box[data-label="Instagram"]{
+    background:linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D, #F56040, #F77737, #FCAF45, #FFDC80, #405DE6);
+    background-size:400% 400%;
+    animation:insta-flow 2.8s ease infinite;
+  }
+  a.contact-box[data-label="Instagram"]:hover{
+    background:linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D, #F56040, #F77737, #FCAF45, #FFDC80, #405DE6);
+    background-size:400% 400%;
+  }
+  @keyframes insta-flow{
+    0%{ background-position:0% 50%; }
+    50%{ background-position:100% 50%; }
+    100%{ background-position:0% 50%; }
+  }
+  .contact-box[data-label="X"]{
+    background:var(--paper);
+    color:#000;
+    justify-content:center;
+  }
+  a.contact-box[data-label="X"]:hover{
+    background:#000;
+    color:#fff;
+  }
+  .x-glyph{
+    font-family:'Press Start 2P', var(--sans);
+    font-size:9rem;
+    line-height:1;
+  }
+  .contact-box[data-label="Email"]{
+    justify-content:center;
+    text-align:center;
+    overflow:hidden;
+    font-size:11.5rem;
+    font-weight:900;
+    white-space:nowrap;
+  }
+  .contact-boxes.is-scrolled .contact-box[data-label="Email"]{
+    font-size:8.1rem;
+  }
+  .email-glyph{
+    display:inline-block;
+  }
   @media (max-width:600px){
     .contact{ padding:3rem 1.25rem; }
   }
@@ -654,16 +705,17 @@
       <div class="contact-progress" id="contactProgress"></div>
       <div class="contact-boxes">
         <div class="contact-box contact-info">
+          <div class="info-circle"></div>
           <div class="info-row"><span class="info-label">Availability</span><span class="info-value">Remote</span></div>
           <div class="info-row"><span class="info-label">Timezone</span><span class="info-value">UTC/GMT +7 hours</span></div>
           <div class="info-row"><span class="info-label">City</span><span class="info-value">Bangkok, Thailand</span></div>
         </div>
-        <a class="contact-box" href="#" data-label="Email">Email</a>
+        <a class="contact-box" href="#" data-label="Email"><span class="email-glyph">Email</span></a>
         <a class="contact-box" href="#" data-label="LinkedIn">LinkedIn</a>
         <a class="contact-box" href="#" data-label="GitHub">GitHub</a>
-        <a class="contact-box" href="#" data-label="X">X</a>
-        <a class="contact-box" href="#" data-label="Threads">Threads</a>
-        <a class="contact-box" href="#" data-label="Instagram">Instagram</a>
+        <a class="contact-box" href="#" data-label="X"><span class="x-glyph">X</span></a>
+        <a class="contact-box" href="#" data-label="Threads"></a>
+        <a class="contact-box" href="#" data-label="Instagram"></a>
         <a class="contact-box" href="#" data-label="Resume/CV">Resume/CV</a>
       </div>
     </div>
@@ -814,7 +866,6 @@
     (function(){
       const hero = document.querySelector('.hero');
       const projects = document.getElementById('projects');
-      const about = document.getElementById('about');
       const header = document.querySelector('header');
       if (!hero || !projects || !header) return;
 
@@ -827,12 +878,6 @@
         const projRect = projects.getBoundingClientRect();
         const heroProgress = 1 - Math.min(Math.max((projRect.top - headerH) / range, 0), 1);
         hero.style.filter = `blur(${(heroProgress * maxBlur).toFixed(2)}px)`;
-
-        if (about){
-          const aboutRect = about.getBoundingClientRect();
-          const projectsProgress = 1 - Math.min(Math.max((aboutRect.top - headerH) / range, 0), 1);
-          projects.style.filter = `blur(${(projectsProgress * maxBlur).toFixed(2)}px)`;
-        }
       }
 
       window.addEventListener('scroll', update, { passive:true });
@@ -842,41 +887,42 @@
 
     (function(){
       const projects = document.getElementById('projects');
-      const projectsGrid = document.querySelector('.projects-grid');
       const header = document.querySelector('header');
-      if (!projects || !header) return;
+      const boxes = document.querySelectorAll('.project-box');
+      if (!projects || !header || !boxes.length) return;
 
-      const lockDuration = 1500;
-      let locked = false;
-      let lockTriggered = false;
+      const dirs = [
+        { x: -1, y: 0, base: 'rotate(-1.4deg)' },
+        { x: 1, y: 0, base: 'rotate(1.1deg) translateY(0.75rem)' },
+        { x: -1, y: 1, base: 'rotate(1deg) translateY(-0.5rem)' },
+        { x: 1, y: 1, base: 'rotate(-0.7deg)' }
+      ];
+      const distance = 500;
 
-      function onScroll(){
-        if (locked) return;
+      function update(){
         const headerH = header.getBoundingClientRect().height;
-        const projTop = projects.getBoundingClientRect().top;
-        const isPinned = Math.abs(projTop - headerH) < 20;
+        const range = window.innerHeight - headerH;
+        const projRect = projects.getBoundingClientRect();
 
-        if (isPinned && !lockTriggered){
-          lockTriggered = true;
-          locked = true;
-          document.body.style.overflow = 'hidden';
-          if (projectsGrid) projectsGrid.classList.add('zoomed');
-          setTimeout(() => {
-            locked = false;
-            document.body.style.overflow = '';
-          }, lockDuration);
-        }
-        if (!isPinned && Math.abs(projTop - headerH) > 50){
-          lockTriggered = false;
-          if (projectsGrid) projectsGrid.classList.remove('zoomed');
-        }
+        const entryProgress = 1 - Math.min(Math.max((projRect.top - headerH) / range, 0), 1);
+        const exitProgress = Math.min(Math.max((headerH - projRect.top) / range, 0), 1);
+
+        boxes.forEach((box, i) => {
+          const dir = dirs[i] || dirs[0];
+          const offset = (1 - entryProgress) * distance + exitProgress * distance;
+          const dx = dir.x * offset;
+          const dy = dir.y * offset;
+          box.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) ${dir.base}`;
+        });
       }
 
-      window.addEventListener('scroll', onScroll, { passive:true });
+      window.addEventListener('scroll', update, { passive:true });
+      window.addEventListener('resize', update);
+      update();
     })();
 
     (function(){
-      const homeLink = document.getElementById('home-link');
+     const homeLink = document.getElementById('home-link');
       const names = [
         { text: '[VUTHY CHEAM]', lang: 'en' },
         { text: '[ជាម វុឌ្ឍី]', lang: 'km' },
@@ -968,6 +1014,106 @@
       }, { passive:true });
       window.addEventListener('resize', updateActive);
       updateActive();
+    })();
+
+    (function(){
+      const scroller = document.querySelector('.contact-boxes');
+      const xBox = document.querySelector('.contact-box[data-label="X"]');
+      const glyph = document.querySelector('.x-glyph');
+      if (!scroller || !xBox || !glyph) return;
+
+      const originalSize = 9;
+      const bigSize = 22;
+
+      function update(){
+        const viewCenter = scroller.scrollLeft + scroller.clientWidth / 2;
+        const boxCenter = xBox.offsetLeft + xBox.offsetWidth / 2;
+        const windowDist = xBox.offsetWidth + 24;
+        const progress = Math.min(Math.abs(boxCenter - viewCenter) / windowDist, 1);
+        const size = originalSize + progress * (bigSize - originalSize);
+        glyph.style.fontSize = size.toFixed(2) + 'rem';
+      }
+
+      let ticking = false;
+      scroller.addEventListener('scroll', () => {
+        if (!ticking){ requestAnimationFrame(() => { update(); ticking = false; }); ticking = true; }
+      }, { passive:true });
+      window.addEventListener('resize', update);
+      update();
+    })();
+
+    (function(){
+      const scroller = document.querySelector('.contact-boxes');
+      const emailBox = document.querySelector('.contact-box[data-label="Email"]');
+      const glyph = document.querySelector('.email-glyph');
+      if (!scroller || !emailBox || !glyph) return;
+
+      const totalChars = 5;
+      const visibleChars = 2;
+
+      function update(){
+        const viewCenter = scroller.scrollLeft + scroller.clientWidth / 2;
+        const boxCenter = emailBox.offsetLeft + emailBox.offsetWidth / 2;
+        const windowDist = emailBox.offsetWidth + 24;
+        const signedDist = boxCenter - viewCenter;
+        const progress = Math.max(-1, Math.min(1, signedDist / windowDist));
+
+        const glyphWidth = glyph.offsetWidth;
+        const charWidth = glyphWidth / totalChars;
+        const hideWidth = glyphWidth - visibleChars * charWidth;
+        const sideGap = (emailBox.clientWidth - glyphWidth) / 2;
+
+        const translateX = -progress * (hideWidth + sideGap);
+        glyph.style.transform = `translateX(${translateX.toFixed(2)}px)`;
+      }
+
+      let ticking = false;
+      scroller.addEventListener('scroll', () => {
+        if (!ticking){ requestAnimationFrame(() => { update(); ticking = false; }); ticking = true; }
+      }, { passive:true });
+      window.addEventListener('resize', update);
+      update();
+    })();
+
+    (function(){
+      const scroller = document.querySelector('.contact-boxes');
+      const infoBox = document.querySelector('.contact-info');
+      const circle = document.querySelector('.info-circle');
+      if (!scroller || !infoBox || !circle) return;
+
+      const maxDiameter = 480;
+      const minDiameter = 160;
+      const textEls = document.querySelectorAll('.info-row .info-label, .info-row .info-value');
+
+      function update(){
+        const boxWidth = infoBox.offsetWidth;
+        const gapPx = parseFloat(getComputedStyle(scroller).columnGap || getComputedStyle(scroller).gap) || 24;
+        const maxDist = boxWidth + gapPx;
+        const progress = Math.min(Math.max(scroller.scrollLeft / maxDist, 0), 1);
+
+        const diameter = maxDiameter - progress * (maxDiameter - minDiameter);
+        const radius = diameter / 2;
+        const startLeft = -radius;
+        const endLeft = boxWidth - diameter;
+        const left = startLeft + progress * (endLeft - startLeft);
+        circle.style.width = diameter + 'px';
+        circle.style.height = diameter + 'px';
+        circle.style.left = left + 'px';
+
+        const circleRect = circle.getBoundingClientRect();
+        textEls.forEach(el => {
+          const r = el.getBoundingClientRect();
+          const overlap = r.left < circleRect.right && r.right > circleRect.left &&
+                           r.top < circleRect.bottom && r.bottom > circleRect.top;
+          el.classList.toggle('on-circle', overlap);
+        });
+      }
+
+      function loop(){
+        update();
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
     })();
   </script>
 </body>

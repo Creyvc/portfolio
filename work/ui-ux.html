@@ -62,11 +62,11 @@
 
   .split{
     display:flex;
-    min-height:calc(100vh - var(--header-h));
+    height:calc(100vh - var(--header-h));
   }
   .side-panel{
     order:2;
-    flex:1.6;
+    flex:2.2;
     background:var(--panel);
   }
   .content{ order:1; }
@@ -74,6 +74,7 @@
     flex:1;
     padding:3rem 3.5rem 4rem;
     display:flex; flex-direction:column;
+    overflow-y:auto;
   }
   .work-list{
     display:flex; flex-direction:column;
@@ -238,14 +239,6 @@
         <a class="work-item" href="#">
           <div class="work-item-top">
             <span class="work-title">Project Two</span>
-            <span class="work-rule"></span>
-            <span class="work-year"><span class="dash">—</span><svg class="arrow" viewBox="0 0 24 24"><path d="M2 12h19"/><path d="M14 5l7 7-7 7"/></svg></span>
-          </div>
-        </a>
-
-        <a class="work-item" href="#">
-          <div class="work-item-top">
-            <span class="work-title">Project Three</span>
             <span class="work-rule"></span>
             <span class="work-year"><span class="dash">—</span><svg class="arrow" viewBox="0 0 24 24"><path d="M2 12h19"/><path d="M14 5l7 7-7 7"/></svg></span>
           </div>
