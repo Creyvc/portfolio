@@ -443,6 +443,7 @@
     padding-right:max(0px, calc((100vw - var(--box-w)) / 2 - 2rem));
     overflow-x:auto;
     scrollbar-width:none;
+    scroll-snap-type:x mandatory;
     transition:transform 0.4s ease-out;
   }
   .contact-boxes::-webkit-scrollbar{ display:none; }
@@ -451,6 +452,7 @@
   }
   .contact-box{
     position:relative;
+    scroll-snap-align:center;
     background:var(--paper);
     color:var(--ink);
     text-decoration:none;
