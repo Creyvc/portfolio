@@ -511,38 +511,6 @@
       27px 27px 0 var(--accent),
       28px 28px 0 var(--accent);
   }
-  .scroll-cta{
-    position:absolute;
-    right:2rem; bottom:5rem;
-    display:inline-flex; flex-direction:row; align-items:center; gap:0.8rem;
-    font-family:'Press Start 2P', var(--sans);
-    font-size:0.75rem;
-    letter-spacing:0.05em;
-    text-transform:uppercase;
-    color:var(--ink);
-    opacity:0.7;
-    text-decoration:none;
-    transition:opacity 0.15s, color 0.15s;
-  }
-  .scroll-cta:hover{ opacity:1; color:var(--accent); }
-  .arrow-wrap{
-    position:relative;
-    display:inline-block;
-    width:1.4em; height:1.4em;
-    overflow:hidden;
-    vertical-align:middle;
-    font-size:1.4rem;
-  }
-  .arrow-stack{
-    display:flex; flex-direction:column;
-    transform:translateY(-1.4em);
-    transition:transform 0.4s ease;
-  }
-  .scroll-cta:hover .arrow-stack{ transform:translateY(0); }
-  .arrow-stack .arrow{
-    height:1.4em; line-height:1.4em;
-    display:block;
-  }
   a.btn{
     text-decoration:none;
     font-size:0.7rem;
@@ -770,11 +738,24 @@
     justify-content:center;
     gap:1.1rem;
   }
+  .cartoon-eyes .caption-row{
+    display:flex;
+    align-items:center;
+    gap:1.5rem;
+    transform:translateX(4rem);
+  }
+  .cartoon-eyes .woody-img{
+    width:5rem;
+    height:6.8rem;
+    object-fit:contain;
+    flex-shrink:0;
+    transform:translate(-0.75rem, -0.2rem);
+  }
   .cartoon-eyes .eyes-caption{
-    font-family:var(--sans);
-    font-size:2.6rem;
+    font-family:'Boogaloo', var(--sans);
+    font-size:3.2rem;
     font-weight:400;
-    line-height:1.5;
+    line-height:1.20;
     text-align:center;
     color:var(--ink);
     margin:0;

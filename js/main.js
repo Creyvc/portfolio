@@ -228,7 +228,7 @@
       const divider = document.getElementById('vDivider');
 
       document.addEventListener('mousemove', (e) => {
-        if (!e.target.closest('.hero') || e.target.closest('.scroll-cta')) return;
+        if (!e.target.closest('.hero')) return;
 
         if (divider){
           const dRect = divider.getBoundingClientRect();
