@@ -2,6 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>
+(function(){
+  var ua = navigator.userAgent;
+  var isMobileUA = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  var isTouchMac = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  if (isMobileUA || isTouchMac){
+    window.location.replace('../../desktop-only.html');
+  }
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI & Data Science — Vuthy Cheam</title>
 <link rel="icon" type="image/png" href="../../assets/icons/favicon.png?v=7">
@@ -20,6 +30,7 @@
     background:var(--paper); color:var(--ink);
     font-family:var(--sans);
     font-weight:300;
+    padding-top:var(--header-h);
   }
   .cursor-box{
     position:fixed;
@@ -30,24 +41,339 @@
     border-radius:50%;
     pointer-events:none;
     z-index:9998;
+    display:flex; align-items:center; justify-content:center;
     transform:translate(-50%, -50%);
+    transition:width 0.25s ease, height 0.25s ease, border-radius 0.25s ease, background 0.25s ease;
   }
-  header{
-    position:sticky; top:0; z-index:10;
-    min-height:var(--header-h);
-    display:flex; justify-content:space-between; align-items:center;
-    padding:0.6rem 2rem;
+  .cursor-box.is-menu{
+    width:1.7rem; height:1.7rem;
+    background:transparent;
+    border-radius:0;
+    mix-blend-mode:normal;
+  }
+  .cursor-corner{
+    position:absolute;
+    width:5px; height:5px;
+    border-radius:50%;
+    background:#000;
+    opacity:0;
+    transition:opacity 0.2s ease;
+  }
+  .cursor-box.is-menu .cursor-corner{ opacity:1; }
+  .cursor-corner.tl{ top:-4px; left:-4px; }
+  .cursor-corner.tr{ top:-4px; right:-4px; }
+  .cursor-corner.bl{ bottom:-4px; left:-4px; }
+  .cursor-corner.br{ bottom:-4px; right:-4px; }
+
+  .home-cluster{
+    display:flex; align-items:center;
+    gap:2.75rem;
+  }
+  .v-logo{
+    position:relative;
+    width:0.9rem; height:1.03rem;
+    flex-shrink:0;
+    margin-left:-0.7rem;
+    cursor:pointer;
+  }
+  .v-logo .menu-label{
+    position:absolute;
+    left:50%; top:50%;
+    transform:translate(-50%, -50%) scale(0.7);
+    font-family:var(--sans);
+    font-weight:300;
+    font-size:0.7rem;
+    line-height:0.85;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    text-align:center;
+    color:var(--ink);
+    white-space:nowrap;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.25s ease, transform 0.25s ease;
+  }
+  .v-logo .menu-label span{ display:block; }
+  .v-logo:hover .menu-label{
+    opacity:1;
+    transform:translate(-50%, -50%) scale(1);
+  }
+  .v-logo .menu-lines{
+    position:absolute;
+    left:50%; top:50%;
+    width:0.6rem;
+    transform:translate(-50%, -50%) scale(0.7);
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    opacity:0;
+    pointer-events:none;
+    animation:v-swipe-lines 3.5s ease-in-out infinite;
+  }
+  .v-logo .menu-lines span{
+    display:block;
+    height:1.3px;
+    background:#000;
+  }
+  .v-logo:hover .menu-lines{
+    animation:none;
+    opacity:0;
+  }
+  body.menu-open .v-logo .menu-lines{
+    animation:none;
+    opacity:0;
+  }
+  @keyframes v-swipe-lines{
+    0%, 35%{ opacity:0; transform:translate(-50%, -50%) scale(0.7); }
+    50%, 85%{ opacity:1; transform:translate(-50%, -50%) scale(1); }
+    100%{ opacity:0; transform:translate(-50%, -50%) scale(0.7); }
+  }
+  .v-logo .px{
+    position:absolute;
+    width:calc(100% / 7);
+    height:calc(100% / 8);
+    background:#000;
+    transition:transform 0.35s cubic-bezier(.4,0,.2,1);
+    animation:v-swipe-px 3.5s ease-in-out infinite;
+  }
+  .v-logo:hover .px{
+    animation:none;
+    opacity:0;
+    transform:translate(var(--dx), var(--dy)) scale(0.2);
+  }
+  body.menu-open .v-logo .px{
+    animation:none;
+    opacity:0;
+  }
+  @keyframes v-swipe-px{
+    0%, 35%{ transform:translate(0, 0) scale(1); }
+    50%, 85%{ transform:translate(var(--dx), var(--dy)) scale(0.2); }
+    100%{ transform:translate(0, 0) scale(1); }
+  }
+  .v-logo-close{
+    position:absolute;
+    left:50%; top:50%;
+    width:5rem; height:2.4rem;
+    transform:translate(-50%, -50%) scale(0.5);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.25s ease, transform 0.25s ease;
+  }
+  .v-logo-close .close-text{
+    font-family:var(--sans);
+    font-weight:500;
+    font-size:0.7rem;
+    letter-spacing:0.01em;
+    text-transform:uppercase;
+    color:var(--ink);
+    white-space:nowrap;
+  }
+  body.menu-open .v-logo .menu-label{ opacity:0 !important; }
+  body.menu-open .v-logo-close{
+    opacity:1;
+    transform:translate(-50%, -50%) scale(1);
+  }
+
+  .v-divider{
+    position:fixed;
+    top:0;
+    width:1px;
+    background:#fff;
+    mix-blend-mode:difference;
+    z-index:9996;
+    pointer-events:none;
+  }
+
+  body.menu-open, body.menu-open *{
+    cursor:url("../../assets/icons/mac-cursor.svg") 2 2, auto;
+  }
+  body.menu-open .cursor-box{ display:none; }
+  body.menu-open .menu-image-box:hover,
+  body.menu-open .menu-image-box:hover *,
+  body.menu-open .menu-scatter:hover,
+  body.menu-open .menu-scatter:hover *,
+  body.menu-open .v-logo:hover,
+  body.menu-open .v-logo:hover *{
+    cursor:url("../../assets/icons/mac-hand-cursor.png") 13 8, pointer;
+  }
+
+  .menu-overlay{
+    position:fixed;
+    inset:0;
+    z-index:9990;
+    background:rgba(23,24,28,0.4);
+    backdrop-filter:blur(4px);
+    -webkit-backdrop-filter:blur(4px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    visibility:hidden;
+    transition:opacity 0.3s ease, visibility 0.3s ease;
+  }
+  .menu-overlay.is-open{
+    opacity:1;
+    visibility:visible;
+  }
+  .menu-panel{
+    width:100%;
+    height:100%;
     background:var(--paper);
-    border-bottom:1px solid rgba(23,24,28,0.1);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    transform:scale(0.9);
+    transition:transform 0.3s ease;
+  }
+  .menu-panel img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    filter:contrast(1.08) saturate(1.15);
+    transform:scale(1.8);
+  }
+  .menu-overlay.is-open .menu-panel{
+    transform:scale(1);
+  }
+  .menu-scatter{
+    position:absolute;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:0.4rem;
+  }
+  .menu-scatter img{
+    object-fit:contain;
+    border-radius:0.15rem;
+    box-shadow:0 8px 32px rgba(0,0,0,0.25);
+    transition:transform 0.2s ease;
+    transform-origin:center bottom;
+  }
+  .menu-scatter:hover img{
+    transform:scale(1.15) !important;
+    border:7px solid rgba(255,255,255,0.35);
+    box-shadow:0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.5);
+  }
+  .menu-scatter-label{
+    font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+    font-weight:700;
+    font-size:0.58rem;
+    letter-spacing:0.02em;
+    text-transform:uppercase;
+    color:#fff;
+    text-shadow:0 1px 3px rgba(0,0,0,0.6);
+    white-space:nowrap;
+    padding:0.22rem 0.55rem;
+    border-radius:0.2rem;
+    background:transparent;
+    transition:background 0.2s ease;
+  }
+  .menu-money:hover .menu-scatter-label,
+  .menu-cat1:hover .menu-scatter-label,
+  .menu-cat2:hover .menu-scatter-label,
+  .menu-dog:hover .menu-scatter-label{ background:#2A5FDA; }
+  .menu-money{ left:27%; top:28%; }
+  .menu-money img{ width:5.5rem; height:5.5rem; transform:none; filter:none; }
+  .menu-cat1{ right:39%; top:28%; }
+  .menu-cat1 img{ width:5.5rem; height:5.5rem; transform:none; filter:none; }
+  .menu-cat2{ left:44%; bottom:36%; transform:translateX(-50%); }
+  .menu-cat2 img{ width:auto; height:auto; max-width:8rem; max-height:8rem; transform:none; filter:none; }
+  .menu-dog{ right:26%; bottom:32%; }
+  .menu-dog img{ width:5.5rem; height:5.5rem; transform:none; filter:none; }
+  .menu-image-box{
+    position:absolute;
+    left:50%; bottom:2.5rem;
+    width:8.5rem; height:4rem;
+    transform:translateX(-50%);
+    border-radius:1rem;
+    background:rgba(255,255,255,0.25);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    box-shadow:0 8px 32px rgba(0,0,0,0.15);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:1.6rem;
+    overflow:hidden;
+  }
+  .menu-image-box img{
+    height:1.75rem;
+    width:auto;
+    object-fit:contain;
+  }
+
+  header{
+    position:fixed; top:0; left:0; width:100%; z-index:9996;
+    min-height:var(--header-h);
+    display:flex; justify-content:space-between;
+    align-items:center;
+    padding:0.6rem 2rem;
+    background:rgba(255,255,255,0.35);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    box-sizing:border-box;
+  }
+  .h-bottom-line{
+    position:fixed;
+    left:0;
+    width:100%;
+    height:1px;
+    background:#fff;
+    mix-blend-mode:difference;
+    z-index:9996;
+    pointer-events:none;
   }
   header a{ color:var(--ink); text-decoration:none; }
-  .home-link{ font-family:var(--sans); font-weight:400; font-size:0.8rem; letter-spacing:0.02em; }
-  nav{ display:flex; gap:2.5rem; font-size:0.7rem; font-weight:200; letter-spacing:0.03em; text-transform:uppercase; }
-  nav a{ opacity:0.6; transition:opacity 0.15s; }
-  nav a:hover, nav a.current{ opacity:1; }
-  nav a::before{ content:'['; opacity:0; transition:opacity 0.15s; }
-  nav a::after{ content:']'; opacity:0; transition:opacity 0.15s; }
-  nav a:hover::before, nav a:hover::after{ opacity:1; }
+  .home-link{
+    font-family:var(--sans);
+    font-weight:400;
+    font-size:0.8rem;
+    letter-spacing:0.02em;
+    white-space:nowrap;
+  }
+  .header-right{
+    display:flex; align-items:center; gap:1.25rem;
+  }
+  .page-title{
+    font-family:var(--sans);
+    font-size:0.7rem;
+    font-weight:400;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    opacity:0.6;
+    white-space:nowrap;
+  }
+  .return-link{
+    font-family:var(--sans);
+    font-size:0.7rem;
+    font-weight:400;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    color:var(--ink);
+    text-decoration:none;
+    opacity:0.7;
+    white-space:nowrap;
+    transition:opacity 0.15s;
+  }
+  .return-link:hover{ opacity:1; }
+  .page-title::before, .page-title::after,
+  .return-link::before, .return-link::after{
+    content:'';
+    opacity:0;
+    transition:opacity 0.15s;
+  }
+  .page-title::before, .return-link::before{ content:'['; }
+  .page-title::after, .return-link::after{ content:']'; }
+  .header-right:hover .page-title::before,
+  .header-right:hover .page-title::after,
+  .return-link:hover::before,
+  .return-link:hover::after{
+    opacity:1;
+  }
 
   .placeholder{
     display:flex; align-items:center; justify-content:center;
@@ -92,7 +418,12 @@
 </head>
 <body>
 
-  <div class="cursor-box"></div>
+  <div class="cursor-box">
+    <span class="cursor-corner tl"></span>
+    <span class="cursor-corner tr"></span>
+    <span class="cursor-corner bl"></span>
+    <span class="cursor-corner br"></span>
+  </div>
 
   <div class="loader" id="loader">
     <div class="loader-rows">
@@ -101,12 +432,48 @@
   </div>
 
   <header>
-    <a class="home-link" href="../../index.html">[VUTHY CHEAM]</a>
-    <nav>
-      <a class="current" href="ai-data-science.html">AI & Data</a>
-      <a href="../../index.html#projects" id="home-nav-link">Home</a>
-    </nav>
+    <div class="home-cluster">
+      <span class="v-logo" id="vLogo">
+        <span class="v-logo-close">
+          <span class="close-text">Close</span>
+        </span>
+      </span>
+      <a class="home-link" href="../../index.html" id="home-link">[VUTHY CHEAM]</a>
+    </div>
+    <div class="header-right">
+      <span class="page-title">AI &amp; Data Science</span>
+      <a class="return-link" id="returnLink" href="../../index.html#projects">Return</a>
+    </div>
   </header>
+
+  <div class="v-divider" id="vDivider"></div>
+  <div class="h-bottom-line" id="hBottomLine"></div>
+
+  <div class="menu-overlay" id="menuOverlay">
+    <div class="menu-panel">
+      <img src="../../assets/images/menu/macbook-wallpaper6.jpg" alt="">
+      <div class="menu-scatter menu-money">
+        <img src="../../assets/images/menu/money.jpg" alt="">
+        <span class="menu-scatter-label">Home</span>
+      </div>
+      <div class="menu-scatter menu-cat1">
+        <img src="../../assets/images/menu/cat1.jpg" alt="">
+        <span class="menu-scatter-label">Contact</span>
+      </div>
+      <div class="menu-scatter menu-cat2">
+        <img src="../../assets/images/menu/cat2.jpg" alt="">
+        <span class="menu-scatter-label">About Me</span>
+      </div>
+      <div class="menu-scatter menu-dog">
+        <img src="../../assets/images/menu/dog.jpg" alt="">
+        <span class="menu-scatter-label">Projects</span>
+      </div>
+      <div class="menu-image-box">
+        <img src="../../assets/images/menu/finder.webp" alt="">
+        <img src="../../assets/images/menu/setting.png" alt="">
+      </div>
+    </div>
+  </div>
 
   <section class="placeholder">
     <h1>IN PROGRESS</h1>
@@ -114,25 +481,147 @@
 
   <script>
     (function(){
+      const pattern = [
+        [1,0,0,0,0,0,1],
+        [1,0,0,0,0,0,1],
+        [0,1,0,0,0,1,0],
+        [0,1,0,0,0,1,0],
+        [0,0,1,0,1,0,0],
+        [0,0,1,0,1,0,0],
+        [0,0,0,1,0,0,0],
+        [0,0,0,1,0,0,0]
+      ];
+      const cols = 7, rows = 8;
+      const logo = document.getElementById('vLogo');
+      if (!logo) return;
+
+      const centerCol = (cols - 1) / 2;
+      const centerRow = (rows - 1) / 2;
+
+      pattern.forEach((rowArr, r) => {
+        rowArr.forEach((val, c) => {
+          if (!val) return;
+          const px = document.createElement('span');
+          px.className = 'px';
+          px.style.left = (c / cols * 100) + '%';
+          px.style.top = (r / rows * 100) + '%';
+          px.style.setProperty('--dx', (centerCol - c) * 100 + '%');
+          px.style.setProperty('--dy', (centerRow - r) * 100 + '%');
+          logo.appendChild(px);
+        });
+      });
+
+      const label = document.createElement('span');
+      label.className = 'menu-label';
+      label.innerHTML = '<span>ME</span><span>NU</span>';
+      logo.appendChild(label);
+
+      const lines = document.createElement('span');
+      lines.className = 'menu-lines';
+      lines.innerHTML = '<span></span><span></span><span></span>';
+      logo.appendChild(lines);
+    })();
+
+    (function(){
+      const divider = document.getElementById('vDivider');
+      const logo = document.getElementById('vLogo');
+      const nameEl = document.getElementById('home-link');
+      if (!divider || !logo || !nameEl) return;
+
+      function positionDivider(){
+        const logoRect = logo.getBoundingClientRect();
+        const nameRect = nameEl.getBoundingClientRect();
+        const x = (logoRect.right + nameRect.left) / 2;
+        divider.style.left = x + 'px';
+        divider.style.height = window.innerHeight + 'px';
+      }
+      positionDivider();
+      window.addEventListener('resize', positionDivider);
+      window.addEventListener('load', positionDivider);
+      setTimeout(positionDivider, 300);
+    })();
+
+    (function(){
+      const line = document.getElementById('hBottomLine');
+      const header = document.querySelector('header');
+      if (!line || !header) return;
+
+      function positionLine(){
+        const rect = header.getBoundingClientRect();
+        line.style.top = rect.bottom + 'px';
+      }
+      positionLine();
+      window.addEventListener('resize', positionLine);
+      window.addEventListener('load', positionLine);
+      setTimeout(positionLine, 300);
+    })();
+
+    (function(){
       const box = document.querySelector('.cursor-box');
       document.addEventListener('mousemove', (e) => {
         box.style.left = e.clientX + 'px';
         box.style.top = e.clientY + 'px';
       });
+
+      const vLogo = document.getElementById('vLogo');
+      if (vLogo){
+        vLogo.addEventListener('mouseenter', () => box.classList.add('is-menu'));
+        vLogo.addEventListener('mouseleave', () => box.classList.remove('is-menu'));
+      }
     })();
-  </script>
 
-  <script>
     (function(){
+      const vLogo = document.getElementById('vLogo');
+      const overlay = document.getElementById('menuOverlay');
       const loader = document.getElementById('loader');
-      const homeLink = document.getElementById('home-nav-link');
+      if (!vLogo || !overlay) return;
 
-      homeLink.addEventListener('click', (e) => {
-        e.preventDefault();
+      vLogo.addEventListener('click', () => {
+        overlay.classList.toggle('is-open');
+        document.body.classList.toggle('menu-open', overlay.classList.contains('is-open'));
+      });
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay){
+          overlay.classList.remove('is-open');
+          document.body.classList.remove('menu-open');
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape'){
+          overlay.classList.remove('is-open');
+          document.body.classList.remove('menu-open');
+        }
+      });
+
+      function goToHome(hash){
+        overlay.classList.remove('is-open');
+        document.body.classList.remove('menu-open');
         loader.classList.add('is-active');
         requestAnimationFrame(() => loader.classList.add('is-covering'));
-        setTimeout(() => { window.location.href = homeLink.href; }, 580);
-      });
+        setTimeout(() => {
+          window.location.href = '../../index.html' + (hash ? '#' + hash : '');
+        }, 580);
+      }
+
+      function wireNavBox(selector, hash){
+        const box = document.querySelector(selector);
+        if (!box) return;
+        box.style.cursor = 'pointer';
+        box.addEventListener('click', () => goToHome(hash));
+      }
+
+      wireNavBox('.menu-money', '');
+      wireNavBox('.menu-dog', 'projects');
+      wireNavBox('.menu-cat2', 'about');
+      wireNavBox('.menu-cat1', 'contact');
+
+      const returnLink = document.getElementById('returnLink');
+      if (returnLink){
+        returnLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          goToHome('projects');
+        });
+      }
     })();
   </script>
 

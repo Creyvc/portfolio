@@ -2,6 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>
+(function(){
+  var ua = navigator.userAgent;
+  var isMobileUA = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  var isTouchMac = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  if (isMobileUA || isTouchMac){
+    window.location.replace('desktop-only.html');
+  }
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vuthy Cheam</title>
 <link rel="icon" type="image/png" href="assets/icons/favicon.png?v=7">
