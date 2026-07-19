@@ -461,7 +461,7 @@
   }
 
   .hero{
-    position:sticky; top:var(--header-h);
+    position:sticky; top:0;
     z-index:0;
     isolation:isolate;
     background:var(--paper);
@@ -471,45 +471,10 @@
     overflow:hidden;
     padding:2rem;
   }
-  .big-name{
-    font-family:'Press Start 2P', var(--sans);
-    font-weight:400;
-    text-transform:uppercase;
-    font-size:clamp(4.2rem, 17vw, 13.5rem);
-    line-height:1.5;
-    letter-spacing:0.15em;
-    color:var(--ink);
-    text-align:center;
-    margin:-8.5rem 0 0 5rem;
-    text-shadow:
-      1px 1px 0 var(--accent),
-      2px 2px 0 var(--accent),
-      3px 3px 0 var(--accent),
-      4px 4px 0 var(--accent),
-      5px 5px 0 var(--accent),
-      6px 6px 0 var(--accent),
-      7px 7px 0 var(--accent),
-      8px 8px 0 var(--accent),
-      9px 9px 0 var(--accent),
-      10px 10px 0 var(--accent),
-      11px 11px 0 var(--accent),
-      12px 12px 0 var(--accent),
-      13px 13px 0 var(--accent),
-      14px 14px 0 var(--accent),
-      15px 15px 0 var(--accent),
-      16px 16px 0 var(--accent),
-      17px 17px 0 var(--accent),
-      18px 18px 0 var(--accent),
-      19px 19px 0 var(--accent),
-      20px 20px 0 var(--accent),
-      21px 21px 0 var(--accent),
-      22px 22px 0 var(--accent),
-      23px 23px 0 var(--accent),
-      24px 24px 0 var(--accent),
-      25px 25px 0 var(--accent),
-      26px 26px 0 var(--accent),
-      27px 27px 0 var(--accent),
-      28px 28px 0 var(--accent);
+  #heroDotGrid .dot{
+    background:#555555;
+    width:2.5px; height:2.5px;
+    margin:-1.25px 0 0 -1.25px;
   }
   a.btn{
     text-decoration:none;
