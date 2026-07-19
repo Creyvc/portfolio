@@ -97,6 +97,38 @@
     z-index:9996;
     pointer-events:none;
   }
+  .scroll-track{
+    position:fixed;
+    left:1.25rem;
+    top:8rem;
+    bottom:8rem;
+    width:1px;
+    background:rgba(23,24,28,0.15);
+    z-index:9995;
+    pointer-events:none;
+  }
+  body.menu-open .scroll-track{
+    display:none;
+  }
+  .scroll-thumb{
+    position:absolute;
+    left:50%;
+    top:0;
+    width:14px; height:14px;
+    border-radius:50%;
+    background:var(--paper);
+    border:1px solid rgba(23,24,28,0.35);
+    transform:translate(-50%, -50%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .scroll-thumb::after{
+    content:'';
+    width:5px; height:5px;
+    border-radius:50%;
+    background:#000;
+  }
   .v-logo .px{
     position:absolute;
     width:calc(100% / 7);
@@ -133,9 +165,9 @@
   }
   .v-logo-close .close-text{
     font-family:var(--sans);
-    font-weight:300;
+    font-weight:500;
     font-size:0.7rem;
-    letter-spacing:0.08em;
+    letter-spacing:0.01em;
     text-transform:uppercase;
     color:var(--ink);
     white-space:nowrap;
@@ -147,6 +179,20 @@
     transform:translate(-50%, -50%) scale(1);
   }
 
+  body.menu-open, body.menu-open *{
+    cursor:url("assets/icons/mac-cursor.svg") 2 2, auto;
+  }
+  body.menu-open .cursor-box{
+    display:none;
+  }
+  body.menu-open .menu-image-box:hover,
+  body.menu-open .menu-image-box:hover *,
+  body.menu-open .menu-scatter:hover,
+  body.menu-open .menu-scatter:hover *,
+  body.menu-open .v-logo:hover,
+  body.menu-open .v-logo:hover *{
+    cursor:url("assets/icons/mac-hand-cursor.png") 13 8, pointer;
+  }
   .menu-overlay{
     position:fixed;
     inset:0;
@@ -184,6 +230,99 @@
     filter:contrast(1.08) saturate(1.15);
     transform:scale(1.8);
   }
+  .menu-scatter{
+    position:absolute;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:0.4rem;
+  }
+  .menu-scatter img{
+    object-fit:contain;
+    border-radius:0.15rem;
+    box-shadow:0 8px 32px rgba(0,0,0,0.25);
+    transition:transform 0.2s ease;
+    transform-origin:center bottom;
+  }
+  .menu-scatter:hover img{
+    transform:scale(1.15) !important;
+    border:7px solid rgba(255,255,255,0.35);
+    box-shadow:0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.5);
+  }
+  .menu-scatter-label{
+    font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+    font-weight:700;
+    font-size:0.58rem;
+    letter-spacing:0.02em;
+    text-transform:uppercase;
+    color:#fff;
+    text-shadow:0 1px 3px rgba(0,0,0,0.6);
+    white-space:nowrap;
+    padding:0.22rem 0.55rem;
+    border-radius:0.2rem;
+    background:transparent;
+    transition:background 0.2s ease;
+  }
+  .menu-money:hover .menu-scatter-label,
+  .menu-cat1:hover .menu-scatter-label,
+  .menu-cat2:hover .menu-scatter-label,
+  .menu-dog:hover .menu-scatter-label{ background:#2A5FDA; }
+  .menu-money{
+    left:27%; top:28%;
+  }
+  .menu-money img{
+    width:5.5rem; height:5.5rem;
+    transform:none;
+    filter:none;
+  }
+  .menu-cat1{
+    right:39%; top:28%;
+  }
+  .menu-cat1 img{
+    width:5.5rem; height:5.5rem;
+    transform:none;
+    filter:none;
+  }
+  .menu-cat2{
+    left:44%; bottom:36%;
+    transform:translateX(-50%);
+  }
+  .menu-cat2 img{
+    width:auto; height:auto;
+    max-width:8rem;
+    max-height:8rem;
+    transform:none;
+    filter:none;
+  }
+  .menu-dog{
+    right:26%; bottom:32%;
+  }
+  .menu-dog img{
+    width:5.5rem; height:5.5rem;
+    transform:none;
+    filter:none;
+  }
+  .menu-image-box{
+    position:absolute;
+    left:50%; bottom:2.5rem;
+    width:8.5rem; height:4rem;
+    transform:translateX(-50%);
+    border-radius:1rem;
+    background:rgba(255,255,255,0.25);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    box-shadow:0 8px 32px rgba(0,0,0,0.15);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:1.6rem;
+    overflow:hidden;
+  }
+  .menu-image-box img{
+    height:1.75rem;
+    width:auto;
+    object-fit:contain;
+  }
   .menu-overlay.is-open .menu-panel{
     transform:scale(1);
   }
@@ -191,7 +330,7 @@
   header{
     position:fixed; top:0; left:0; width:100%; z-index:9996;
     min-height:var(--header-h);
-    display:grid; grid-template-columns:1fr auto 1fr;
+    display:flex; justify-content:space-between;
     align-items:center;
     padding:0.6rem 2rem;
     background:rgba(255,255,255,0.35);
@@ -226,6 +365,7 @@
   }
   .time-badge{
     justify-self:end;
+    margin-right:-0.8rem;
     display:inline-flex; align-items:center; gap:0.5rem;
     background:#0C1F3F; color:#fff;
     padding:0.35rem 0.9rem;
@@ -241,7 +381,7 @@
     width:6px; height:6px; border-radius:50%;
     background:#fff;
     flex-shrink:0;
-    animation:blink-dot 0.7s ease-in-out infinite;
+    animation:blink-dot 1s ease-in-out infinite;
   }
   @keyframes blink-dot{
     0%, 100%{ background:#fff; }
@@ -555,7 +695,7 @@
     border-top:1px solid rgba(23,24,28,0.1);
     padding:4rem 2rem;
   }
-  .about-inner{ max-width:700px; margin:0; }
+  .about-inner{ max-width:700px; margin:0 0 0 auto; }
   .about h2{
     font-family:var(--sans);
     font-weight:400;
@@ -944,12 +1084,6 @@
       </span>
       <a class="home-link" href="index.html" id="home-link">[VUTHY CHEAM]</a>
     </div>
-    <nav class="reveal reveal-2">
-      <a href="index.html">Home</a>
-      <a href="#about">About</a>
-      <a href="#contact">Contact</a>
-      <a href="show-reel.html">Showreel</a>
-    </nav>
     <span class="time-badge reveal reveal-1">
       <span id="bkk-time">BKK[TH] --:--</span>
       <span class="dot"></span>
@@ -957,10 +1091,33 @@
   </header>
 
   <div class="v-divider" id="vDivider"></div>
+  <div class="scroll-track" id="scrollTrack"><div class="scroll-thumb" id="scrollThumb"></div></div>
   <div class="h-bottom-line" id="hBottomLine"></div>
 
   <div class="menu-overlay" id="menuOverlay">
-    <div class="menu-panel"><img src="assets/images/menu/macbook-wallpaper6.jpg" alt=""></div>
+    <div class="menu-panel">
+      <img src="assets/images/menu/macbook-wallpaper6.jpg" alt="">
+      <div class="menu-scatter menu-money">
+        <img src="assets/images/menu/money.jpg" alt="">
+        <span class="menu-scatter-label">Home</span>
+      </div>
+      <div class="menu-scatter menu-cat1">
+        <img src="assets/images/menu/cat1.jpg" alt="">
+        <span class="menu-scatter-label">Contact</span>
+      </div>
+      <div class="menu-scatter menu-cat2">
+        <img src="assets/images/menu/cat2.jpg" alt="">
+        <span class="menu-scatter-label">About Me</span>
+      </div>
+      <div class="menu-scatter menu-dog">
+        <img src="assets/images/menu/dog.jpg" alt="">
+        <span class="menu-scatter-label">Projects</span>
+      </div>
+      <div class="menu-image-box">
+        <img src="assets/images/menu/finder.webp" alt="">
+        <img src="assets/images/menu/setting.png" alt="">
+      </div>
+    </div>
   </div>
 
   <section class="hero">
@@ -1127,6 +1284,22 @@
     })();
 
     (function(){
+      const track = document.getElementById('scrollTrack');
+      const thumb = document.getElementById('scrollThumb');
+      if (!track || !thumb) return;
+
+      function update(){
+        const trackRect = track.getBoundingClientRect();
+        const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = scrollableHeight > 0 ? window.scrollY / scrollableHeight : 0;
+        thumb.style.top = (Math.min(Math.max(progress, 0), 1) * trackRect.height) + 'px';
+      }
+      window.addEventListener('scroll', update, { passive:true });
+      window.addEventListener('resize', update);
+      update();
+    })();
+
+    (function(){
       const line = document.getElementById('hBottomLine');
       const header = document.querySelector('header');
       if (!line || !header) return;
@@ -1209,6 +1382,42 @@
           document.body.classList.remove('menu-open');
         }
       });
+
+      function easeInOutCubic(t){
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      }
+
+      function goToY(targetY){
+        overlay.classList.remove('is-open');
+        document.body.classList.remove('menu-open');
+
+        const startY = window.scrollY;
+        const startTime = performance.now();
+        const duration = 600;
+        function step(now){
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          window.scrollTo(0, startY + (targetY - startY) * easeInOutCubic(progress));
+          if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      }
+
+      function wireNavBox(selector, sectionId){
+        const box = document.querySelector(selector);
+        const section = sectionId ? document.getElementById(sectionId) : null;
+        if (!box || (sectionId && !section)) return;
+        box.style.cursor = 'pointer';
+        box.addEventListener('click', () => {
+          const targetY = section ? section.getBoundingClientRect().top + window.scrollY : 0;
+          goToY(targetY);
+        });
+      }
+
+      wireNavBox('.menu-money', null);
+      wireNavBox('.menu-dog', 'projects');
+      wireNavBox('.menu-cat2', 'about');
+      wireNavBox('.menu-cat1', 'contact');
     })();
 
     (function(){
@@ -1240,9 +1449,15 @@
       let index = 0;
       let lastSpawn = 0;
       const spawnGapMs = 90;
+      const divider = document.getElementById('vDivider');
 
       document.addEventListener('mousemove', (e) => {
         if (!e.target.closest('.hero') || e.target.closest('.scroll-cta')) return;
+
+        if (divider){
+          const dRect = divider.getBoundingClientRect();
+          if (e.clientX <= dRect.left + dRect.width / 2) return;
+        }
 
         const now = performance.now();
         if (now - lastSpawn < spawnGapMs) return;
@@ -1295,27 +1510,6 @@
       });
     })();
 
-    (function(){
-      const hero = document.querySelector('.hero');
-      const projects = document.getElementById('projects');
-      const header = document.querySelector('header');
-      if (!hero || !projects || !header) return;
-
-      const maxBlur = 10;
-
-      function update(){
-        const headerH = header.getBoundingClientRect().height;
-        const range = window.innerHeight - headerH;
-
-        const projRect = projects.getBoundingClientRect();
-        const heroProgress = 1 - Math.min(Math.max((projRect.top - headerH) / range, 0), 1);
-        hero.style.filter = `blur(${(heroProgress * maxBlur).toFixed(2)}px)`;
-      }
-
-      window.addEventListener('scroll', update, { passive:true });
-      window.addEventListener('resize', update);
-      update();
-    })();
 
     (function(){
       const projects = document.getElementById('projects');
