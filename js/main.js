@@ -736,3 +736,257 @@
   }
   requestAnimationFrame(loop);
 })();
+
+(function(){
+  if (typeof Matter === 'undefined') return;
+  const container = document.getElementById('tagCloud');
+  if (!container) return;
+
+  const ICON_ATTR = 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+  const icons = {
+    jewelry: '<polygon points="12 2 19 9 12 22 5 9 12 2"/><line x1="5" y1="9" x2="19" y2="9"/>',
+    ai: '<path d="m12 3-1.9 5.8a2 2 0 0 1-1.287 1.288L3 12l5.8 1.9a2 2 0 0 1 1.288 1.287L12 21l1.9-5.8a2 2 0 0 1 1.287-1.288L21 12l-5.8-1.9a2 2 0 0 1-1.288-1.287Z"/>',
+    ml: '<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="15" x2="23" y2="15"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="15" x2="4" y2="15"/>',
+    fullstack: '<polygon points="12 2 22 8.5 12 15 2 8.5 12 2"/><polyline points="2 15.5 12 21 22 15.5"/>',
+    datascience: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+    python: '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+    coding: '<polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>',
+    brainstorming: '<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Z"/>',
+    softskills: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    programming: '<rect x="4" y="3" width="16" height="18" rx="2"/><polyline points="9 8 7 10 9 12"/><polyline points="13 8 15 10 13 12"/>',
+    java: '<path d="M18 8h1a4 4 0 1 1 0 8h-1"/><path d="M2 8h14v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4Z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>',
+    cpp: '<line x1="4" y1="9" x2="4" y2="15"/><line x1="1" y1="12" x2="7" y2="12"/><line x1="12" y1="9" x2="12" y2="15"/><line x1="9" y1="12" x2="15" y2="12"/><path d="M20 8a4 4 0 1 0 0 8"/>',
+    c: '<path d="M20 8a7 7 0 1 0 0 8"/>',
+    databases: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+    oop: '<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><polyline points="3.3 7 12 12 20.7 7"/><line x1="12" y1="22" x2="12" y2="12"/>',
+    frontend: '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>',
+    backend: '<rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><line x1="6" y1="7" x2="6.01" y2="7"/><line x1="6" y1="17" x2="6.01" y2="17"/>',
+    teamwork: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>',
+    learning: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2Z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7Z"/>',
+    problemsolving: '<path d="M4 8V5a2 2 0 0 1 2-2h3a2 2 0 0 0 4 0h3a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2h-3a2 2 0 0 0-4 0H6a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4Z"/>'
+  };
+
+  const skills = [
+    { name:'Jewelry', icon:'jewelry' },
+    { name:'AI', icon:'ai' },
+    { name:'ML', icon:'ml' },
+    { name:'Full Stack', icon:'fullstack' },
+    { name:'Data Science', icon:'datascience' },
+    { name:'Python', icon:'python' },
+    { name:'Coding', icon:'coding' },
+    { name:'Brainstorming', icon:'brainstorming' },
+    { name:'Soft Skills', icon:'softskills' },
+    { name:'Programming', icon:'programming' },
+    { name:'Java', icon:'java' },
+    { name:'C++', icon:'cpp' },
+    { name:'C', icon:'c' },
+    { name:'Databases', icon:'databases' },
+    { name:'OOP', icon:'oop' },
+    { name:'Frontend', icon:'frontend' },
+    { name:'Backend', icon:'backend' },
+    { name:'Teamwork', icon:'teamwork' },
+    { name:'Learning', icon:'learning' },
+    { name:'Problem Solving', icon:'problemsolving' }
+  ];
+
+  const circleIndexes = { 2:true, 7:true, 12:true, 17:true };
+
+  const badges = skills.map(function(skill, i){
+    const isCircle = !!circleIndexes[i];
+    const el = document.createElement('div');
+    el.className = 'tag-badge' + (isCircle ? ' is-circle' : '');
+    const svg = '<svg viewBox="0 0 24 24" ' + ICON_ATTR + '>' + icons[skill.icon] + '</svg>';
+    el.innerHTML = isCircle ? svg : svg + '<span>' + skill.name + '</span>';
+    if (isCircle) el.title = skill.name;
+    container.appendChild(el);
+    return { el: el, isCircle: isCircle, w: 0, h: 0, body: null };
+  });
+
+  const Engine = Matter.Engine, World = Matter.World, Bodies = Matter.Bodies,
+        Mouse = Matter.Mouse, MouseConstraint = Matter.MouseConstraint,
+        Events = Matter.Events, Runner = Matter.Runner;
+
+  const engine = Engine.create();
+  engine.gravity.y = 1;
+  const world = engine.world;
+
+  let W = 900, H = 480, floorY = 480;
+  let wallBodies = [];
+  let ceilingWall = null;
+  let ceilingTimer = null;
+  const divider = document.querySelector('.about-divider');
+
+  const mouse = Mouse.create(container);
+  container.removeEventListener('mousewheel', mouse.mousewheel);
+  container.removeEventListener('DOMMouseScroll', mouse.mousewheel);
+  const mouseConstraint = MouseConstraint.create(engine, {
+    mouse: mouse,
+    constraint: { stiffness:0.2, damping:0.15, render:{ visible:false } }
+  });
+
+  function buildWalls(){
+    const t = 60;
+    return [
+      Bodies.rectangle(W / 2, floorY + t / 2, W + t * 2, t, { isStatic:true }),
+      Bodies.rectangle(-t / 2, floorY / 2, t, floorY + t * 2, { isStatic:true }),
+      Bodies.rectangle(W + t / 2, floorY / 2, t, floorY + t * 2, { isStatic:true })
+    ];
+  }
+
+  function measureFloorY(containerRect){
+    if (!divider) return containerRect.height;
+    const dRect = divider.getBoundingClientRect();
+    return dRect.top - containerRect.top;
+  }
+
+  function init(){
+    const rect = container.getBoundingClientRect();
+    W = rect.width || W;
+    H = rect.height || H;
+    floorY = measureFloorY(rect) || H;
+
+    World.clear(world, false);
+    Engine.clear(engine);
+    ceilingWall = null;
+    if (ceilingTimer) clearTimeout(ceilingTimer);
+
+    wallBodies = buildWalls();
+    wallBodies.forEach(function(w){ World.add(world, w); });
+
+    badges.forEach(function(b, i){
+      const bw = b.el.offsetWidth;
+      const bh = b.el.offsetHeight;
+      b.w = bw; b.h = bh;
+      const x = bw / 2 + 8 + Math.random() * Math.max(1, W - bw - 16);
+      const y = -(80 + i * 45 + Math.random() * 100);
+      const angle = (Math.random() * 16 - 8) * Math.PI / 180;
+      const opts = { restitution:0.4, friction:0.3, frictionAir:0.02, angle: angle };
+      const body = b.isCircle
+        ? Bodies.circle(x, y, Math.max(bw, bh) / 2, opts)
+        : Bodies.rectangle(x, y, bw, bh, Object.assign({ chamfer:{ radius: bh / 2 } }, opts));
+      b.body = body;
+      World.add(world, body);
+    });
+
+    World.add(world, mouseConstraint);
+
+    ceilingTimer = setTimeout(function(){
+      const t = 60;
+      ceilingWall = Bodies.rectangle(W / 2, -t / 2, W + t * 2, t, { isStatic:true });
+      World.add(world, ceilingWall);
+    }, 2500);
+  }
+
+  let started = false;
+  function start(){
+    if (started) return;
+    started = true;
+    init();
+  }
+
+  if ('IntersectionObserver' in window){
+    const observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting){
+          start();
+          observer.disconnect();
+        }
+      });
+    }, { threshold: 0.15 });
+    observer.observe(container);
+  } else {
+    start();
+  }
+
+  window.addEventListener('resize', function(){
+    if (started) init();
+  });
+
+  function findBadge(body){
+    for (let i = 0; i < badges.length; i++){
+      if (badges[i].body === body) return badges[i];
+    }
+    return null;
+  }
+
+  Events.on(mouseConstraint, 'startdrag', function(e){
+    const b = findBadge(e.body);
+    if (b) b.el.classList.add('is-dragging');
+  });
+  Events.on(mouseConstraint, 'enddrag', function(e){
+    const b = findBadge(e.body);
+    if (!b) return;
+    b.el.classList.remove('is-dragging');
+    const v = e.body.velocity;
+    Matter.Body.setAngularVelocity(e.body, v.x * 0.06);
+  });
+
+  const runner = Runner.create();
+  Runner.run(runner, engine);
+
+  function render(){
+    badges.forEach(function(b){
+      if (!b.body) return;
+      const p = b.body.position;
+      const deg = b.body.angle * 180 / Math.PI;
+      const scale = b.el.classList.contains('is-dragging') ? 1.08 : 1;
+      b.el.style.transform =
+        'translate(' + (p.x - b.w / 2).toFixed(1) + 'px, ' + (p.y - b.h / 2).toFixed(1) + 'px) ' +
+        'rotate(' + deg.toFixed(2) + 'deg) scale(' + scale + ')';
+    });
+  }
+  Events.on(engine, 'afterUpdate', render);
+})();
+
+(function(){
+  const eyesBox = document.getElementById('cartoonEyes');
+  if (!eyesBox) return;
+  const eyes = Array.from(eyesBox.querySelectorAll('.eye'));
+  const pupils = eyes.map(function(eye){ return eye.querySelector('.pupil'); });
+  const curX = eyes.map(function(){ return 0; });
+  const curY = eyes.map(function(){ return 0; });
+
+  let mouseX = window.innerWidth / 2;
+  let mouseY = window.innerHeight / 2;
+  window.addEventListener('mousemove', function(e){
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  function loop(){
+    eyes.forEach(function(eye, i){
+      const rect = eye.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = mouseX - cx;
+      const dy = mouseY - cy;
+      const maxX = rect.width / 2 - 15;
+      const maxY = rect.height / 2 - 15;
+      const ellipseDist = (dx * dx) / (maxX * maxX) + (dy * dy) / (maxY * maxY);
+      let tx = dx, ty = dy;
+      if (ellipseDist > 1){
+        const scale = 1 / Math.sqrt(ellipseDist);
+        tx = dx * scale;
+        ty = dy * scale;
+      }
+      curX[i] += (tx - curX[i]) * 0.25;
+      curY[i] += (ty - curY[i]) * 0.25;
+      pupils[i].style.transform =
+        'translate(-50%, -50%) translate(' + curX[i].toFixed(1) + 'px, ' + curY[i].toFixed(1) + 'px)';
+    });
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  function scheduleBlink(){
+    const delay = 2000 + Math.random() * 4000;
+    setTimeout(function(){
+      eyes.forEach(function(eye){ eye.classList.add('is-blinking'); });
+      setTimeout(function(){
+        eyes.forEach(function(eye){ eye.classList.remove('is-blinking'); });
+      }, 140);
+      scheduleBlink();
+    }, delay);
+  }
+  scheduleBlink();
+})();

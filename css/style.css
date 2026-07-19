@@ -736,25 +736,88 @@
     min-height:calc(160vh - var(--header-h));
     display:flex; flex-direction:column; justify-content:flex-start;
     background:#EBFF00; color:var(--ink);
-    padding:4rem 2rem 4rem;
+    padding:0 2rem 4rem;
   }
-  .about-inner{ max-width:700px; margin:0 0 0 auto; }
   .about h2{
+    position:relative;
+    z-index:1;
+    pointer-events:none;
+    color:#fff;
+    mix-blend-mode:difference;
     font-family:'Silkscreen', var(--sans);
     font-weight:400;
     text-transform:uppercase;
-    font-size:clamp(5rem, 30vw, 20rem);
+    font-size:clamp(6rem, 34vw, 24rem);
     letter-spacing:0.03em;
-    margin:0 0 1.25rem;
+    margin:-5.5rem 0 1.25rem;
     text-align:center;
-    transform:translateX(1.5rem);
+    transform:translateX(0.5rem);
+  }
+  .cartoon-eyes{
+    position:absolute;
+    z-index:2;
+    top:calc(50% + 4rem); left:50%;
+    transform:translate(-50%, -50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:1rem;
+    pointer-events:none;
+  }
+  .cartoon-eyes .eyes-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:1.1rem;
+  }
+  .cartoon-eyes .eyes-caption{
+    font-family:var(--sans);
+    font-size:2.6rem;
+    font-weight:400;
+    line-height:1.5;
+    text-align:center;
+    color:var(--ink);
+    margin:0;
+    white-space:nowrap;
+  }
+  .cartoon-eyes .eye{
+    position:relative;
+    width:3.5rem;
+    height:4.75rem;
+    background:#fff;
+    border-radius:50% / 60%;
+    transform:rotate(-6deg);
+    overflow:hidden;
+    transition:transform 0.12s ease;
+  }
+  .cartoon-eyes .eye:last-child{
+    transform:rotate(6deg);
+  }
+  .cartoon-eyes .eye.is-blinking{
+    transform:rotate(-6deg) scaleY(0.08);
+  }
+  .cartoon-eyes .eye:last-child.is-blinking{
+    transform:rotate(6deg) scaleY(0.08);
+  }
+  .cartoon-eyes .pupil{
+    position:absolute;
+    left:50%; top:50%;
+    width:1.3rem;
+    height:1.3rem;
+    background:#000;
+    border-radius:50%;
+    transform:translate(-50%, -50%);
+    will-change:transform;
   }
   .about-divider{
+    position:relative;
+    z-index:1;
+    pointer-events:none;
     width:100vw;
     height:1px;
     background:#fff;
     mix-blend-mode:difference;
-    margin:5rem calc(50% - 50vw) 2rem calc(50% - 50vw);
+    margin:16vh calc(50% - 50vw) 2rem calc(50% - 50vw);
   }
   .about p{
     font-size:0.85rem;
@@ -764,29 +827,62 @@
     max-width:60ch;
     margin:3rem 0 0;
   }
-  .skill-tags{
-    display:flex;
-    flex-wrap:wrap;
-    gap:0.6rem;
-    margin:2rem 0 0;
-    max-width:60ch;
+  .tag-cloud{
+    position:absolute;
+    top:0; bottom:0;
+    left:calc(50% - 50vw);
+    width:100vw;
+    z-index:0;
+    overflow:hidden;
   }
-  .skill-tag{
-    font-family:var(--sans);
-    font-size:0.7rem;
-    font-weight:400;
-    text-transform:uppercase;
-    letter-spacing:0.03em;
-    color:var(--ink);
-    border:1px solid rgba(23,24,28,0.35);
-    border-radius:0.25rem;
-    padding:0.4rem 0.75rem;
+  .tag-badge{
+    position:absolute;
+    top:0; left:0;
+    display:inline-flex;
+    align-items:center;
+    gap:0.45rem;
     white-space:nowrap;
+    cursor:grab;
+    touch-action:none;
+    user-select:none;
+    font-family:var(--sans);
+    font-size:0.85rem;
+    font-weight:500;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--ink);
+    background:transparent;
+    border:1px solid rgba(23,24,28,0.35);
+    border-radius:999px;
+    padding:0.65rem 1.1rem;
+    box-shadow:0 6px 14px rgba(23,24,28,0.18);
+    will-change:transform;
     transition:background 0.15s ease, color 0.15s ease;
   }
-  .skill-tag:hover{
+  .tag-badge:hover{
     background:var(--ink);
     color:#EBFF00;
+  }
+  .tag-badge svg{
+    width:1rem;
+    height:1rem;
+    flex-shrink:0;
+  }
+  .tag-badge.is-circle{
+    width:3.2rem;
+    height:3.2rem;
+    padding:0;
+    border-radius:50%;
+    justify-content:center;
+  }
+  .tag-badge.is-circle svg{
+    width:1.35rem;
+    height:1.35rem;
+  }
+  .tag-badge.is-dragging{
+    box-shadow:0 18px 30px rgba(23,24,28,0.32);
+    z-index:80;
+    cursor:grabbing;
   }
   .contact{
     position:relative; z-index:3;
