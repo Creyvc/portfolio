@@ -58,6 +58,36 @@
     opacity:1;
     transform:translate(-50%, -50%) scale(1);
   }
+  .v-logo .menu-lines{
+    position:absolute;
+    left:50%; top:50%;
+    width:0.6rem;
+    transform:translate(-50%, -50%) scale(0.7);
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    opacity:0;
+    pointer-events:none;
+    animation:v-swipe-lines 3.5s ease-in-out infinite;
+  }
+  .v-logo .menu-lines span{
+    display:block;
+    height:1.3px;
+    background:#000;
+  }
+  .v-logo:hover .menu-lines{
+    animation:none;
+    opacity:0;
+  }
+  body.menu-open .v-logo .menu-lines{
+    animation:none;
+    opacity:0;
+  }
+  @keyframes v-swipe-lines{
+    0%, 35%{ opacity:0; transform:translate(-50%, -50%) scale(0.7); }
+    50%, 85%{ opacity:1; transform:translate(-50%, -50%) scale(1); }
+    100%{ opacity:0; transform:translate(-50%, -50%) scale(0.7); }
+  }
   .v-divider{
     position:fixed;
     top:0;
@@ -73,9 +103,20 @@
     height:calc(100% / 8);
     background:#000;
     transition:transform 0.35s cubic-bezier(.4,0,.2,1);
+    animation:v-swipe-px 3.5s ease-in-out infinite;
   }
   .v-logo:hover .px{
+    animation:none;
+    opacity:0;
     transform:translate(var(--dx), var(--dy)) scale(0.2);
+  }
+  body.menu-open .v-logo .px{
+    animation:none;
+  }
+  @keyframes v-swipe-px{
+    0%, 35%{ transform:translate(0, 0) scale(1); }
+    50%, 85%{ transform:translate(var(--dx), var(--dy)) scale(0.2); }
+    100%{ transform:translate(0, 0) scale(1); }
   }
   .v-logo{ cursor:pointer; }
   .v-logo-close{
@@ -93,7 +134,7 @@
   .v-logo-close .close-text{
     font-family:var(--sans);
     font-weight:300;
-    font-size:0.6rem;
+    font-size:0.7rem;
     letter-spacing:0.08em;
     text-transform:uppercase;
     color:var(--ink);
@@ -132,8 +173,16 @@
     display:flex;
     align-items:center;
     justify-content:center;
+    overflow:hidden;
     transform:scale(0.9);
     transition:transform 0.3s ease;
+  }
+  .menu-panel img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    filter:contrast(1.08) saturate(1.15);
+    transform:scale(1.8);
   }
   .menu-overlay.is-open .menu-panel{
     transform:scale(1);
@@ -911,7 +960,7 @@
   <div class="h-bottom-line" id="hBottomLine"></div>
 
   <div class="menu-overlay" id="menuOverlay">
-    <div class="menu-panel"></div>
+    <div class="menu-panel"><img src="assets/images/menu/macbook-wallpaper6.jpg" alt=""></div>
   </div>
 
   <section class="hero">
@@ -1051,6 +1100,11 @@
       label.className = 'menu-label';
       label.innerHTML = '<span>ME</span><span>NU</span>';
       logo.appendChild(label);
+
+      const lines = document.createElement('span');
+      lines.className = 'menu-lines';
+      lines.innerHTML = '<span></span><span></span><span></span>';
+      logo.appendChild(lines);
     })();
 
     (function(){
