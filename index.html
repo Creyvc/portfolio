@@ -33,6 +33,31 @@
     flex-shrink:0;
     margin-left:-0.7rem;
   }
+  .v-logo .menu-label{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%, -50%) scale(0.7);
+    font-family:var(--sans);
+    font-weight:300;
+    font-size:0.7rem;
+    line-height:0.85;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    text-align:center;
+    color:var(--ink);
+    white-space:nowrap;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.25s ease, transform 0.25s ease;
+  }
+  .v-logo .menu-label span{
+    display:block;
+  }
+  .v-logo:hover .menu-label{
+    opacity:1;
+    transform:translate(-50%, -50%) scale(1);
+  }
   .v-divider{
     position:fixed;
     top:0;
@@ -47,6 +72,10 @@
     width:calc(100% / 7);
     height:calc(100% / 8);
     background:#000;
+    transition:transform 0.35s cubic-bezier(.4,0,.2,1);
+  }
+  .v-logo:hover .px{
+    transform:translate(var(--dx), var(--dy)) scale(0.2);
   }
   header{
     position:fixed; top:0; left:0; width:100%; z-index:10;
@@ -148,6 +177,26 @@
   .cursor-box.is-viewing .cursor-label,
   .cursor-box.is-viewing .cursor-arrow{ opacity:1; }
 
+  .cursor-box.is-menu{
+    width:1.7rem; height:1.7rem;
+    background:transparent;
+    border-radius:0;
+    mix-blend-mode:normal;
+  }
+  .cursor-corner{
+    position:absolute;
+    width:5px; height:5px;
+    border-radius:50%;
+    background:#000;
+    opacity:0;
+    transition:opacity 0.2s ease;
+  }
+  .cursor-box.is-menu .cursor-corner{ opacity:1; }
+  .cursor-corner.tl{ top:-4px; left:-4px; }
+  .cursor-corner.tr{ top:-4px; right:-4px; }
+  .cursor-corner.bl{ bottom:-4px; left:-4px; }
+  .cursor-corner.br{ bottom:-4px; right:-4px; }
+
   .hello-trail{
     position:fixed;
     top:0; left:0;
@@ -187,7 +236,7 @@
     letter-spacing:0.15em;
     color:var(--ink);
     text-align:center;
-    margin:0;
+    margin:-6rem 0 0 5rem;
     text-shadow:
       1px 1px 0 var(--accent),
       2px 2px 0 var(--accent),
@@ -220,7 +269,7 @@
   }
   .scroll-cta{
     position:absolute;
-    right:2rem; bottom:2.5rem;
+    right:2rem; bottom:5rem;
     display:inline-flex; flex-direction:row; align-items:center; gap:0.8rem;
     font-family:'Press Start 2P', var(--sans);
     font-size:0.75rem;
@@ -281,7 +330,7 @@
     letter-spacing:0.02em;
     font-size:clamp(1.8rem, 4.5vw, 3rem);
     opacity:0.9;
-    margin:2rem 0 0;
+    margin:3.5rem 0 0 4rem;
     flex-shrink:0;
   }
   .projects-grid{
@@ -761,7 +810,13 @@
 </head>
 <body class="is-loading">
 
-  <div class="cursor-box"><span class="cursor-label">View</span><span class="cursor-arrow">→</span></div>
+  <div class="cursor-box">
+    <span class="cursor-label">View</span><span class="cursor-arrow">→</span>
+    <span class="cursor-corner tl"></span>
+    <span class="cursor-corner tr"></span>
+    <span class="cursor-corner bl"></span>
+    <span class="cursor-corner br"></span>
+  </div>
 
   <div class="loader" id="loader">
     <div class="loader-rows">
@@ -906,6 +961,9 @@
       const logo = document.getElementById('vLogo');
       if (!logo) return;
 
+      const centerCol = (cols - 1) / 2;
+      const centerRow = (rows - 1) / 2;
+
       pattern.forEach((rowArr, r) => {
         rowArr.forEach((val, c) => {
           if (!val) return;
@@ -913,9 +971,16 @@
           px.className = 'px';
           px.style.left = (c / cols * 100) + '%';
           px.style.top = (r / rows * 100) + '%';
+          px.style.setProperty('--dx', (centerCol - c) * 100 + '%');
+          px.style.setProperty('--dy', (centerRow - r) * 100 + '%');
           logo.appendChild(px);
         });
       });
+
+      const label = document.createElement('span');
+      label.className = 'menu-label';
+      label.innerHTML = '<span>ME</span><span>NU</span>';
+      logo.appendChild(label);
     })();
 
     (function(){
@@ -991,6 +1056,12 @@
         link.addEventListener('mouseenter', () => box.classList.add('is-viewing'));
         link.addEventListener('mouseleave', () => box.classList.remove('is-viewing'));
       });
+
+      const vLogo = document.getElementById('vLogo');
+      if (vLogo){
+        vLogo.addEventListener('mouseenter', () => box.classList.add('is-menu'));
+        vLogo.addEventListener('mouseleave', () => box.classList.remove('is-menu'));
+      }
     })();
 
     (function(){
