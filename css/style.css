@@ -441,25 +441,36 @@
   .cursor-corner.bl{ bottom:-4px; left:-4px; }
   .cursor-corner.br{ bottom:-4px; right:-4px; }
 
-  .hello-trail{
-    position:fixed;
-    top:0; left:0;
+  .hero-greet{
+    position:relative;
+    z-index:1;
+    margin:0;
+    align-self:flex-start;
+    width:100%;
+    margin-top:-1.2rem;
+    margin-bottom:90vh;
+    padding-left:clamp(1.25rem, 3.7vw, 4rem);
     font-family:var(--sans), 'Noto Sans Khmer', 'Noto Sans Thai', sans-serif;
-    font-size:3.2rem;
-    font-weight:700;
-    color:#fff;
-    mix-blend-mode:difference;
-    pointer-events:none;
-    z-index:9997;
-    transform:translate(-50%, -50%);
-    opacity:1;
-    transition:opacity 0.9s ease, transform 0.9s ease;
+    font-size:clamp(0.6rem, 1.25vw, 1rem);
+    font-weight:400;
+    letter-spacing:0.04em;
+    color:var(--ink);
+    text-align:left;
+    white-space:nowrap;
+    height:2.6rem;
+    line-height:2.6rem;      /* fixed line box so scripts don't shift the layout */
   }
-  .hello-trail.fade{
-    opacity:0;
-    transform:translate(-50%, -50%) translateY(-24px) scale(0.85);
+  .hero-greet > span{
+    display:inline-block;
+    vertical-align:middle;   /* keep every script centered in the fixed line box */
+    line-height:1.15;
   }
-
+  /* Latin-script phrases render in the mono font, which looks larger than the
+     Khmer/Thai/CJK fallbacks at the same size — shrink them to match. */
+  #heroGreet:lang(en),
+  #heroGreet:lang(es),
+  #heroGreet:lang(fr),
+  #heroGreet:lang(vi){ font-size:0.82em; }
   .hero{
     position:sticky; top:0;
     z-index:0;
@@ -1169,4 +1180,3 @@
   .loader.is-done .loader-rows span{ transform:translateY(-100%); }
 
   body.is-loading{ overflow:hidden; }
-
