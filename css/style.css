@@ -471,11 +471,6 @@
     overflow:hidden;
     padding:2rem;
   }
-  #heroDotGrid .dot{
-    background:#555555;
-    width:2.5px; height:2.5px;
-    margin:-1.25px 0 0 -1.25px;
-  }
   a.btn{
     text-decoration:none;
     font-size:0.7rem;
@@ -1174,3 +1169,4 @@
   .loader.is-done .loader-rows span{ transform:translateY(-100%); }
 
   body.is-loading{ overflow:hidden; }
+

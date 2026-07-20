@@ -680,35 +680,6 @@
   window.addEventListener('resize', buildGrid);
 })();
 (function(){
-  const section = document.querySelector('.hero');
-  const grid = document.getElementById('heroDotGrid');
-  if (!section || !grid) return;
-
-  const SPACING = 28;
-
-  function buildGrid(){
-    grid.innerHTML = '';
-    const w = section.clientWidth;
-    const h = section.clientHeight;
-    const cols = Math.ceil(w / SPACING) + 1;
-    const rows = Math.ceil(h / SPACING) + 1;
-    const frag = document.createDocumentFragment();
-    for (let r = 0; r < rows; r++){
-      for (let c = 0; c < cols; c++){
-        const dot = document.createElement('div');
-        dot.className = 'dot';
-        dot.style.left = (c * SPACING) + 'px';
-        dot.style.top = (r * SPACING) + 'px';
-        frag.appendChild(dot);
-      }
-    }
-    grid.appendChild(frag);
-  }
-
-  buildGrid();
-  window.addEventListener('resize', buildGrid);
-})();
-(function(){
   const section = document.getElementById('blackDivider');
   const text = document.getElementById('discoverText');
   if (!section || !text) return;
