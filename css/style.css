@@ -765,11 +765,12 @@
     position:relative;
     z-index:1;
     pointer-events:none;
-    width:100vw;
+    width:auto;
     height:1px;
     background:#fff;
     mix-blend-mode:difference;
-    margin:16vh calc(50% - 50vw) 2rem calc(50% - 50vw);
+    /* full-bleed by escaping the section's 2rem padding — scrollbar-safe (no 100vw) */
+    margin:16vh -2rem 2rem;
   }
   .about p{
     font-size:0.85rem;
@@ -782,8 +783,8 @@
   .tag-cloud{
     position:absolute;
     top:0; bottom:0;
-    left:calc(50% - 50vw);
-    width:100vw;
+    left:0;
+    width:100%;
     z-index:0;
     overflow:hidden;
   }
@@ -895,7 +896,6 @@
     display:flex;
     align-items:center;
     gap:var(--box-gap);
-    max-width:100%;
     margin:3.5rem -2rem 0;
     padding-top:2.25rem;
     padding-bottom:0.5rem;
@@ -903,7 +903,7 @@
     padding-right:max(0px, calc((100vw - var(--box-w)) / 2 - 2rem));
     overflow-x:auto;
     scrollbar-width:none;
-    scroll-snap-type:x mandatory;
+    scroll-snap-type:x proximity;
     transition:transform 0.4s ease-out;
   }
   .contact-boxes::-webkit-scrollbar{ display:none; }

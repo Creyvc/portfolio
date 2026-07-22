@@ -523,6 +523,22 @@
       const minDiameter = 160;
       const textEls = document.querySelectorAll('.info-row .info-label, .info-row .info-value');
 
+      // split each label/value into per-character spans so the color reveal
+      // can happen letter-by-letter instead of on the whole word at once
+      const chars = [];
+      textEls.forEach(el => {
+        const text = el.textContent;
+        el.textContent = '';
+        for (const c of text){
+          const span = document.createElement('span');
+          span.className = 'ch';
+          span.textContent = c;
+          if (c === ' ') span.style.whiteSpace = 'pre';
+          el.appendChild(span);
+          chars.push(span);
+        }
+      });
+
       function update(){
         const boxWidth = infoBox.offsetWidth;
         const gapPx = parseFloat(getComputedStyle(scroller).columnGap || getComputedStyle(scroller).gap) || 24;
@@ -539,19 +555,89 @@
         circle.style.left = left + 'px';
 
         const circleRect = circle.getBoundingClientRect();
-        textEls.forEach(el => {
-          const r = el.getBoundingClientRect();
-          const overlap = r.left < circleRect.right && r.right > circleRect.left &&
-                           r.top < circleRect.bottom && r.bottom > circleRect.top;
-          el.classList.toggle('on-circle', overlap);
+        const cx = circleRect.left + circleRect.width / 2;
+        const cy = circleRect.top + circleRect.height / 2;
+        const rad = circleRect.width / 2;
+        chars.forEach(span => {
+          const r = span.getBoundingClientRect();
+          const px = r.left + r.width / 2;
+          const py = r.top + r.height / 2;
+          const inside = Math.hypot(px - cx, py - cy) <= rad;
+          span.classList.toggle('on-circle', inside);
         });
       }
 
-      function loop(){
-        update();
-        requestAnimationFrame(loop);
+      // only recompute when the boxes actually move (was a perpetual rAF that
+      // read layout on every character every frame — very costly on Windows)
+      let ticking = false;
+      function requestUpdate(){
+        if (!ticking){
+          ticking = true;
+          // try/finally so a throw can never leave `ticking` stuck (which would
+          // freeze the letter-reveal mid-sweep, leaving stale white letters)
+          requestAnimationFrame(function(){ try { update(); } finally { ticking = false; } });
+        }
       }
-      requestAnimationFrame(loop);
+      // when scrolling fully settles, force one authoritative pass so the final
+      // resting state is always correct (no letters left white after swiping back)
+      let settleTimer;
+      function onScroll(){
+        requestUpdate();
+        clearTimeout(settleTimer);
+        settleTimer = setTimeout(update, 120); // fallback for browsers without scrollend
+      }
+      scroller.addEventListener('scroll', onScroll, { passive:true });
+      scroller.addEventListener('scrollend', update);
+      window.addEventListener('resize', requestUpdate);
+      requestUpdate();
+    })();
+
+    // let users swipe the contact boxes in ANY direction (up/down or left/right)
+    (function(){
+      const scroller = document.querySelector('.contact-boxes');
+      if (!scroller) return;
+
+      function maxScroll(){
+        return scroller.scrollWidth - scroller.clientWidth;
+      }
+
+      // wheel handler: let the browser natively scroll horizontal gestures
+      // (smooth trackpad swipe on Mac), and only translate VERTICAL wheel/scroll
+      // into horizontal movement (what mouse-only users on Windows need).
+      scroller.addEventListener('wheel', function(e){
+        // horizontal gesture already present -> leave it to native overflow-x
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+        // normalize vertical delta: many Windows mice report lines/pages, not px
+        let dy = e.deltaY;
+        if (e.deltaMode === 1) dy *= 16;                       // lines -> px
+        else if (e.deltaMode === 2) dy *= scroller.clientHeight; // pages -> px
+        if (dy === 0) return;
+        const max = maxScroll();
+        const atStart = scroller.scrollLeft <= 0;
+        const atEnd = scroller.scrollLeft >= max - 1;
+        // release to the page when there's no more room in that direction
+        if ((dy < 0 && atStart) || (dy > 0 && atEnd)) return;
+        scroller.scrollLeft += dy;
+        e.preventDefault();
+      }, { passive:false });
+
+      // touch: dominant axis of the swipe drives horizontal scroll
+      let startX = 0, startY = 0, startLeft = 0;
+      scroller.addEventListener('touchstart', function(e){
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        startLeft = scroller.scrollLeft;
+      }, { passive:true });
+      scroller.addEventListener('touchmove', function(e){
+        const dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+        const move = Math.abs(dy) > Math.abs(dx) ? dy : dx;
+        const max = maxScroll();
+        const clamped = Math.max(0, Math.min(max, startLeft - move));
+        scroller.scrollLeft = clamped;
+        // keep the page still only while the boxes still have somewhere to go
+        if (clamped > 0 && clamped < max) e.preventDefault();
+      }, { passive:false });
     })();
 
     (function(){
@@ -733,6 +819,7 @@
     link.el.style.transform = 'translate(' + link.curX.toFixed(1) + 'px, ' + link.curY.toFixed(1) + 'px)';
   }
 
+  let rafId = null;
   function loop(){
     step(links[midIndex], { curX: mouseX, curY: mouseY }, 0);
     for (let i = midIndex + 1; i < links.length; i++){
@@ -741,9 +828,21 @@
     for (let i = midIndex - 1; i >= 0; i--){
       step(links[i], links[i + 1], midIndex - i);
     }
-    requestAnimationFrame(loop);
+    rafId = requestAnimationFrame(loop);
   }
-  requestAnimationFrame(loop);
+
+  // only run the trailing-text physics while the section is on screen
+  const io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting && rafId === null){
+        rafId = requestAnimationFrame(loop);
+      } else if (!entry.isIntersecting && rafId !== null){
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    });
+  }, { threshold: 0 });
+  io.observe(section);
 })();
 
 (function(){
@@ -931,7 +1030,20 @@
   });
 
   const runner = Runner.create();
-  Runner.run(runner, engine);
+  // only simulate physics while the tag cloud is on screen
+  let simRunning = false;
+  const simObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting && !simRunning){
+        Runner.run(runner, engine);
+        simRunning = true;
+      } else if (!entry.isIntersecting && simRunning){
+        Runner.stop(runner);
+        simRunning = false;
+      }
+    });
+  }, { threshold: 0 });
+  simObserver.observe(container);
 
   function render(){
     badges.forEach(function(b){
@@ -962,16 +1074,28 @@
     mouseY = e.clientY;
   });
 
-  function loop(){
+  // cache eye geometry; recompute only when layout can actually change
+  const geo = eyes.map(function(){ return { cx:0, cy:0, maxX:1, maxY:1 }; });
+  function measure(){
     eyes.forEach(function(eye, i){
       const rect = eye.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      const dx = mouseX - cx;
-      const dy = mouseY - cy;
-      const maxX = rect.width / 2 - 15;
-      const maxY = rect.height / 2 - 15;
-      const ellipseDist = (dx * dx) / (maxX * maxX) + (dy * dy) / (maxY * maxY);
+      geo[i].cx = rect.left + rect.width / 2;
+      geo[i].cy = rect.top + rect.height / 2;
+      geo[i].maxX = rect.width / 2 - 15;
+      geo[i].maxY = rect.height / 2 - 15;
+    });
+  }
+  measure();
+  window.addEventListener('scroll', measure, { passive:true });
+  window.addEventListener('resize', measure);
+
+  let rafId = null;
+  function loop(){
+    eyes.forEach(function(eye, i){
+      const g = geo[i];
+      const dx = mouseX - g.cx;
+      const dy = mouseY - g.cy;
+      const ellipseDist = (dx * dx) / (g.maxX * g.maxX) + (dy * dy) / (g.maxY * g.maxY);
       let tx = dx, ty = dy;
       if (ellipseDist > 1){
         const scale = 1 / Math.sqrt(ellipseDist);
@@ -983,9 +1107,22 @@
       pupils[i].style.transform =
         'translate(-50%, -50%) translate(' + curX[i].toFixed(1) + 'px, ' + curY[i].toFixed(1) + 'px)';
     });
-    requestAnimationFrame(loop);
+    rafId = requestAnimationFrame(loop);
   }
-  requestAnimationFrame(loop);
+
+  // only animate while the eyes are on screen
+  const io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting && rafId === null){
+        measure();
+        rafId = requestAnimationFrame(loop);
+      } else if (!entry.isIntersecting && rafId !== null){
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    });
+  }, { threshold: 0 });
+  io.observe(eyesBox);
 
   function scheduleBlink(){
     const delay = 2000 + Math.random() * 4000;
