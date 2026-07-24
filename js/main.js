@@ -720,90 +720,146 @@
       }, { passive:false });
     })();
 (function(){
+  // ===== Dot Grid Background =====
+  // Physics-inspired cursor interaction: dots break from the grid and orbit in
+  // randomized 3D planes (atomic-orbital model). A single global clock drives
+  // every orbit at constant speed; the cursor only decides which dots are pulled
+  // in. On leave, orbits wind down with a smooth ease-out decay.
   const section = document.getElementById('blackDivider');
-  const grid = document.getElementById('dotGrid');
+  const canvas = document.getElementById('dotGrid');
   const cursorCircle = document.getElementById('cursorCircle');
-  if (!section || !grid) return;
+  if (!section || !canvas || !canvas.getContext) return;
+  const ctx = canvas.getContext('2d');
 
-  const SPACING = 28;
-  const MAX_DIST = 160;
-  const MAX_SCALE = 6;
+  // ---- Properties ----
+  const DOT_COLOR    = '255, 255, 255'; // rgb; white dots on the black section
+  const DOT_RADIUS   = 2;    // px (1–12)
+  const GRID_SPACING = 28;   // px (12 tight – 80 airy)
+  const ENABLE_ORBIT = true; // 3D orbit on/off (off = just scale + brighten)
+  const ORBIT_SPEED  = 1.5;  // radians / second (global, cursor never changes it)
+  const IMPACT_RADIUS= 160;  // px reach from cursor (20–400)
+  const SCALE_HOVER  = 3.6;  // dot enlargement at the center of the impact zone
+  const ORBIT_R      = 22;   // how far a fully-pulled dot breaks from its grid spot
+
   let dots = [];
-  let mouseX = null, mouseY = null;
+  let W = 0, H = 0, dpr = 1;
+  let mouseX = null, mouseY = null, active = false;
   let raf = null;
 
+  function rand(a, b){ return a + Math.random() * (b - a); }
+
   function buildGrid(){
-    grid.innerHTML = '';
     dots = [];
-    const w = section.clientWidth;
-    const h = section.clientHeight;
-    const cols = Math.ceil(w / SPACING) + 1;
-    const rows = Math.ceil(h / SPACING) + 1;
-    const frag = document.createDocumentFragment();
+    const cols = Math.ceil(W / GRID_SPACING) + 1;
+    const rows = Math.ceil(H / GRID_SPACING) + 1;
     for (let r = 0; r < rows; r++){
       for (let c = 0; c < cols; c++){
-        const x = c * SPACING;
-        const y = r * SPACING;
-        const dot = document.createElement('div');
-        dot.className = 'dot';
-        dot.style.left = x + 'px';
-        dot.style.top = y + 'px';
-        frag.appendChild(dot);
-        dots.push({ el: dot, x, y });
+        dots.push({
+          x: c * GRID_SPACING,
+          y: r * GRID_SPACING,
+          inc: rand(0, Math.PI),        // inclination — tilt of the orbital plane
+          asc: rand(0, Math.PI * 2),    // ascension — plane rotation around viewer axis
+          phase: rand(0, Math.PI * 2),  // where on the orbit it starts
+          infl: 0                        // current cursor influence (eased)
+        });
       }
     }
-    grid.appendChild(frag);
   }
 
-  function update(){
-    raf = null;
-    if (mouseX === null){
-      dots.forEach(d => {
-        d.el.style.transform = 'scale(1)';
-        d.el.style.background = 'rgba(255,255,255,0.45)';
-      });
-      return;
-    }
-    dots.forEach(d => {
-      const dx = d.x - mouseX;
-      const dy = d.y - mouseY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < MAX_DIST){
-        const t = 1 - (dist / MAX_DIST);
-        const scale = 1 + t * (MAX_SCALE - 1);
-        const alpha = 0.45 + t * 0.55;
-        d.el.style.transform = 'scale(' + scale.toFixed(3) + ')';
-        d.el.style.background = 'rgba(255,255,255,' + alpha.toFixed(3) + ')';
-      } else {
-        d.el.style.transform = 'scale(1)';
-        d.el.style.background = 'rgba(255,255,255,0.45)';
-      }
-    });
+  function resize(){
+    const rect = section.getBoundingClientRect();
+    W = rect.width; H = rect.height;
+    dpr = Math.min(window.devicePixelRatio || 1, 2); // resolution-aware
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    buildGrid();
+    if (!raf) render(); // redraw the static grid after a resize
   }
+
+  function render(){
+    raf = null;
+    const clock = performance.now() / 1000; // global wall clock — constant orbit speed
+    ctx.clearRect(0, 0, W, H);
+    let busy = false;
+
+    for (let i = 0; i < dots.length; i++){
+      const d = dots[i];
+
+      // target influence from cursor proximity to this dot's grid position
+      let target = 0;
+      if (active && mouseX !== null){
+        const dx = d.x - mouseX, dy = d.y - mouseY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < IMPACT_RADIUS) target = 1 - dist / IMPACT_RADIUS;
+      }
+      d.infl += (target - d.infl) * 0.12; // ease-in / ease-out decay
+      if (d.infl > 0.003) busy = true; else if (target === 0) d.infl = 0;
+
+      let ox = 0, oy = 0, depth = 0;
+      if (ENABLE_ORBIT && d.infl > 0.001){
+        const R = d.infl * ORBIT_R;
+        const th = clock * ORBIT_SPEED + d.phase;
+        // point on the orbit circle in its own plane
+        let px = Math.cos(th) * R, py = Math.sin(th) * R;
+        // tilt the plane by inclination (rotate about X): introduces depth (z)
+        const ci = Math.cos(d.inc), si = Math.sin(d.inc);
+        const y1 = py * ci;      // z-in was 0
+        depth = py * si;
+        // rotate the plane about the viewer axis by ascension (rotate about Z)
+        const ca = Math.cos(d.asc), sa = Math.sin(d.asc);
+        ox = px * ca - y1 * sa;
+        oy = px * sa + y1 * ca;
+      }
+
+      const depthN = ORBIT_R ? depth / ORBIT_R : 0;         // -1 (back) .. 1 (front)
+      const scale = 1 + d.infl * (SCALE_HOVER - 1);
+      const radius = Math.max(0.2, DOT_RADIUS * scale * (1 + depthN * 0.5));
+      let alpha = 0.45 + d.infl * 0.55;                     // brighten near cursor
+      alpha = Math.min(1, Math.max(0.06, alpha * (1 + depthN * 0.35))); // depth shading
+
+      ctx.beginPath();
+      ctx.arc(d.x + ox, d.y + oy, radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(' + DOT_COLOR + ', ' + alpha.toFixed(3) + ')';
+      ctx.fill();
+    }
+
+    // keep animating while the cursor is active or dots are still settling
+    if (active || busy) raf = requestAnimationFrame(render);
+  }
+
+  function start(){ if (!raf) raf = requestAnimationFrame(render); }
 
   section.addEventListener('mouseenter', function(){
     document.body.classList.add('on-black-divider');
+    active = true; start();
   });
   section.addEventListener('mousemove', function(e){
     const rect = section.getBoundingClientRect();
     mouseX = e.clientX - rect.left;
     mouseY = e.clientY - rect.top;
+    active = true;
     if (cursorCircle){
       cursorCircle.style.left = mouseX + 'px';
       cursorCircle.style.top = mouseY + 'px';
       cursorCircle.style.opacity = '1';
     }
-    if (!raf) raf = requestAnimationFrame(update);
+    start();
   });
   section.addEventListener('mouseleave', function(){
-    mouseX = null;
+    active = false; mouseX = null; mouseY = null;
     document.body.classList.remove('on-black-divider');
     if (cursorCircle) cursorCircle.style.opacity = '0';
-    if (!raf) raf = requestAnimationFrame(update);
+    start(); // let the orbits wind down to rest, then the loop stops itself
   });
 
-  buildGrid();
-  window.addEventListener('resize', buildGrid);
+  // rebuild on resize (ResizeObserver per spec, window resize as fallback)
+  if ('ResizeObserver' in window){
+    new ResizeObserver(resize).observe(section);
+  } else {
+    window.addEventListener('resize', resize);
+  }
+  resize();
 })();
 (function(){
   const section = document.getElementById('blackDivider');
