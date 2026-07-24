@@ -1147,6 +1147,13 @@
 })();
 
 (function(){
+  // ===== Eyes Follow Cursor =====
+  // Pupils track the mouse with eased, ellipse-constrained motion and return to
+  // the exact eye center when the cursor is over it.
+  const PUPIL_RANGE = 1.0; // customizable radius: 0 = no movement, 1 = max in-eye travel
+  const PUPIL_INSET = 15;  // px kept between the pupil and the eye edge (keeps it inside)
+  const EASE = 0.25;       // tracking smoothness: lower = smoother/laggier
+
   const eyesBox = document.getElementById('cartoonEyes');
   if (!eyesBox) return;
   const eyes = Array.from(eyesBox.querySelectorAll('.eye'));
@@ -1168,8 +1175,8 @@
       const rect = eye.getBoundingClientRect();
       geo[i].cx = rect.left + rect.width / 2;
       geo[i].cy = rect.top + rect.height / 2;
-      geo[i].maxX = rect.width / 2 - 15;
-      geo[i].maxY = rect.height / 2 - 15;
+      geo[i].maxX = Math.max(0, rect.width / 2 - PUPIL_INSET) * PUPIL_RANGE;
+      geo[i].maxY = Math.max(0, rect.height / 2 - PUPIL_INSET) * PUPIL_RANGE;
     });
   }
   measure();
@@ -1189,8 +1196,8 @@
         tx = dx * scale;
         ty = dy * scale;
       }
-      curX[i] += (tx - curX[i]) * 0.25;
-      curY[i] += (ty - curY[i]) * 0.25;
+      curX[i] += (tx - curX[i]) * EASE;
+      curY[i] += (ty - curY[i]) * EASE;
       pupils[i].style.transform =
         'translate(-50%, -50%) translate(' + curX[i].toFixed(1) + 'px, ' + curY[i].toFixed(1) + 'px)';
     });
