@@ -108,14 +108,45 @@
 
     (function(){
       const loader = document.getElementById('loader');
-      const duration = 80;
+      const countEl = document.getElementById('loaderCount');
+      const fillEl = document.getElementById('loaderFill');
+      if (!loader) return;
 
-      setTimeout(() => {
-        loader.classList.add('is-done');
-        document.body.classList.remove('is-loading');
-        document.body.classList.add('loaded');
-        setTimeout(() => { loader.style.display = 'none'; }, 1000);
-      }, duration);
+      // ===== PreloaderDelay =====
+      // Total time (ms) page scroll stays locked, until the curtain reveal is finished.
+      // Change 3000 to any number you like. Note: 3000ms = 3 seconds.
+      const PreloaderDelay = 3000;
+
+      const countDuration = 1900; // counter run time; the stage-curtain reveal plays right after
+      const start = performance.now();
+      // easeOutCubic so the count decelerates toward 100 like a real loader
+      const ease = t => 1 - Math.pow(1 - t, 3);
+
+      function frame(now){
+        const t = Math.min((now - start) / countDuration, 1);
+        const p = ease(t);
+        if (countEl) countEl.textContent = Math.round(p * 100);
+        if (fillEl) fillEl.style.width = (p * 100) + '%';
+
+        if (t < 1){
+          requestAnimationFrame(frame);
+        } else {
+          // counter hit 100% -> raise the stage curtain and reveal the page underneath
+          loader.classList.add('is-done');
+          document.body.classList.add('loaded'); // fades in the .reveal content beneath
+        }
+      }
+      requestAnimationFrame(frame);
+
+      // Keep the page from scrolling until the whole preloader has finished.
+      const scrollY = window.scrollY || 0;
+      function lockScroll(){ window.scrollTo(0, scrollY); }
+      window.addEventListener('scroll', lockScroll, { passive:true });
+      setTimeout(function(){
+        window.removeEventListener('scroll', lockScroll);
+        document.body.classList.remove('is-loading'); // releases overflow:hidden
+        loader.style.display = 'none';
+      }, PreloaderDelay);
     })();
 
     (function(){

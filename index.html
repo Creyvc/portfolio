@@ -31,8 +31,14 @@
   </div>
 
   <div class="loader" id="loader">
-    <div class="loader-rows">
-      <span></span><span></span><span></span><span></span><span></span><span></span>
+    <div class="loader-panels" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="loader-content">
+      <div class="loader-count-wrap">
+        <span class="loader-count" id="loaderCount">0</span><span class="loader-pct">%</span>
+      </div>
+      <div class="loader-line"><span class="loader-line-fill" id="loaderFill"></span></div>
     </div>
   </div>
 
