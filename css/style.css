@@ -327,9 +327,7 @@
     justify-self:end;
     margin-right:-0.8rem;
     display:inline-flex; align-items:center; gap:0.5rem;
-    background:#0C1F3F; color:#fff;
-    padding:0.35rem 0.9rem;
-    border-radius:999px;
+    color:var(--ink);
     font-family:var(--sans);
     font-size:0.65rem;
     font-weight:500;
@@ -339,13 +337,13 @@
   }
   .time-badge .dot{
     width:6px; height:6px; border-radius:50%;
-    background:#fff;
+    background:var(--ink);
     flex-shrink:0;
     animation:blink-dot 1s ease-in-out infinite;
   }
   @keyframes blink-dot{
-    0%, 100%{ background:#fff; }
-    50%{ background:#0C1F3F; }
+    0%, 100%{ opacity:1; }
+    50%{ opacity:0; }
   }
   nav{ grid-column:2; display:flex; gap:2.5rem; font-size:0.7rem; font-weight:200; letter-spacing:0.03em; text-transform:uppercase; }
   nav a{ opacity:0.6; transition:opacity 0.15s; }
