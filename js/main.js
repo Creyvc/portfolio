@@ -134,64 +134,6 @@
     })();
 
 
-    (function(){
-      const vLogo = document.getElementById('vLogo');
-      const overlay = document.getElementById('menuOverlay');
-      if (!vLogo || !overlay) return;
-
-      vLogo.addEventListener('click', () => {
-        overlay.classList.toggle('is-open');
-        document.body.classList.toggle('menu-open', overlay.classList.contains('is-open'));
-      });
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay){
-          overlay.classList.remove('is-open');
-          document.body.classList.remove('menu-open');
-        }
-      });
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape'){
-          overlay.classList.remove('is-open');
-          document.body.classList.remove('menu-open');
-        }
-      });
-
-      function easeInOutCubic(t){
-        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-      }
-
-      function goToY(targetY){
-        overlay.classList.remove('is-open');
-        document.body.classList.remove('menu-open');
-
-        const startY = window.scrollY;
-        const startTime = performance.now();
-        const duration = 600;
-        function step(now){
-          const elapsed = now - startTime;
-          const progress = Math.min(elapsed / duration, 1);
-          window.scrollTo(0, startY + (targetY - startY) * easeInOutCubic(progress));
-          if (progress < 1) requestAnimationFrame(step);
-        }
-        requestAnimationFrame(step);
-      }
-
-      function wireNavBox(selector, sectionId){
-        const box = document.querySelector(selector);
-        const section = sectionId ? document.getElementById(sectionId) : null;
-        if (!box || (sectionId && !section)) return;
-        box.style.cursor = 'pointer';
-        box.addEventListener('click', () => {
-          const targetY = section ? section.getBoundingClientRect().top + window.scrollY : 0;
-          goToY(targetY);
-        });
-      }
-
-      wireNavBox('.menu-money', null);
-      wireNavBox('.menu-dog', 'projects');
-      wireNavBox('.menu-cat2', 'about');
-      wireNavBox('.menu-cat1', 'contact');
-    })();
 
     (function(){
       document.querySelectorAll('.project-box').forEach(box => {
