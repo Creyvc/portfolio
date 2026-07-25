@@ -3,7 +3,7 @@
     --sans:ui-monospace, 'SF Mono', 'JetBrains Mono', 'IBM Plex Mono', Menlo, Consolas, monospace;
     --header-h: 3.25rem;
   }
-  *{ box-sizing:border-box; cursor:none; }
+  *{ box-sizing:border-box; }
   html,body{ margin:0; scroll-behavior:smooth; overflow-x:hidden; }
   body{
     background:var(--paper); color:var(--ink);
@@ -594,7 +594,6 @@
     align-items:center;
     justify-content:center;
     overflow:hidden;
-    cursor:none;
   }
   .black-divider .cursor-circle{
     position:absolute;
