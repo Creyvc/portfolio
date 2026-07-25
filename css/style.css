@@ -650,13 +650,15 @@
     pointer-events:none;
   }
   .black-divider span{
-    position:relative;
+    position:absolute;
+    top:1.5rem;
+    left:3.5rem;
     z-index:1;
     color:#fff;
     font-family:'Press Start 2P', var(--sans);
     font-weight:700;
     letter-spacing:0.06em;
-    font-size:clamp(2rem, 5vw, 3.5rem);
+    font-size:clamp(0.7rem, 1.5vw, 1rem);
     text-transform:uppercase;
   }
   .black-divider span .lead{

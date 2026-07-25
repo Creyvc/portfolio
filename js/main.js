@@ -883,53 +883,7 @@
 
   const links = chars.map(function(c){ return { el: c, curX: 0, curY: 0, targetX: 0, targetY: 0 }; });
 
-  let mouseX = 0, mouseY = 0;
-
-  section.addEventListener('mousemove', function(e){
-    const rect = section.getBoundingClientRect();
-    mouseX = (e.clientX - rect.left) - rect.width / 2;
-    mouseY = (e.clientY - rect.top) - rect.height / 2;
-  });
-  section.addEventListener('mouseleave', function(){
-    mouseX = 0;
-    mouseY = 0;
-  });
-
-  const midIndex = Math.floor((links.length - 1) / 2);
-
-  function step(link, leader, dist){
-    const rate = Math.max(0.075 - dist * 0.003, 0.025);
-    link.targetX = leader.curX;
-    link.targetY = leader.curY;
-    link.curX += (link.targetX - link.curX) * rate;
-    link.curY += (link.targetY - link.curY) * rate;
-    link.el.style.transform = 'translate(' + link.curX.toFixed(1) + 'px, ' + link.curY.toFixed(1) + 'px)';
-  }
-
-  let rafId = null;
-  function loop(){
-    step(links[midIndex], { curX: mouseX, curY: mouseY }, 0);
-    for (let i = midIndex + 1; i < links.length; i++){
-      step(links[i], links[i - 1], i - midIndex);
-    }
-    for (let i = midIndex - 1; i >= 0; i--){
-      step(links[i], links[i + 1], midIndex - i);
-    }
-    rafId = requestAnimationFrame(loop);
-  }
-
-  // only run the trailing-text physics while the section is on screen
-  const io = new IntersectionObserver(function(entries){
-    entries.forEach(function(entry){
-      if (entry.isIntersecting && rafId === null){
-        rafId = requestAnimationFrame(loop);
-      } else if (!entry.isIntersecting && rafId !== null){
-        cancelAnimationFrame(rafId);
-        rafId = null;
-      }
-    });
-  }, { threshold: 0 });
-  io.observe(section);
+  // Text stays fixed in the middle — no mouse-following.
 })();
 
 (function(){
