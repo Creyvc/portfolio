@@ -379,25 +379,48 @@
   }
 
   .split{
-    display:flex;
+    position:relative;
     height:calc(100vh - var(--header-h));
   }
   .side-panel{
-    order:2;
-    flex:2.2;
-    background:var(--panel);
+    position:absolute;
+    right:0; top:0; bottom:0;
+    width:58%;
+    background:#2e5fff;
   }
-  .content{ order:1; }
   .content{
-    flex:1;
-    padding:3rem 0rem 4rem 6.8rem;
+    position:relative;
+    height:100%;
+    margin-left:0;
+    padding:0 2rem 0 21rem;
     display:flex; flex-direction:column;
-    overflow-y:auto;
+    overflow:hidden;
+  }
+  /* center marker dot */
+  .wheel-dot{
+    position:absolute;
+    left:10rem; top:50%;
+    width:0.9rem; height:0.9rem;
+    margin-top:-0.45rem;
+    border-radius:50%;
+    background:transparent;
+    border:2px solid currentColor;
+    pointer-events:none;
+    z-index:2;
+  }
+  .work-track{
+    display:flex; flex-direction:column;
+    will-change:transform;
   }
   .work-list{
     display:flex; flex-direction:column;
-    gap:3rem;
-    margin-top:3rem;
+    gap:2.2rem;
+    padding:1.1rem 0;
+    max-width:16rem;
+  }
+  .work-item-top{
+    transform-origin:0% 50%;
+    will-change:transform;
   }
   .work-item{
     display:block;
@@ -405,9 +428,9 @@
     color:inherit;
     transition:filter 0.2s ease, opacity 0.2s ease;
   }
-  .work-list:hover .work-item:not(:hover){
-    filter:blur(4px);
-    opacity:0.5;
+  .work-track:has(.work-item:hover) .work-item:not(:hover){
+    filter:blur(2px);
+    opacity:0.65;
   }
   .work-item-top{
     display:flex; align-items:baseline; gap:1rem;
@@ -419,29 +442,15 @@
   .work-item:hover .work-item-top{
     border-color:var(--ink);
   }
-  .work-item:first-child:hover .work-item-top{
-    border-color:#2e5fff;
-    background:#2e5fff;
-    color:var(--paper);
-  }
-  .work-item:nth-child(2):hover .work-item-top{
-    border-color:#E11D48;
-    background:#E11D48;
-    color:var(--paper);
-  }
-  .work-item:nth-child(3):hover .work-item-top{
-    border-color:#33FF57;
-    background:#33FF57;
-    color:var(--ink);
-  }
   .work-title{
-    font-family:'Press Start 2P', var(--sans);
-    font-size:clamp(0.8rem, 1.6vw, 1.05rem);
+    font-family:var(--sans);
+    font-weight:300;
+    letter-spacing:0;
+    font-size:clamp(1.1rem, 2.2vw, 1.5rem);
     white-space:nowrap;
   }
   .work-rule{
     flex:1;
-    border-bottom:1px solid rgba(23,24,28,0.15);
     transform:translateY(-0.4em);
     transition:border-color 0.2s ease;
   }
@@ -583,31 +592,9 @@
     </div>
   </div>
 
-  <div class="split">
-    <aside class="side-panel"></aside>
-
-    <main class="content">
-      <div class="work-list">
-        <a class="work-item" href="#">
-          <div class="work-item-top">
-            <span class="work-title">Project One</span>
-            <span class="work-rule"></span>
-            <span class="work-year"><span class="dash">—</span><svg class="arrow" viewBox="0 0 24 24"><path d="M2 12h19"/><path d="M14 5l7 7-7 7"/></svg></span>
-          </div>
-        </a>
-
-        <a class="work-item" href="#">
-          <div class="work-item-top">
-            <span class="work-title">Project Two</span>
-            <span class="work-rule"></span>
-            <span class="work-year"><span class="dash">—</span><svg class="arrow" viewBox="0 0 24 24"><path d="M2 12h19"/><path d="M14 5l7 7-7 7"/></svg></span>
-          </div>
-        </a>
-      </div>
-    </main>
-  </div>
 
   <script>
+
     (function(){
       const pattern = [
         [1,0,0,0,0,0,1],
