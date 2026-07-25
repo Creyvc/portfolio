@@ -364,18 +364,52 @@
     })();
 
     (function(){
-     const homeLink = document.getElementById('home-link');
+      const homeLink = document.getElementById('home-link');
+      if (!homeLink) return;
       const names = [
         { text: '[VUTHY CHEAM]', lang: 'en' },
         { text: '[ជាម វុឌ្ឍី]', lang: 'km' },
         { text: '[เฟิร์ส]', lang: 'th' }
       ];
-      let i = 0;
-      setInterval(() => {
-        i = (i + 1) % names.length;
-        homeLink.textContent = names[i].text;
-        homeLink.lang = names[i].lang;
-      }, 1250);
+      // same scramble/decode transition as the multilingual greeting above
+      const GLYPHS = '01<>[]{}/\\|=+*-#%&$ｦｧｨｩｪﾊﾋﾌﾍABCDEFGHKMNXZ';
+      const HOLD_MS = 1250;   // how long each resolved name stays
+      const STEPS = 15;       // scramble ticks before fully resolved
+      const TICK_MS = 26;     // ms per scramble tick
+
+      let index = 0;
+      let timer = null;
+
+      function play(){
+        const n = names[index % names.length];
+        homeLink.lang = n.lang;
+        const chars = Array.from(n.text);
+        const total = chars.length;
+        let step = 0;
+        clearInterval(timer);
+        timer = setInterval(function(){
+          step++;
+          const revealed = Math.floor(total * step / STEPS);
+          let out = '';
+          for (let i = 0; i < total; i++){
+            const c = chars[i];
+            if (i < revealed || c === ' ' || c === '[' || c === ']'){
+              out += c;
+            } else {
+              out += GLYPHS[(Math.random() * GLYPHS.length) | 0];
+            }
+          }
+          homeLink.textContent = out;
+          if (step >= STEPS){
+            clearInterval(timer);
+            homeLink.textContent = n.text;
+            index++;
+            setTimeout(play, HOLD_MS);
+          }
+        }, TICK_MS);
+      }
+
+      play();
     })();
 
     (function(){
