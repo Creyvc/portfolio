@@ -86,39 +86,6 @@
     z-index:9996;
     pointer-events:none;
   }
-  .scroll-track{
-    position:fixed;
-    left:1.75rem;
-    top:8rem;
-    bottom:8rem;
-    width:1px;
-    background:#fff;
-    mix-blend-mode:difference;
-    z-index:9995;
-    pointer-events:none;
-  }
-  body.menu-open .scroll-track{
-    display:none;
-  }
-  .scroll-thumb{
-    position:absolute;
-    left:50%;
-    top:0;
-    width:14px; height:14px;
-    border-radius:50%;
-    background:var(--paper);
-    border:1px solid rgba(23,24,28,0.35);
-    transform:translate(-50%, -50%);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
-  .scroll-thumb::after{
-    content:'';
-    width:5px; height:5px;
-    border-radius:50%;
-    background:#000;
-  }
   .v-logo .px{
     position:absolute;
     width:calc(100% / 7);

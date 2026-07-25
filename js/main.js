@@ -60,22 +60,6 @@
     })();
 
     (function(){
-      const track = document.getElementById('scrollTrack');
-      const thumb = document.getElementById('scrollThumb');
-      if (!track || !thumb) return;
-
-      function update(){
-        const trackRect = track.getBoundingClientRect();
-        const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
-        const progress = scrollableHeight > 0 ? window.scrollY / scrollableHeight : 0;
-        thumb.style.top = (Math.min(Math.max(progress, 0), 1) * trackRect.height) + 'px';
-      }
-      window.addEventListener('scroll', update, { passive:true });
-      window.addEventListener('resize', update);
-      update();
-    })();
-
-    (function(){
       const line = document.getElementById('hBottomLine');
       const header = document.querySelector('header');
       if (!line || !header) return;
