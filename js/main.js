@@ -29,15 +29,6 @@
         });
       });
 
-      const label = document.createElement('span');
-      label.className = 'menu-label';
-      label.innerHTML = '<span>ME</span><span>NU</span>';
-      logo.appendChild(label);
-
-      const lines = document.createElement('span');
-      lines.className = 'menu-lines';
-      lines.innerHTML = '<span></span><span></span><span></span>';
-      logo.appendChild(lines);
     })();
 
     (function(){

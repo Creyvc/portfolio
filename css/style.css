@@ -96,8 +96,6 @@
   }
   .v-logo:hover .px{
     animation:none;
-    opacity:0;
-    transform:translate(var(--dx), var(--dy)) scale(0.2);
   }
   body.menu-open .v-logo .px{
     animation:none;
