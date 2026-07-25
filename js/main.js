@@ -1,19 +1,4 @@
     (function(){
-      const line = document.getElementById('hBottomLine');
-      const header = document.querySelector('header');
-      if (!line || !header) return;
-
-      function positionLine(){
-        const rect = header.getBoundingClientRect();
-        line.style.top = rect.bottom + 'px';
-      }
-      positionLine();
-      window.addEventListener('resize', positionLine);
-      window.addEventListener('load', positionLine);
-      setTimeout(positionLine, 300);
-    })();
-
-    (function(){
       const timeEl = document.getElementById('bkk-time');
       function updateClock(){
         const formatted = new Intl.DateTimeFormat('en-US', {
