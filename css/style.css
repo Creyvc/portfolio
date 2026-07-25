@@ -12,15 +12,15 @@
     padding-top:var(--header-h);
   }
   .home-cluster{
-    display:flex; flex-direction:column; align-items:flex-start;
-    gap:0.35rem;
+    display:flex; flex-direction:row; align-items:center;
+    gap:0.5rem;
     justify-self:start;
+    margin-top:-0.35rem;
   }
   .header-logo{
     display:block;
     width:3.5rem; height:auto;
     margin-left:-1.6rem;
-    margin-top:-0.5rem;
   }
   .v-logo{
     position:relative;
@@ -322,6 +322,7 @@
     width:9rem;
     white-space:nowrap;
     overflow:hidden;
+    margin-top:-0.9rem;
   }
   .home-link:lang(km), .home-link:lang(th){
     font-size:0.88rem;
