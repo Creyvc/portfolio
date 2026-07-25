@@ -57,51 +57,6 @@
       }, PreloaderDelay);
     })();
 
-    // ===== Interstitial gate (blank for now) =====
-    // Shows a black page after the loader; the home page stays locked behind it
-    // until dismissGate() is called. Wire your own interaction later and call
-    // dismissGate() from it. For now, clicking anywhere continues (placeholder).
-    (function(){
-      const gate = document.getElementById('gate');
-      if (!gate) return;
-
-      document.body.classList.add('gate-up'); // keep the page locked behind the gate
-
-      function dismissGate(){
-        if (gate.classList.contains('is-dismissed')) return;
-        gate.classList.add('is-dismissed');
-        document.body.classList.remove('gate-up');
-        setTimeout(function(){ gate.style.display = 'none'; }, 600); // match CSS fade
-      }
-      // expose so a future interaction (from anywhere) can call it
-      window.dismissGate = dismissGate;
-
-      // --- placeholder trigger: press Enter to continue (replace me) ---
-      document.addEventListener('keydown', function(e){
-        if (e.key === 'Enter') dismissGate();
-      });
-    })();
-
-    // ===== Shifter: move the joystick to a letter's slot when that letter is clicked =====
-    (function(){
-      const stick = document.getElementById('stick');
-      const btns = document.querySelectorAll('.sbtn');
-      if (!stick || !btns.length) return;
-
-      btns.forEach(function(btn){
-        btn.addEventListener('click', function(){
-          const x = btn.getAttribute('data-x');
-          const y = btn.getAttribute('data-y');
-          if (x) stick.style.left = x;
-          if (y) stick.style.top = y;
-          btns.forEach(function(b){ b.classList.remove('is-active'); });
-          btn.classList.add('is-active');
-        });
-      });
-    })();
-
-
-
     (function(){
       document.querySelectorAll('.project-box').forEach(box => {
         ['tl', 'tr', 'bl', 'br'].forEach(corner => {
