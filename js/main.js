@@ -57,6 +57,29 @@
       }, PreloaderDelay);
     })();
 
+    // ===== Interstitial gate (blank for now) =====
+    // Shows a black page after the loader; the home page stays locked behind it
+    // until dismissGate() is called. Wire your own interaction later and call
+    // dismissGate() from it. For now, clicking anywhere continues (placeholder).
+    (function(){
+      const gate = document.getElementById('gate');
+      if (!gate) return;
+
+      document.body.classList.add('gate-up'); // keep the page locked behind the gate
+
+      function dismissGate(){
+        if (gate.classList.contains('is-dismissed')) return;
+        gate.classList.add('is-dismissed');
+        document.body.classList.remove('gate-up');
+        setTimeout(function(){ gate.style.display = 'none'; }, 600); // match CSS fade
+      }
+      // expose so a future interaction (from anywhere) can call it
+      window.dismissGate = dismissGate;
+
+      // --- placeholder trigger: click anywhere to continue (replace me) ---
+      gate.addEventListener('click', dismissGate);
+    })();
+
 
 
     (function(){
