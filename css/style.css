@@ -315,6 +315,7 @@
   .home-link{
     font-family:var(--sans), 'Noto Sans Khmer', 'Noto Sans Thai', sans-serif;
     font-weight:400;
+    color:#888888;
     font-size:0.8rem;
     letter-spacing:0.02em;
     position:absolute;
@@ -338,7 +339,7 @@
     margin-right:-0.8rem;
     margin-top:0.15rem;
     display:inline-flex; align-items:center; gap:0.5rem;
-    color:var(--ink);
+    color:#888888;
     font-family:var(--sans);
     font-size:0.8rem;
     font-weight:500;
@@ -348,7 +349,7 @@
   }
   .time-badge .dot{
     width:8px; height:8px; border-radius:50%;
-    background:var(--ink);
+    background:#888888;
     flex-shrink:0;
     animation:blink-dot 1s ease-in-out infinite;
   }
