@@ -1,5 +1,5 @@
   :root{
-    --paper:#F3F2FA; --ink:#17181C; --accent:#B4371F;
+    --paper:#ffffff; --ink:#17181C; --accent:#B4371F;
     --sans:ui-monospace, 'SF Mono', 'JetBrains Mono', 'IBM Plex Mono', Menlo, Consolas, monospace;
     --header-h: 3.25rem;
   }
