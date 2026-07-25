@@ -319,9 +319,13 @@
     letter-spacing:0.02em;
     position:absolute;
     left:50%;
-    top:0.7rem;
-    width:12rem;
-    margin-left:-6rem;
+    top:0.4rem;
+    width:16rem;
+    height:1.8rem;
+    margin-left:-8rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     text-align:center;
     white-space:nowrap;
     overflow:hidden;

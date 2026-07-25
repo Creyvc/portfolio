@@ -148,9 +148,9 @@
       ];
       // same scramble/decode transition as the multilingual greeting above
       const GLYPHS = '01<>[]{}/\\|=+*-#%&$ｦｧｨｩｪﾊﾋﾌﾍABCDEFGHKMNXZ';
-      const HOLD_MS = 1250;   // how long each resolved name stays
+      const HOLD_MS = 2400;   // how long each resolved name stays
       const STEPS = 15;       // scramble ticks before fully resolved
-      const TICK_MS = 26;     // ms per scramble tick
+      const TICK_MS = 45;     // ms per scramble tick
 
       let index = 0;
       let timer = null;
