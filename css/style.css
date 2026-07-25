@@ -15,7 +15,7 @@
     display:flex; flex-direction:row; align-items:center;
     gap:0.5rem;
     justify-self:start;
-    margin-top:-0.35rem;
+    margin-top:-0.7rem;
   }
   .header-logo{
     display:block;
@@ -317,12 +317,14 @@
     font-weight:400;
     font-size:0.8rem;
     letter-spacing:0.02em;
-    justify-self:start;
-    display:inline-block;
-    width:9rem;
+    position:absolute;
+    left:50%;
+    top:0.7rem;
+    width:12rem;
+    margin-left:-6rem;
+    text-align:center;
     white-space:nowrap;
     overflow:hidden;
-    margin-top:-0.9rem;
   }
   .home-link:lang(km), .home-link:lang(th){
     font-size:0.88rem;
