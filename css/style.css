@@ -326,14 +326,14 @@
     display:inline-flex; align-items:center; gap:0.5rem;
     color:var(--ink);
     font-family:var(--sans);
-    font-size:0.65rem;
+    font-size:0.8rem;
     font-weight:500;
     letter-spacing:0.03em;
     text-transform:uppercase;
     white-space:nowrap;
   }
   .time-badge .dot{
-    width:6px; height:6px; border-radius:50%;
+    width:8px; height:8px; border-radius:50%;
     background:var(--ink);
     flex-shrink:0;
     animation:blink-dot 1s ease-in-out infinite;
