@@ -237,63 +237,6 @@
       });
     })();
 
-    (function(){
-      const el = document.getElementById('heroGreet');
-      if (!el) return;
-      const greetings = [
-        { text: 'ខ្ញុំទន្ទឹងរង់ចាំជួបអ្នកណាស់!', lang: 'km' },
-        { text: 'ฉันตั้งตารอที่จะได้พบคุณ!', lang: 'th' },
-        { text: 'お会いできるのを楽しみにしていました！', lang: 'ja' },
-        { text: '만나 뵙기를 고대하고 있었어요!', lang: 'ko' },
-        { text: 'Tenía muchas ganas de conocerte!', lang: 'es' },
-        { text: "I've been looking forward to meeting you!", lang: 'en' },
-        { text: 'मैं आपसे मिलने का इंतज़ार कर रहा था!', lang: 'hi' },
-        { text: '我一直很期待见到你！', lang: 'zh' },
-        { text: "J'avais hâte de vous rencontrer!", lang: 'fr' },
-        { text: 'သင့်ကိုတွေ့ဖို့ စောင့်မျှော်နေခဲ့တယ်!', lang: 'my' },
-        { text: 'مجھے آپ سے ملنے کا بہت انتظار تھا!', lang: 'ur' },
-        { text: 'Tôi đã rất mong được gặp bạn!', lang: 'vi' },
-        { text: 'ຂ້ອຍລໍຖ້າທີ່ຈະໄດ້ພົບເຈົ້າ!', lang: 'lo' }
-      ];
-      const GLYPHS = '01<>[]{}/\\|=+*-#%&$ｦｧｨｩｪﾊﾋﾌﾍABCDEFGHKMNXZ';
-      const HOLD_MS = 1400;    // how long each resolved phrase stays
-      const STEPS = 15;        // scramble ticks before fully resolved
-      const TICK_MS = 26;      // ms per scramble tick
-
-      let index = 0;
-      let timer = null;
-
-      function play(){
-        const g = greetings[index % greetings.length];
-        el.lang = g.lang;
-        const chars = Array.from(g.text);
-        const total = chars.length;
-        let step = 0;
-        clearInterval(timer);
-        timer = setInterval(function(){
-          step++;
-          const revealed = Math.floor(total * step / STEPS);
-          let out = '';
-          for (let i = 0; i < total; i++){
-            const c = chars[i];
-            if (i < revealed || c === ' '){
-              out += c;
-            } else {
-              out += GLYPHS[(Math.random() * GLYPHS.length) | 0];
-            }
-          }
-          el.textContent = out;
-          if (step >= STEPS){
-            clearInterval(timer);
-            el.textContent = g.text;
-            index++;
-            setTimeout(play, HOLD_MS);
-          }
-        }, TICK_MS);
-      }
-
-      play();
-    })();
 
     (function(){
       function easeInOutCubic(t){
