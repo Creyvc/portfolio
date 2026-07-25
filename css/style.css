@@ -12,9 +12,13 @@
     padding-top:var(--header-h);
   }
   .home-cluster{
-    display:flex; align-items:center;
-    gap:2.75rem;
+    display:flex; flex-direction:column; align-items:flex-start;
+    gap:0.35rem;
     justify-self:start;
+  }
+  .header-logo{
+    display:block;
+    width:2rem; height:auto;
   }
   .v-logo{
     position:relative;
@@ -288,7 +292,7 @@
     position:fixed; top:0; left:0; width:100%; z-index:9996;
     min-height:var(--header-h);
     display:flex; justify-content:space-between;
-    align-items:center;
+    align-items:flex-start;
     padding:0.6rem 2rem;
     background:rgba(255,255,255,0.35);
     backdrop-filter:blur(8px);
