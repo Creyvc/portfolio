@@ -76,8 +76,28 @@
       // expose so a future interaction (from anywhere) can call it
       window.dismissGate = dismissGate;
 
-      // --- placeholder trigger: click anywhere to continue (replace me) ---
-      gate.addEventListener('click', dismissGate);
+      // --- placeholder trigger: press Enter to continue (replace me) ---
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'Enter') dismissGate();
+      });
+    })();
+
+    // ===== Shifter: move the joystick to a letter's slot when that letter is clicked =====
+    (function(){
+      const stick = document.getElementById('stick');
+      const btns = document.querySelectorAll('.sbtn');
+      if (!stick || !btns.length) return;
+
+      btns.forEach(function(btn){
+        btn.addEventListener('click', function(){
+          const x = btn.getAttribute('data-x');
+          const y = btn.getAttribute('data-y');
+          if (x) stick.style.left = x;
+          if (y) stick.style.top = y;
+          btns.forEach(function(b){ b.classList.remove('is-active'); });
+          btn.classList.add('is-active');
+        });
+      });
     })();
 
 

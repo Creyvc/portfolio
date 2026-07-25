@@ -40,7 +40,38 @@
        Intentionally blank for now. Add whatever interaction you want inside,
        then call dismissGate() (in js/main.js) to reveal the home page.
        Placeholder for now: clicking anywhere dismisses it. -->
-  <div class="gate" id="gate"></div>
+  <div class="gate" id="gate">
+    <div class="shifter">
+      <div class="shifter-base"></div>
+      <div class="shifter-plate" id="shifterPlate">
+        <!-- engraved shift-gate groove -->
+        <svg class="gate-groove" viewBox="0 0 220 220" aria-hidden="true">
+          <path d="M60,52 H150 V88 H100 V120 H158 V156 H86"
+                fill="none" stroke="#000" stroke-width="26"
+                stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M60,52 H150 V88 H100 V120 H158 V156 H86"
+                fill="none" stroke="#0a0a0a" stroke-width="18"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+
+        <!-- clickable letter buttons: data-x / data-y = where the joystick moves to (% of plate) -->
+        <button class="sbtn sbtn-p" style="left:16%; top:20%;" data-x="30%" data-y="30%">⤴P</button>
+        <button class="sbtn"        style="left:84%; top:20%;" data-x="70%" data-y="30%">X</button>
+        <button class="sbtn"        style="left:84%; top:42%;" data-x="70%" data-y="45%">⤴L</button>
+        <button class="sbtn"        style="left:84%; top:55%;" data-x="70%" data-y="55%">⤴M</button>
+        <button class="sbtn"        style="left:84%; top:68%;" data-x="70%" data-y="68%">⤴H</button>
+        <button class="sbtn"        style="left:84%; top:86%;" data-x="70%" data-y="80%">⤴U</button>
+        <button class="sbtn"        style="left:16%; top:55%;" data-x="34%" data-y="55%">⤴H</button>
+        <button class="sbtn"        style="left:16%; top:86%;" data-x="34%" data-y="80%">⤴M</button>
+
+        <!-- joystick (moves on click) -->
+        <div class="stick" id="stick">
+          <div class="stick-shaft"></div>
+          <div class="stick-ball"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <header>
     <div class="home-cluster reveal reveal-1">
