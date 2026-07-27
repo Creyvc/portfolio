@@ -16,9 +16,11 @@
     font-family:var(--sans);
     font-weight:300;
     color:#fff;
-    line-height:0.8;
-    font-size:min(120vh, 85vw);
+    line-height:0.55;
+    font-size:min(130vh, 100vw);
     user-select:none;
+    overflow:hidden;
+    transform:scaleX(1.35);
   }
   html,body{ margin:0; scroll-behavior:smooth; overflow-x:hidden; }
   body{
