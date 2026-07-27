@@ -1,33 +1,3 @@
-    // ===== Hero name: huge on load, shrinks up into the header as you scroll =====
-    (function(){
-      const name = document.getElementById('home-link');
-      if (!name) return;
-
-      let restCenterY, bigTranslateY, bigScale, threshold;
-      function rem(){ return parseFloat(getComputedStyle(document.documentElement).fontSize) || 16; }
-
-      function measure(){
-        const r = rem();
-        restCenterY = 1.3 * r;                              // name's center in the header (top:0.4rem + ~0.9rem)
-        bigTranslateY = window.innerHeight / 2 - restCenterY;
-        const baseFont = 0.8 * r;                           // header name font size
-        const targetFont = window.innerWidth * 0.10;        // big size ≈ 10% of screen width
-        bigScale = Math.min(Math.max(targetFont / baseFont, 1), 14);
-        threshold = window.innerHeight * 0.6;               // scroll distance over which it shrinks
-      }
-
-      function apply(){
-        const p = Math.min(Math.max(window.scrollY / threshold, 0), 1);   // 0 = big, 1 = header size
-        const scale = 1 + (bigScale - 1) * (1 - p);
-        const ty = bigTranslateY * (1 - p);
-        name.style.transform = 'translateY(' + ty.toFixed(1) + 'px) scale(' + scale.toFixed(3) + ')';
-      }
-
-      measure(); apply();
-      window.addEventListener('scroll', apply, { passive:true });
-      window.addEventListener('resize', function(){ measure(); apply(); });
-    })();
-
     (function(){
       const timeEl = document.getElementById('bkk-time');
       function updateClock(){
