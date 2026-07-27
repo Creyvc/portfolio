@@ -15,12 +15,38 @@
     })();
 
     (function(){
-      // fade in the .reveal content (header, name, timezone) on load
-      requestAnimationFrame(function(){
-        requestAnimationFrame(function(){
-          document.body.classList.add('loaded');
-        });
-      });
+      const loader = document.getElementById('loader');
+      const countEl = document.getElementById('loaderCount');
+      const fillEl = document.getElementById('loaderFill');
+      if (!loader) return;
+
+      const PreloaderDelay = 3000;   // total ms scroll stays locked until reveal finishes
+      const countDuration = 1900;    // counter run time
+      const start = performance.now();
+      const ease = t => 1 - Math.pow(1 - t, 3);
+
+      function frame(now){
+        const t = Math.min((now - start) / countDuration, 1);
+        const p = ease(t);
+        if (countEl) countEl.textContent = Math.round(p * 100);
+        if (fillEl) fillEl.style.width = (p * 100) + '%';
+        if (t < 1){
+          requestAnimationFrame(frame);
+        } else {
+          loader.classList.add('is-done');       // fade the overlay out
+          document.body.classList.add('loaded');  // fades in the .reveal content beneath
+        }
+      }
+      requestAnimationFrame(frame);
+
+      const scrollY = window.scrollY || 0;
+      function lockScroll(){ window.scrollTo(0, scrollY); }
+      window.addEventListener('scroll', lockScroll, { passive:true });
+      setTimeout(function(){
+        window.removeEventListener('scroll', lockScroll);
+        document.body.classList.remove('is-loading');
+        loader.style.display = 'none';
+      }, PreloaderDelay);
     })();
 
     (function(){
