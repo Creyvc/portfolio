@@ -329,11 +329,16 @@
     justify-content:center;
     text-align:center;
     white-space:nowrap;
-    overflow:hidden;
+    overflow:visible;
+    transform-origin:center center;
+    will-change:transform;
+    z-index:2;
   }
   .home-link:lang(km), .home-link:lang(th){
     font-size:0.88rem;
   }
+  /* scroll room so the big hero name can shrink up into the header */
+  .name-scroll-spacer{ height:80vh; }
   .time-badge{
     justify-self:end;
     margin-right:-0.8rem;
