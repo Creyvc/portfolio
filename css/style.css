@@ -1,5 +1,5 @@
   :root{
-    --paper:#f5faff; --ink:#17181C; --accent:#B4371F;
+    --paper:#FDFDFD; --ink:#17181C; --accent:#B4371F;
     --sans:ui-monospace, 'SF Mono', 'JetBrains Mono', 'IBM Plex Mono', Menlo, Consolas, monospace;
     --header-h: 3.25rem;
   }
@@ -315,7 +315,7 @@
   .home-link{
     font-family:var(--sans), 'Noto Sans Khmer', 'Noto Sans Thai', sans-serif;
     font-weight:400;
-    color:#888888;
+    color:var(--ink);
     font-size:0.8rem;
     letter-spacing:0.02em;
     position:absolute;
@@ -339,7 +339,7 @@
     margin-right:-0.8rem;
     margin-top:0.15rem;
     display:inline-flex; align-items:center; gap:0.5rem;
-    color:#888888;
+    color:var(--ink);
     font-family:var(--sans);
     font-size:0.8rem;
     font-weight:500;
@@ -349,7 +349,7 @@
   }
   .time-badge .dot{
     width:8px; height:8px; border-radius:50%;
-    background:#888888;
+    background:var(--ink);
     flex-shrink:0;
     animation:blink-dot 1s ease-in-out infinite;
   }
