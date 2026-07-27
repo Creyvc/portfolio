@@ -4,6 +4,12 @@
     --header-h: 3.25rem;
   }
   *{ box-sizing:border-box; }
+  body.home-dark{ background:#000; color:#fff; }
+  body.home-dark .hero{ background:#000; }
+  body.home-dark .home-link,
+  body.home-dark header a,
+  body.home-dark .time-badge{ color:#fff; }
+  body.home-dark .time-badge .dot{ background:#fff; }
   html,body{ margin:0; scroll-behavior:smooth; overflow-x:hidden; }
   body{
     background:var(--paper); color:var(--ink);
