@@ -11,6 +11,15 @@
   body.home-dark .time-badge{ color:#fff; }
   body.home-dark .time-badge .dot{ background:#fff; }
   body.home-dark header{ background:transparent; backdrop-filter:none; -webkit-backdrop-filter:none; }
+  .hero-v{
+    display:block;
+    font-family:var(--sans);
+    font-weight:300;
+    color:#fff;
+    line-height:0.8;
+    font-size:min(120vh, 85vw);
+    user-select:none;
+  }
   html,body{ margin:0; scroll-behavior:smooth; overflow-x:hidden; }
   body{
     background:var(--paper); color:var(--ink);
@@ -22,7 +31,7 @@
     display:flex; flex-direction:row; align-items:center;
     gap:0.5rem;
     justify-self:start;
-    margin-top:-0.7rem;
+    margin-top:-0.35rem;
   }
   .header-logo{
     display:block;
