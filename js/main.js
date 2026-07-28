@@ -1,5 +1,6 @@
     (function(){
       const timeEl = document.getElementById('bkk-time');
+      if (!timeEl) return;
       function updateClock(){
         const formatted = new Intl.DateTimeFormat('en-US', {
           timeZone: 'Asia/Bangkok',

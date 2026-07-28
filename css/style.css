@@ -9,8 +9,8 @@
   .home-lines{ position:absolute; inset:0; pointer-events:none; }
   .home-lines .hl{
     position:absolute;
-    top:50%; transform:translateY(-50%);
-    width:1px; height:72vh;
+    top:0; bottom:0;
+    width:1px; height:100%;
     background:var(--ink);
   }
   .home-lines .hl-1{ left:6%; }    /* near left end */
@@ -21,7 +21,6 @@
     background:var(--paper); color:var(--ink);
     font-family:var(--sans);
     font-weight:300;
-    padding-top:var(--header-h);
   }
   .home-cluster{
     display:flex; flex-direction:row; align-items:center;
@@ -465,7 +464,7 @@
     z-index:0;
     isolation:isolate;
     background:var(--paper);
-    min-height:calc(100vh - var(--header-h));
+    min-height:100vh;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:2rem;
     overflow:hidden;
