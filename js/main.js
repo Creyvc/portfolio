@@ -22,18 +22,18 @@
       }
       function onSkip(){ if (armed) dismiss(); }
 
-      const SPEED = 1.2;   // playback rate — higher = faster intro
+      const SPEED = 1.5;   // playback rate — higher = faster intro
       vid.playbackRate = SPEED;
       vid.addEventListener('loadedmetadata', function(){ vid.playbackRate = SPEED; });
 
-      // start playback just before the loader's white panels dissolve,
-      // so the video is already rendering when it's revealed (no black flash)
+      // Crossfade + settle: loader fades out (~1.9s) while the video eases in
+      // with a subtle zoom-out. Start playback just before it fades up.
       setTimeout(function(){
         vid.playbackRate = SPEED;
         vid.play().catch(function(){ /* autoplay blocked: hold on first frame */ });
         armed = true;
       }, 1600);
-      // fade the video up as the loader's white dissolves -> crossfade
+      // fade + settle the video in as the loader fades out
       setTimeout(function(){ wrap.classList.add('playing'); }, 1900);
 
       vid.addEventListener('ended', dismiss);
@@ -68,7 +68,7 @@
       const fillEl = document.getElementById('loaderFill');
       if (!loader) return;
 
-      const PreloaderDelay = 4300;   // total ms scroll stays locked until reveal finishes
+      const PreloaderDelay = 2950;   // total ms scroll stays locked until reveal finishes
       const countDuration = 1900;    // counter run time
       const start = performance.now();
       const ease = t => 1 - Math.pow(1 - t, 3);
