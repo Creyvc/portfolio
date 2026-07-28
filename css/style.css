@@ -25,6 +25,21 @@
   }
   .home-lines .hlh-1{ top:33%; }
   .home-lines .hlh-2{ top:67%; }
+  /* emphasized "+" at each line intersection */
+  .home-lines .plus{
+    position:absolute;
+    transform:translate(-50%, -50%);
+    width:9px; height:9px;
+    z-index:2;
+  }
+  .home-lines .plus::before,
+  .home-lines .plus::after{
+    content:"";
+    position:absolute;
+    background:#8a9096;
+  }
+  .home-lines .plus::before{ left:0; right:0; top:50%; height:2px; transform:translateY(-50%); }
+  .home-lines .plus::after{ top:0; bottom:0; left:50%; width:2px; transform:translateX(-50%); }
   body{
     background:var(--paper); color:var(--ink);
     font-family:var(--sans);
