@@ -65,10 +65,19 @@
     color:var(--ink);
     z-index:2;
   }
+  .home-blurb .blurb-text{ display:block; width:100%; }
   /* row 3, column 2 cell (33%-67% x, 67%-100% y) */
   .home-blurb-2{
-    left:33%; top:71%;
-    width:34%; height:29%;
+    left:33%; top:75%;
+    width:34%; height:25%;
+    justify-content:flex-end;
+    text-align:right;
+  }
+  /* column 3, row 3 cell (67%-97% x, 67%-100% y) */
+  .home-blurb-3{
+    left:67%; top:67%;
+    width:30%; height:33%;
+    align-items:flex-start;
     justify-content:flex-end;
     text-align:right;
   }
