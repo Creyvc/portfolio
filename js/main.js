@@ -1,3 +1,38 @@
+    /* Black interstitial between the loader and the home page.
+       Revealed as the loader fades out; stays until the user clicks,
+       scrolls, or presses a key, then fades away to show the home page. */
+    (function(){
+      const it = document.getElementById('interstitial');
+      if (!it) return;
+      document.body.classList.add('interstitial-open');
+
+      // draw the T once the loader has faded and the black page is showing,
+      // then reveal + draw the H (T slides left to make room)
+      setTimeout(function(){ it.classList.add('draw'); }, 1900);
+      setTimeout(function(){ it.classList.add('draw-h'); }, 2850);
+      setTimeout(function(){ it.classList.add('draw-y'); }, 3750);
+
+      let armed = false;
+      // arm only after the THY animation has finished, so clicks don't skip it
+      setTimeout(function(){ armed = true; }, 4700);
+
+      function dismiss(){
+        if (!armed) return;
+        it.classList.add('is-hidden');
+        document.body.classList.remove('interstitial-open');
+        window.removeEventListener('click', dismiss);
+        window.removeEventListener('keydown', dismiss);
+        window.removeEventListener('wheel', dismiss);
+        window.removeEventListener('touchstart', dismiss);
+        setTimeout(function(){ it.style.display = 'none'; }, 800);
+      }
+
+      window.addEventListener('click', dismiss);
+      window.addEventListener('keydown', dismiss);
+      window.addEventListener('wheel', dismiss, { passive:true });
+      window.addEventListener('touchstart', dismiss, { passive:true });
+    })();
+
     (function(){
       const timeEl = document.getElementById('bkk-time');
       function updateClock(){
