@@ -1,3 +1,50 @@
+    /* Intro video between the loader and the home page. Plays once the
+       loader has faded, then advances to the home page when it ends
+       (or on click / key / scroll to skip). */
+    (function(){
+      const wrap = document.getElementById('introVideo');
+      const vid = document.getElementById('introVid');
+      if (!wrap || !vid) return;
+
+      document.body.classList.add('intro-open');
+      let armed = false;
+
+      function dismiss(){
+        if (wrap.classList.contains('is-hidden')) return;
+        wrap.classList.add('is-hidden');
+        document.body.classList.remove('intro-open');
+        try { vid.pause(); } catch(e){}
+        window.removeEventListener('click', onSkip);
+        window.removeEventListener('keydown', onSkip);
+        window.removeEventListener('wheel', onSkip);
+        window.removeEventListener('touchstart', onSkip);
+        setTimeout(function(){ wrap.style.display = 'none'; }, 900);
+      }
+      function onSkip(){ if (armed) dismiss(); }
+
+      const SPEED = 1.2;   // playback rate — higher = faster intro
+      vid.playbackRate = SPEED;
+      vid.addEventListener('loadedmetadata', function(){ vid.playbackRate = SPEED; });
+
+      // start playback just before the loader's white panels dissolve,
+      // so the video is already rendering when it's revealed (no black flash)
+      setTimeout(function(){
+        vid.playbackRate = SPEED;
+        vid.play().catch(function(){ /* autoplay blocked: hold on first frame */ });
+        armed = true;
+      }, 1600);
+      // fade the video up as the loader's white dissolves -> crossfade
+      setTimeout(function(){ wrap.classList.add('playing'); }, 1900);
+
+      vid.addEventListener('ended', dismiss);
+      vid.addEventListener('error', dismiss);   // don't trap the user if it fails to load
+
+      window.addEventListener('click', onSkip);
+      window.addEventListener('keydown', onSkip);
+      window.addEventListener('wheel', onSkip, { passive:true });
+      window.addEventListener('touchstart', onSkip, { passive:true });
+    })();
+
     (function(){
       const timeEl = document.getElementById('bkk-time');
       if (!timeEl) return;
