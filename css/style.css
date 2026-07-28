@@ -4,7 +4,7 @@
     --header-h: 3.25rem;
   }
   *{ box-sizing:border-box; }
-  html,body{ margin:0; scroll-behavior:smooth; overflow-x:hidden; }
+  html,body{ margin:0; scroll-behavior:smooth; overflow-x:hidden; overscroll-behavior:none; }
   /* 4 long vertical lines across the home hero */
   .home-lines{ position:fixed; top:0; left:0; right:0; bottom:0; z-index:1; pointer-events:none; }
   .home-lines .hl{
@@ -36,7 +36,7 @@
   .home-lines .plus::after{
     content:"";
     position:absolute;
-    background:#c2c7cc;
+    background:#b3b9bf;
   }
   .home-lines .plus::before{ left:0; right:0; top:50%; height:1.5px; transform:translateY(-50%); }
   .home-lines .plus::after{ top:0; bottom:0; left:50%; width:1.5px; transform:translateX(-50%); }
