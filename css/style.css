@@ -11,7 +11,7 @@
     position:absolute;
     top:0; bottom:0;
     width:1px; height:100%;
-    background:var(--ink);
+    background:#9aa0a6;
   }
   .home-lines .hl-1{ left:3%; }    /* near left end */
   .home-lines .hl-2{ left:33%; }   /* between */
@@ -346,7 +346,7 @@
   }
   .time-badge{
     justify-self:end;
-    margin-right:0.2rem;
+    margin-right:1.7rem;
     margin-top:0.15rem;
     display:inline-flex; align-items:center; gap:0.5rem;
     color:var(--ink);
