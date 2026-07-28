@@ -10,13 +10,21 @@
   .home-lines .hl{
     position:absolute;
     top:0; bottom:0;
-    width:1px; height:100%;
-    background:#9aa0a6;
+    width:2px; height:100%;
+    background:#c8ccd0;
   }
   .home-lines .hl-1{ left:3%; }    /* near left end */
   .home-lines .hl-2{ left:33%; }   /* between */
   .home-lines .hl-3{ left:67%; }   /* between */
   .home-lines .hl-4{ left:97%; }   /* near right end */
+  .home-lines .hlh{
+    position:absolute;
+    left:0; right:0;
+    width:100%; height:2px;
+    background:#c8ccd0;
+  }
+  .home-lines .hlh-1{ top:33%; }
+  .home-lines .hlh-2{ top:67%; }
   body{
     background:var(--paper); color:var(--ink);
     font-family:var(--sans);
