@@ -10,7 +10,7 @@
   .home-lines .hl{
     position:absolute;
     top:0; bottom:0;
-    width:1px; height:100%;
+    width:0.75px; height:100%;
     background:#c8ccd0;
   }
   .home-lines .hl-1{ left:3%; }    /* near left end */
@@ -20,7 +20,7 @@
   .home-lines .hlh{
     position:absolute;
     left:0; right:0;
-    width:100%; height:1px;
+    width:100%; height:0.75px;
     background:#c8ccd0;
   }
   .home-lines .hlh-1{ top:33%; }
@@ -38,8 +38,8 @@
     position:absolute;
     background:#8a9096;
   }
-  .home-lines .plus::before{ left:0; right:0; top:50%; height:2px; transform:translateY(-50%); }
-  .home-lines .plus::after{ top:0; bottom:0; left:50%; width:2px; transform:translateX(-50%); }
+  .home-lines .plus::before{ left:0; right:0; top:50%; height:1.5px; transform:translateY(-50%); }
+  .home-lines .plus::after{ top:0; bottom:0; left:50%; width:1.5px; transform:translateX(-50%); }
   body{
     background:var(--paper); color:var(--ink);
     font-family:var(--sans);
