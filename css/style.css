@@ -355,6 +355,8 @@
     letter-spacing:0.02em;
     width:16rem;
     height:1.8rem;
+    margin-left:1.8rem;
+    margin-top:-0.3rem;
     display:flex;
     align-items:center;
     justify-content:flex-start;
