@@ -1031,3 +1031,45 @@
   }
   scheduleBlink();
 })();
+
+/* Hover scramble on the underlined phrases in the home blurbs — same
+   decode animation as the multilingual name, but resolves back to the
+   identical text (scramble only, no word change). */
+(function(){
+  const els = document.querySelectorAll('.home-blurb u');
+  if (!els.length) return;
+  const GLYPHS = '01<>[]{}/\\|=+*-#%&$ABCDEFGHKMNXZ';
+  const STEPS = 14;
+  const TICK_MS = 40;
+
+  els.forEach(function(el){
+    const original = el.textContent;
+    el.addEventListener('mouseenter', function(){
+      if (el._animating) return;   // don't restart mid-animation (prevents glitch)
+      el._animating = true;
+      const chars = Array.from(original);
+      const total = chars.length;
+      let step = 0;
+      clearInterval(el._scr);
+      el._scr = setInterval(function(){
+        step++;
+        const revealed = Math.floor(total * step / STEPS);
+        let out = '';
+        for (let i = 0; i < total; i++){
+          const c = chars[i];
+          if (i < revealed || c === ' ' || c === '/'){
+            out += c;
+          } else {
+            out += GLYPHS[(Math.random() * GLYPHS.length) | 0];
+          }
+        }
+        el.textContent = out;
+        if (step >= STEPS){
+          clearInterval(el._scr);
+          el.textContent = original;
+          el._animating = false;
+        }
+      }, TICK_MS);
+    });
+  });
+})();

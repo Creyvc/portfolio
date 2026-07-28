@@ -52,7 +52,7 @@
   /* paragraph in the left-middle grid cell (between 3%-33% x, 33%-67% y) */
   .home-blurb{
     position:fixed;
-    left:3%; top:26%;
+    left:3%; top:27.5%;
     width:30%; height:34%;
     box-sizing:border-box;
     padding:1.4rem 1.6rem;
@@ -66,6 +66,184 @@
     z-index:2;
   }
   .home-blurb .blurb-text{ display:block; width:100%; }
+  .home-blurb u{ white-space:nowrap; }   /* keep multi-word phrases on one line */
+  /* big letter C in row 1, column 3 (67%-97% x, 0-33% y) */
+  .cell-c{
+    position:fixed;
+    left:67%; top:12%;
+    width:30%; height:33%;
+    display:flex; align-items:center; justify-content:flex-start;
+    padding-left:1.6rem;
+    box-sizing:border-box;
+    font-family:var(--sans);
+    font-weight:300;
+    font-size:3.8vh;
+    line-height:1;
+    color:var(--ink);
+    user-select:none;
+    white-space:nowrap;
+    z-index:2;
+  }
+  /* the "ONTACT" is collapsed (only "C" shows); it expands + fades in when
+     hovering the collaborating line -> C becomes CONTACT */
+  .cell-c-rest{
+    overflow:hidden;
+    max-width:0;
+    opacity:0;
+    white-space:nowrap;
+    transition:max-width 0.4s ease, opacity 0.4s ease;
+  }
+  .home-blurb-3:has(u:hover) ~ .cell-c .cell-c-rest{
+    max-width:6em; opacity:1;
+  }
+  /* letter A -> ABOUT ME on hover, row 3 column 1 (bottom-left) */
+  .cell-a{
+    position:fixed;
+    left:34.5%; top:61%;
+    display:flex; align-items:center;
+    font-family:var(--sans);
+    font-weight:300;
+    font-size:3.8vh;
+    line-height:1;
+    color:var(--ink);
+    white-space:nowrap;
+    user-select:none;
+    z-index:2;
+  }
+  .cell-a-rest{
+    overflow:hidden;
+    max-width:0;
+    opacity:0;
+    white-space:nowrap;
+    transition:max-width 0.4s ease, opacity 0.4s ease;
+  }
+  .home-blurb:has(.u-vc:hover) ~ .cell-a .cell-a-rest{ max-width:8em; opacity:1; }
+  /* letter A -> AI/ML Engineering on hover, row 2 column 2 (center) */
+  .cell-ai{
+    position:fixed;
+    left:34.5%; top:35%;
+    display:flex; align-items:center;
+    font-family:var(--sans);
+    font-weight:300;
+    font-size:3.8vh;
+    line-height:1;
+    color:var(--ink);
+    white-space:nowrap;
+    user-select:none;
+    z-index:2;
+  }
+  .cell-ai-rest{
+    overflow:hidden;
+    max-width:0;
+    opacity:0;
+    white-space:nowrap;
+    transition:max-width 0.4s ease, opacity 0.4s ease;
+  }
+  .home-blurb:has(.u-ai:hover) ~ .cell-ai .cell-ai-rest{ max-width:14em; opacity:1; }
+  /* letter J -> JEWELRY DESIGN on hover, row 3 column 3 (bottom-right) */
+  .cell-j{
+    position:fixed;
+    left:68.5%; top:94%;
+    display:flex; align-items:center;
+    font-family:var(--sans);
+    font-weight:300;
+    font-size:3.8vh;
+    line-height:1;
+    color:var(--ink);
+    white-space:nowrap;
+    user-select:none;
+    z-index:2;
+  }
+  .cell-j-rest{
+    overflow:hidden;
+    max-width:0;
+    opacity:0;
+    white-space:nowrap;
+    transition:max-width 0.4s ease, opacity 0.4s ease;
+  }
+  .home-blurb:has(.u-jw:hover) ~ .cell-j .cell-j-rest{ max-width:12em; opacity:1; }
+  /* letter D -> DATA SCIENCE on hover, row 2 column 3 (right-aligned) */
+  .cell-d{
+    position:fixed;
+    left:67%; top:46%;
+    width:30.5%; height:34%;
+    box-sizing:border-box;
+    padding-right:1.6rem;
+    display:flex; align-items:center; justify-content:flex-end;
+    font-family:var(--sans);
+    font-weight:300;
+    font-size:3.8vh;
+    line-height:1;
+    color:var(--ink);
+    white-space:nowrap;
+    user-select:none;
+    z-index:2;
+  }
+  .cell-d-rest{
+    overflow:hidden;
+    max-width:0;
+    opacity:0;
+    white-space:nowrap;
+    transition:max-width 0.4s ease, opacity 0.4s ease;
+  }
+  .home-blurb:has(.u-ds:hover) ~ .cell-d .cell-d-rest{ max-width:12em; opacity:1; }
+  /* letter S -> SOFTWARE DEVELOPMENT on hover, row 1 column 1 (right-aligned) */
+  .cell-s{
+    position:fixed;
+    left:3%; top:12%;
+    width:30%; height:33%;
+    box-sizing:border-box;
+    padding-right:1.6rem;
+    display:flex; align-items:center; justify-content:flex-end;
+    font-family:var(--sans);
+    font-weight:300;
+    font-size:3.8vh;
+    line-height:1;
+    color:var(--ink);
+    white-space:nowrap;
+    user-select:none;
+    z-index:2;
+  }
+  .cell-s-rest{
+    overflow:hidden;
+    max-width:0;
+    opacity:0;
+    white-space:nowrap;
+    transition:max-width 0.4s ease, opacity 0.4s ease;
+  }
+  .home-blurb:has(.u-sd:hover) ~ .cell-s .cell-s-rest{ max-width:18em; opacity:1; }
+  /* the letter cells are display-only (triggered by hovering the text), so
+     their boxes must not intercept hover on the paragraphs beneath them */
+  .cell-c, .cell-a, .cell-ai, .cell-j, .cell-d, .cell-s, .cell-u{ pointer-events:none; }
+  /* stacked U's -> UI (top) / UX DESIGN (bottom) on hover, row 3 column 1 */
+  .cell-u{
+    position:fixed;
+    left:4.5%; top:90%;
+    display:flex; flex-direction:column;
+    font-family:var(--sans);
+    font-weight:300;
+    font-size:3.8vh;
+    line-height:1.1;
+    color:var(--ink);
+    user-select:none;
+    z-index:2;
+  }
+  .cell-u-line{ display:flex; align-items:center; white-space:nowrap; }
+  .cell-u-rest{
+    overflow:hidden;
+    max-width:0;
+    opacity:0;
+    white-space:nowrap;
+    transition:max-width 0.4s ease, opacity 0.4s ease;
+  }
+  .home-blurb:has(.u-ux:hover) ~ .cell-u .cell-u-rest{ max-width:12em; opacity:1; }
+  .home-blurb .ref{
+    font-size:0.6em;
+    vertical-align:super;
+    line-height:0;
+    margin-left:1px;
+    color:var(--ink);
+  }
   /* row 3, column 2 cell (33%-67% x, 67%-100% y) */
   .home-blurb-2{
     left:33%; top:75%;
