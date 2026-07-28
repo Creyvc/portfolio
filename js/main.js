@@ -68,7 +68,7 @@
       const fillEl = document.getElementById('loaderFill');
       if (!loader) return;
 
-      const PreloaderDelay = 3000;   // total ms scroll stays locked until reveal finishes
+      const PreloaderDelay = 4300;   // total ms scroll stays locked until reveal finishes
       const countDuration = 1900;    // counter run time
       const start = performance.now();
       const ease = t => 1 - Math.pow(1 - t, 3);
