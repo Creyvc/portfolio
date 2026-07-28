@@ -65,6 +65,11 @@
     color:var(--ink);
     z-index:2;
   }
+  /* row 3, column 2 cell (33%-67% x, 67%-100% y) */
+  .home-blurb-2{
+    left:33%; top:71%;
+    width:34%; height:29%;
+  }
   /* emphasized "+" at each line intersection */
   .home-lines .plus{
     position:absolute;
