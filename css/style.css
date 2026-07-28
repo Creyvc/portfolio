@@ -1204,13 +1204,13 @@
     letter-spacing:-0.03em;
   }
   .loader-count{
-    font-size:clamp(5rem, 18vw, 15rem);
+    font-size:clamp(3rem, 10vw, 8rem);
     font-variant-numeric:tabular-nums;
   }
   .loader-pct{
-    font-size:clamp(1.4rem, 4vw, 3rem);
+    font-size:clamp(1rem, 2.6vw, 2rem);
     opacity:0.5;
-    margin:0 0 0.5em 0.15em;
+    margin:0 0 0.2em 0.15em;
   }
   .loader-line{
     position:absolute; left:0; top:50%;
