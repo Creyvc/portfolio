@@ -14,6 +14,7 @@
         wrap.classList.add('is-hidden');
         document.body.classList.remove('intro-open');
         try { vid.pause(); } catch(e){}
+        if (window.__homeScramble) window.__homeScramble();   // scramble-in the home text
         window.removeEventListener('click', onSkip);
         window.removeEventListener('keydown', onSkip);
         window.removeEventListener('wheel', onSkip);
@@ -1072,4 +1073,47 @@
       }, TICK_MS);
     });
   });
+})();
+
+/* On first entry to the home page, scramble-decode the paragraph text. */
+(function(){
+  const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>[]{}/=+*#%';
+
+  function scramble(el){
+    // walk text nodes so <u>/<sup> markup is preserved; treat as one stream
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    const nodes = [];
+    let n;
+    while ((n = walker.nextNode())) if (n.nodeValue.length) nodes.push({ node:n, text:n.nodeValue });
+    const total = nodes.reduce((a,b) => a + b.text.length, 0);
+    if (!total) return;
+
+    const STEPS = Math.min(46, Math.max(16, Math.round(total / 7)));
+    let step = 0;
+    clearInterval(el._enterScr);
+    el._enterScr = setInterval(function(){
+      step++;
+      const revealed = Math.floor(total * step / STEPS);
+      let idx = 0;
+      for (const it of nodes){
+        let out = '';
+        for (let i = 0; i < it.text.length; i++){
+          const c = it.text[i];
+          if (idx < revealed || c === ' ' || c === '\n'){ out += c; }
+          else out += GLYPHS[(Math.random() * GLYPHS.length) | 0];
+          idx++;
+        }
+        it.node.nodeValue = out;
+      }
+      if (step >= STEPS){
+        clearInterval(el._enterScr);
+        for (const it of nodes) it.node.nodeValue = it.text;   // restore exact text
+      }
+    }, 40);
+  }
+
+  // exposed so the intro dismiss can fire it right as the home page reveals
+  window.__homeScramble = function(){
+    document.querySelectorAll('.home-blurb .blurb-text').forEach(scramble);
+  };
 })();
