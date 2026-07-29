@@ -1,51 +1,3 @@
-    /* Intro video between the loader and the home page. Plays once the
-       loader has faded, then advances to the home page when it ends
-       (or on click / key / scroll to skip). */
-    (function(){
-      const wrap = document.getElementById('introVideo');
-      const vid = document.getElementById('introVid');
-      if (!wrap || !vid) return;
-
-      document.body.classList.add('intro-open');
-      let armed = false;
-
-      function dismiss(){
-        if (wrap.classList.contains('is-hidden')) return;
-        wrap.classList.add('is-hidden');
-        document.body.classList.remove('intro-open');
-        try { vid.pause(); } catch(e){}
-        if (window.__homeScramble) window.__homeScramble();   // scramble-in the home text
-        window.removeEventListener('click', onSkip);
-        window.removeEventListener('keydown', onSkip);
-        window.removeEventListener('wheel', onSkip);
-        window.removeEventListener('touchstart', onSkip);
-        setTimeout(function(){ wrap.style.display = 'none'; }, 900);
-      }
-      function onSkip(){ if (armed) dismiss(); }
-
-      const SPEED = 1.5;   // playback rate — higher = faster intro
-      vid.playbackRate = SPEED;
-      vid.addEventListener('loadedmetadata', function(){ vid.playbackRate = SPEED; });
-
-      // Crossfade + settle: loader fades out (~1.9s) while the video eases in
-      // with a subtle zoom-out. Start playback just before it fades up.
-      setTimeout(function(){
-        vid.playbackRate = SPEED;
-        vid.play().catch(function(){ /* autoplay blocked: hold on first frame */ });
-        armed = true;
-      }, 1600);
-      // fade + settle the video in as the loader fades out
-      setTimeout(function(){ wrap.classList.add('playing'); }, 1900);
-
-      vid.addEventListener('ended', dismiss);
-      vid.addEventListener('error', dismiss);   // don't trap the user if it fails to load
-
-      window.addEventListener('click', onSkip);
-      window.addEventListener('keydown', onSkip);
-      window.addEventListener('wheel', onSkip, { passive:true });
-      window.addEventListener('touchstart', onSkip, { passive:true });
-    })();
-
     (function(){
       const timeEl = document.getElementById('bkk-time');
       if (!timeEl) return;
@@ -84,6 +36,7 @@
         } else {
           loader.classList.add('is-done');       // fade the overlay out
           document.body.classList.add('loaded');  // fades in the .reveal content beneath
+          if (window.__homeScramble) window.__homeScramble();   // scramble-in the home text
         }
       }
       requestAnimationFrame(frame);
@@ -1112,7 +1065,7 @@
     }, 40);
   }
 
-  // exposed so the intro dismiss can fire it right as the home page reveals
+  // exposed so the loader can fire it right as the home page reveals
   window.__homeScramble = function(){
     document.querySelectorAll('.home-blurb .blurb-text').forEach(scramble);
   };
