@@ -262,12 +262,12 @@
     gap:0.5rem;
     position:absolute;
     left:50%;
-    margin-left:-1.5rem;   /* half the 3rem logo -> true horizontal center */
+    margin-left:-2rem;   /* half the 4rem logo -> true horizontal center */
     margin-top:-0.35rem;
   }
   .header-logo{
     display:block;
-    width:3rem; height:auto;
+    width:4rem; height:auto;
     margin-left:0;
   }
   .v-logo{
