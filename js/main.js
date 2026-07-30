@@ -21,7 +21,7 @@
       const fillEl = document.getElementById('loaderFill');
       if (!loader) return;
 
-      const PreloaderDelay = 2950;   // total ms scroll stays locked until reveal finishes
+      const PreloaderDelay = 3950;   // total ms scroll stays locked until the grid build + reveal finish
       const countDuration = 1900;    // counter run time
       const start = performance.now();
       const ease = t => 1 - Math.pow(1 - t, 3);
@@ -34,9 +34,25 @@
         if (t < 1){
           requestAnimationFrame(frame);
         } else {
-          loader.classList.add('is-done');       // fade the overlay out
-          document.body.classList.add('loaded');  // fades in the .reveal content beneath
-          if (window.__homeScramble) window.__homeScramble();   // scramble-in the home text
+          loader.classList.add('is-done');            // fade the loading overlay out
+          document.body.classList.add('grid-build');  // lines draw out from center (CSS)
+          // plus marks start stacked at screen center, then fly out to their intersections
+          document.querySelectorAll('.home-lines .plus').forEach(function(p){
+            const L = parseFloat(p.style.left) || 50;
+            const T = parseFloat(p.style.top) || 50;
+            const dx = ((50 - L) / 100) * window.innerWidth;   // px from its spot back to center
+            const dy = ((50 - T) / 100) * window.innerHeight;
+            p.animate([
+              { transform:`translate(calc(-50% + 0.5px + ${dx}px), calc(-50% + 0.5px + ${dy}px))`, opacity:0 },
+              { opacity:1, offset:0.25 },
+              { transform:'translate(calc(-50% + 0.5px), calc(-50% + 0.5px))', opacity:1 }
+            ], { duration:1300, delay:150, easing:'cubic-bezier(0.65, 0, 0.35, 1)', fill:'both' });
+          });
+          const BUILD_DURATION = 1550;                // let the plus finish gliding, then reveal the content
+          setTimeout(function(){
+            document.body.classList.add('loaded');       // reveal the blurbs / letters
+            if (window.__homeScramble) window.__homeScramble();   // scramble-in the home text
+          }, BUILD_DURATION);
         }
       }
       requestAnimationFrame(frame);

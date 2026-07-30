@@ -26,6 +26,21 @@
   }
   .home-lines .hlh-1{ top:33%; }
   .home-lines .hlh-2{ top:67%; }
+
+  /* ===== Intro grid-build (loader -> home) =====
+     The grid lines draw out from center while the plus marks fly out from
+     the center to their own intersections, then the page content reveals.
+     Each plus carries its center offset in --dx / --dy (see index.html).    */
+  @keyframes gb-drawV{ 0%{ opacity:0; transform:scaleY(0); } 100%{ opacity:1; transform:scaleY(1); } }
+  @keyframes gb-drawH{ 0%{ opacity:0; transform:scaleX(0); } 100%{ opacity:1; transform:scaleX(1); } }
+  /* lines draw out from center; the plus marks fly out from center via JS
+     (Web Animations API) since a per-element transform can't be built from
+     CSS custom properties reliably. */
+  body.grid-build .home-lines .hl{  transform-origin:center center; animation:gb-drawV 0.8s cubic-bezier(.22,1,.36,1) both; }
+  body.grid-build .home-lines .hlh{ transform-origin:center center; animation:gb-drawH 0.8s cubic-bezier(.22,1,.36,1) both; }
+  /* keep plus hidden until the JS fly animation takes over (no flash at final) */
+  body.grid-build .home-lines .plus{ opacity:0; }
+
   /* paragraph in the left-middle grid cell (between 3%-33% x, 33%-67% y) */
   .home-blurb{
     position:fixed;
