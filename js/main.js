@@ -34,8 +34,8 @@
         if (t < 1){
           requestAnimationFrame(frame);
         } else {
-          loader.classList.add('is-done');            // fade the loading overlay out
-          document.body.classList.add('grid-build');  // hide the real grid; JS spins a crosshair then flies it out
+          loader.style.display = 'none';              // hide instantly (no fade) — the loader bar connects straight into the spinning line
+          document.body.classList.add('grid-build');  // hide the real grid; JS spins the line then flies it out
           const EASE = 'cubic-bezier(0.65, 0, 0.35, 1)', DUR = 2000, ROT_DUR = 1000;
           const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
           const INK = '#17181C';           // starts black, settles to the grid's grey
@@ -51,8 +51,8 @@
             const dy = cy - parseFloat(getComputedStyle(l).top);
             const spinner = l.classList.contains('hlh-1');   // one line is the visible spinner...
             const frames = spinner
-              ? [ { transform:`translateY(${dy}px)`, opacity:1, backgroundColor:INK },
-                  { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5' } ]
+              ? [ { transform:`translateY(${dy}px)`, opacity:1, backgroundColor:INK, height:'3px' },   // matches the loader bar
+                  { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5', height:'1px' } ] // thins to a grid line
               : [ { transform:`translateY(${dy}px)`, opacity:0, backgroundColor:INK },   // ...the other emerges at center
                   { opacity:1, offset:0.08 },
                   { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5' } ];
