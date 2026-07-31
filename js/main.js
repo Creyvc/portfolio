@@ -21,7 +21,7 @@
       const fillEl = document.getElementById('loaderFill');
       if (!loader) return;
 
-      const PreloaderDelay = 6200;   // total ms scroll stays locked until the grid build + reveal finish
+      const PreloaderDelay = 5000;   // total ms scroll stays locked until the grid build + reveal finish
       const countDuration = 1900;    // counter run time
       const start = performance.now();
       const ease = t => 1 - Math.pow(1 - t, 3);
@@ -36,7 +36,7 @@
         } else {
           loader.style.display = 'none';              // hide instantly (no fade) — the loader bar connects straight into the spinning line
           document.body.classList.add('grid-build');  // hide the real grid; JS spins the line then flies it out
-          const EASE = 'cubic-bezier(0.65, 0, 0.35, 1)', DUR = 2000, HOLD = 2000;
+          const EASE = 'cubic-bezier(0.65, 0, 0.35, 1)', DUR = 2000, HOLD = 800;
           const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
           const INK = '#17181C';           // starts black, settles to the grid's grey
 
