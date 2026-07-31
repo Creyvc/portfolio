@@ -31,19 +31,13 @@
      The grid lines draw out from center while the plus marks fly out from
      the center to their own intersections, then the page content reveals.
      Each plus carries its center offset in --dx / --dy (see index.html).    */
-  /* A single black crosshair spins at the center first (hl-c / hlh-c / plus-c);
-     then it hides and the real grid lines + plus marks fly out from center to
-     their places via JS (Web Animations API). */
-  .home-lines .hl-c{ left:50%; }               /* center vertical  */
-  .home-lines .hlh-c{ top:50%; }               /* center horizontal */
-  .home-lines .hl-c, .home-lines .hlh-c{ background:#17181C; }
-  .home-lines .plus.plus-c{ color:#17181C; }   /* keep specificity above .plus grey */
-  /* crosshair is invisible unless the opening spin is running (JS shows it) */
-  .home-lines .hl-c, .home-lines .hlh-c, .home-lines .plus-c{ opacity:0; }
-  /* during the intro, keep the real grid hidden until the fly-out drives it */
-  body.grid-build .home-lines .hl:not(.hl-c),
-  body.grid-build .home-lines .hlh:not(.hlh-c),
-  body.grid-build .home-lines .plus:not(.plus-c){ opacity:0; }
+  /* Intro (JS / Web Animations API): the two horizontal lines collapse into a
+     single line at center, spin a full 360°, then split apart to their rows —
+     nothing fades away, the spinning line becomes the grid. The vertical lines
+     and plus marks fly out from center meanwhile. Keep those hidden until the
+     fly-out drives them (fallback; JS overrides). */
+  body.grid-build .home-lines .hl,
+  body.grid-build .home-lines .plus{ opacity:0; }
 
   /* paragraph in the left-middle grid cell (between 3%-33% x, 33%-67% y) */
   .home-blurb{

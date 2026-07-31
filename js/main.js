@@ -40,35 +40,31 @@
           const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
           const INK = '#17181C';           // starts black, settles to the grid's grey
 
-          // 1) a single crosshair (1 vertical + 1 horizontal + 1 plus) spins 360° at center
+          const FLY = { duration:DUR, delay:ROT_DUR, easing:EASE, fill:'both' };
+          // 1) both horizontal lines collapse to one line at center and spin 360°,
+          //    2) then split apart to their rows — one continuous move, never hidden.
           document.querySelector('.home-lines').animate(
             [ { transform:'rotate(0deg)' }, { transform:'rotate(360deg)' } ],
             { duration:ROT_DUR, easing:'cubic-bezier(0.37, 0, 0.63, 1)', fill:'forwards' }   // smooth ease-in-out
           );
-          document.querySelectorAll('.home-lines .hl-c, .home-lines .hlh-c, .home-lines .plus-c').forEach(function(el){
-            el.animate([
-              { opacity:0 }, { opacity:1, offset:0.12 }, { opacity:1, offset:0.8 }, { opacity:0 }
-            ], { duration:ROT_DUR, easing:'ease', fill:'both' });   // fade in, hold, fade out as the spin ends
+          document.querySelectorAll('.home-lines .hlh').forEach(function(l){
+            const dy = cy - parseFloat(getComputedStyle(l).top);
+            const spinner = l.classList.contains('hlh-1');   // one line is the visible spinner...
+            const frames = spinner
+              ? [ { transform:`translateY(${dy}px)`, opacity:1, backgroundColor:INK },
+                  { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5' } ]
+              : [ { transform:`translateY(${dy}px)`, opacity:0, backgroundColor:INK },   // ...the other emerges at center
+                  { opacity:1, offset:0.08 },
+                  { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5' } ];
+            l.animate(frames, FLY);
           });
-
-          // 2) then the real grid flies out from center to its place (after the spin)
-          const FLY = { duration:DUR, delay:ROT_DUR, easing:EASE, fill:'both' };
-          // vertical lines slide horizontally from center-x out to their columns
-          document.querySelectorAll('.home-lines .hl:not(.hl-c)').forEach(function(l){
+          // vertical lines fly out from center-x to their columns (appear as they go)
+          document.querySelectorAll('.home-lines .hl').forEach(function(l){
             const dx = cx - parseFloat(getComputedStyle(l).left);
             l.animate([
               { transform:`translateX(${dx}px)`, opacity:0, backgroundColor:INK },
               { opacity:1, offset:0.05 },
               { transform:'translateX(0px)', opacity:1, backgroundColor:'#dfe2e5' }
-            ], FLY);
-          });
-          // horizontal lines slide vertically from center-y out to their rows
-          document.querySelectorAll('.home-lines .hlh:not(.hlh-c)').forEach(function(l){
-            const dy = cy - parseFloat(getComputedStyle(l).top);
-            l.animate([
-              { transform:`translateY(${dy}px)`, opacity:0, backgroundColor:INK },
-              { opacity:1, offset:0.05 },
-              { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5' }
             ], FLY);
           });
           // plus marks start stacked at screen center, then fly out to their intersections
