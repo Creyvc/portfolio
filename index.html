@@ -5,6 +5,9 @@
 <script>
 (function(){
   var ua = navigator.userAgent;
+  // never redirect search-engine crawlers / link-preview bots — they must index the real site
+  var isBot = /bot|crawl|spider|slurp|bingpreview|google-inspectiontool|lighthouse|headless|facebookexternalhit|embedly|slackbot|twitterbot|whatsapp|telegrambot|discordbot|pinterest/i.test(ua);
+  if (isBot) return;
   var isMobileUA = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
   var isTouchMac = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
   if (isMobileUA || isTouchMac){
@@ -14,10 +17,17 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vuthy Cheam</title>
-<link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg?v=13">
-<link rel="icon" type="image/png" href="assets/icons/favicon.png?v=13">
-<link rel="icon" type="image/png" href="assets/icons/logo-white.png?v=13" media="(prefers-color-scheme: dark)">
-<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=13">
+<meta name="description" content="Vuthy Cheam is a Computer Science student exploring AI/ML engineering, data science, and software development — with a background in jewelry design and UI/UX.">
+<link rel="canonical" href="https://vuthycheam.com/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Vuthy Cheam">
+<meta property="og:description" content="Computer Science student exploring AI/ML engineering, data science, and software development.">
+<meta property="og:url" content="https://vuthycheam.com/">
+<meta property="og:image" content="https://vuthycheam.com/assets/icons/favicon.png?v=14">
+<link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg?v=14">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/favicon.png?v=14">
+<link rel="icon" type="image/png" href="assets/icons/logo-white.png?v=14" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=14">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500&family=Noto+Sans+Thai:wght@400;500&family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Jersey+10&family=VT323&family=Space+Grotesk:wght@400;500;700&family=Boogaloo&display=swap" rel="stylesheet">

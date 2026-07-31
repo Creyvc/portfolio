@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /desktop-only.html
+
+Sitemap: https://vuthycheam.com/sitemap.xml
