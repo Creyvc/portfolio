@@ -21,7 +21,7 @@
       const fillEl = document.getElementById('loaderFill');
       if (!loader) return;
 
-      const PreloaderDelay = 3950;   // total ms scroll stays locked until the grid build + reveal finish
+      const PreloaderDelay = 5100;   // total ms scroll stays locked until the grid build + reveal finish
       const countDuration = 1900;    // counter run time
       const start = performance.now();
       const ease = t => 1 - Math.pow(1 - t, 3);
@@ -35,20 +35,55 @@
           requestAnimationFrame(frame);
         } else {
           loader.classList.add('is-done');            // fade the loading overlay out
-          document.body.classList.add('grid-build');  // lines draw out from center (CSS)
+          document.body.classList.add('grid-build');  // hide the real grid; JS spins a crosshair then flies it out
+          const EASE = 'cubic-bezier(0.65, 0, 0.35, 1)', DUR = 2000, ROT_DUR = 1000;
+          const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+          const INK = '#17181C';           // starts black, settles to the grid's grey
+
+          // 1) a single crosshair (1 vertical + 1 horizontal + 1 plus) spins 360° at center
+          document.querySelector('.home-lines').animate(
+            [ { transform:'rotate(0deg)' }, { transform:'rotate(360deg)' } ],
+            { duration:ROT_DUR, easing:'cubic-bezier(0.37, 0, 0.63, 1)', fill:'forwards' }   // smooth ease-in-out
+          );
+          document.querySelectorAll('.home-lines .hl-c, .home-lines .hlh-c, .home-lines .plus-c').forEach(function(el){
+            el.animate([
+              { opacity:0 }, { opacity:1, offset:0.12 }, { opacity:1, offset:0.8 }, { opacity:0 }
+            ], { duration:ROT_DUR, easing:'ease', fill:'both' });   // fade in, hold, fade out as the spin ends
+          });
+
+          // 2) then the real grid flies out from center to its place (after the spin)
+          const FLY = { duration:DUR, delay:ROT_DUR, easing:EASE, fill:'both' };
+          // vertical lines slide horizontally from center-x out to their columns
+          document.querySelectorAll('.home-lines .hl:not(.hl-c)').forEach(function(l){
+            const dx = cx - parseFloat(getComputedStyle(l).left);
+            l.animate([
+              { transform:`translateX(${dx}px)`, opacity:0, backgroundColor:INK },
+              { opacity:1, offset:0.05 },
+              { transform:'translateX(0px)', opacity:1, backgroundColor:'#dfe2e5' }
+            ], FLY);
+          });
+          // horizontal lines slide vertically from center-y out to their rows
+          document.querySelectorAll('.home-lines .hlh:not(.hlh-c)').forEach(function(l){
+            const dy = cy - parseFloat(getComputedStyle(l).top);
+            l.animate([
+              { transform:`translateY(${dy}px)`, opacity:0, backgroundColor:INK },
+              { opacity:1, offset:0.05 },
+              { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5' }
+            ], FLY);
+          });
           // plus marks start stacked at screen center, then fly out to their intersections
-          document.querySelectorAll('.home-lines .plus').forEach(function(p){
+          document.querySelectorAll('.home-lines .plus:not(.plus-c)').forEach(function(p){
             const L = parseFloat(p.style.left) || 50;
             const T = parseFloat(p.style.top) || 50;
             const dx = ((50 - L) / 100) * window.innerWidth;   // px from its spot back to center
             const dy = ((50 - T) / 100) * window.innerHeight;
             p.animate([
-              { transform:`translate(calc(-50% + 0.5px + ${dx}px), calc(-50% + 0.5px + ${dy}px))`, opacity:0 },
-              { opacity:1, offset:0.25 },
-              { transform:'translate(calc(-50% + 0.5px), calc(-50% + 0.5px))', opacity:1 }
-            ], { duration:1300, delay:150, easing:'cubic-bezier(0.65, 0, 0.35, 1)', fill:'both' });
+              { transform:`translate(calc(-50% + 0.5px + ${dx}px), calc(-50% + 0.5px + ${dy}px))`, opacity:0, color:INK },
+              { opacity:1, offset:0.05 },
+              { transform:'translate(calc(-50% + 0.5px), calc(-50% + 0.5px))', opacity:1, color:'#b3b9bf' }
+            ], FLY);
           });
-          const BUILD_DURATION = 1550;                // let the plus finish gliding, then reveal the content
+          const BUILD_DURATION = ROT_DUR + DUR + 100;  // spin + fly-out, then reveal the content
           setTimeout(function(){
             document.body.classList.add('loaded');       // reveal the blurbs / letters
             if (window.__homeScramble) window.__homeScramble();   // scramble-in the home text
