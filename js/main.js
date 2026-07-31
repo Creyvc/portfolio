@@ -21,7 +21,7 @@
       const fillEl = document.getElementById('loaderFill');
       if (!loader) return;
 
-      const PreloaderDelay = 5100;   // total ms scroll stays locked until the grid build + reveal finish
+      const PreloaderDelay = 6200;   // total ms scroll stays locked until the grid build + reveal finish
       const countDuration = 1900;    // counter run time
       const start = performance.now();
       const ease = t => 1 - Math.pow(1 - t, 3);
@@ -36,25 +36,19 @@
         } else {
           loader.style.display = 'none';              // hide instantly (no fade) — the loader bar connects straight into the spinning line
           document.body.classList.add('grid-build');  // hide the real grid; JS spins the line then flies it out
-          const EASE = 'cubic-bezier(0.65, 0, 0.35, 1)', DUR = 2000, ROT_DUR = 1000;
+          const EASE = 'cubic-bezier(0.65, 0, 0.35, 1)', DUR = 2000, HOLD = 2000;
           const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
           const INK = '#17181C';           // starts black, settles to the grid's grey
 
-          const FLY = { duration:DUR, delay:ROT_DUR, easing:EASE, fill:'both' };
-          // long enough that the spinning line reaches the corners at every angle
-          const SPAN = Math.hypot(cx, cy) / cx * 1.06;
-          // 1) both horizontal lines collapse to one line at center and spin 360°,
-          //    2) then split apart to their rows — one continuous move, never hidden.
-          document.querySelector('.home-lines').animate(
-            [ { transform:'rotate(0deg)' }, { transform:'rotate(360deg)' } ],
-            { duration:ROT_DUR, easing:'cubic-bezier(0.37, 0, 0.63, 1)', fill:'forwards' }   // smooth ease-in-out
-          );
+          const FLY = { duration:DUR, delay:HOLD, easing:EASE, fill:'both' };
+          // 1) the loader bar stays as a single horizontal line at center for HOLD ms,
+          //    2) then it splits to its rows — one continuous move, never hidden.
           document.querySelectorAll('.home-lines .hlh').forEach(function(l){
             const dy = cy - parseFloat(getComputedStyle(l).top);
-            const spinner = l.classList.contains('hlh-1');   // one line is the visible spinner...
+            const spinner = l.classList.contains('hlh-1');   // one line is the held loader bar...
             const frames = spinner
-              ? [ { transform:`translateY(${dy}px) scaleX(${SPAN})`, opacity:1, backgroundColor:INK, height:'3px' },   // long + matches loader bar
-                  { transform:'translateY(0px) scaleX(1)', opacity:1, backgroundColor:'#dfe2e5', height:'1px' } ]      // shrinks to a grid line
+              ? [ { transform:`translateY(${dy}px)`, opacity:1, backgroundColor:INK, height:'3px' },   // held at center, matches loader bar
+                  { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5', height:'1px' } ] // shrinks to a grid line
               : [ { transform:`translateY(${dy}px)`, opacity:0, backgroundColor:INK },   // ...the other emerges at center
                   { opacity:1, offset:0.08 },
                   { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5' } ];
@@ -81,7 +75,7 @@
               { transform:'translate(calc(-50% + 0.5px), calc(-50% + 0.5px))', opacity:1, color:'#b3b9bf' }
             ], FLY);
           });
-          const BUILD_DURATION = ROT_DUR + DUR + 100;  // spin + fly-out, then reveal the content
+          const BUILD_DURATION = HOLD + DUR + 100;  // hold + fly-out, then reveal the content
           setTimeout(function(){
             document.body.classList.add('loaded');       // reveal the blurbs / letters
             if (window.__homeScramble) window.__homeScramble();   // scramble-in the home text
