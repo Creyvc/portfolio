@@ -36,7 +36,7 @@
         } else {
           loader.style.display = 'none';              // hide instantly (no fade) — the loader bar connects straight into the spinning line
           document.body.classList.add('grid-build');  // hide the real grid; JS spins the line then flies it out
-          const EASE = 'cubic-bezier(0.65, 0, 0.35, 1)', DUR = 2000, HOLD = 800;
+          const EASE = 'cubic-bezier(0.65, 0, 0.35, 1)', DUR = 2000, HOLD = 300;
           const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
           const INK = '#17181C';           // starts black, settles to the grid's grey
 
@@ -47,8 +47,8 @@
             const dy = cy - parseFloat(getComputedStyle(l).top);
             const spinner = l.classList.contains('hlh-1');   // one line is the held loader bar...
             const frames = spinner
-              ? [ { transform:`translateY(${dy}px)`, opacity:1, backgroundColor:INK, height:'3px' },   // held at center, matches loader bar
-                  { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5', height:'1px' } ] // shrinks to a grid line
+              ? [ { transform:`translateY(${dy - 1.5}px)`, opacity:1, backgroundColor:INK, height:'3px' },   // centered on the midline, exactly matching the loader bar (no jump)
+                  { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5', height:'1px' } ]      // shrinks to a grid line
               : [ { transform:`translateY(${dy}px)`, opacity:0, backgroundColor:INK },   // ...the other emerges at center
                   { opacity:1, offset:0.08 },
                   { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5' } ];
