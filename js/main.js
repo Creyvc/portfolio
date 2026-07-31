@@ -41,6 +41,8 @@
           const INK = '#17181C';           // starts black, settles to the grid's grey
 
           const FLY = { duration:DUR, delay:ROT_DUR, easing:EASE, fill:'both' };
+          // long enough that the spinning line reaches the corners at every angle
+          const SPAN = Math.hypot(cx, cy) / cx * 1.06;
           // 1) both horizontal lines collapse to one line at center and spin 360°,
           //    2) then split apart to their rows — one continuous move, never hidden.
           document.querySelector('.home-lines').animate(
@@ -51,8 +53,8 @@
             const dy = cy - parseFloat(getComputedStyle(l).top);
             const spinner = l.classList.contains('hlh-1');   // one line is the visible spinner...
             const frames = spinner
-              ? [ { transform:`translateY(${dy}px)`, opacity:1, backgroundColor:INK, height:'3px' },   // matches the loader bar
-                  { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5', height:'1px' } ] // thins to a grid line
+              ? [ { transform:`translateY(${dy}px) scaleX(${SPAN})`, opacity:1, backgroundColor:INK, height:'3px' },   // long + matches loader bar
+                  { transform:'translateY(0px) scaleX(1)', opacity:1, backgroundColor:'#dfe2e5', height:'1px' } ]      // shrinks to a grid line
               : [ { transform:`translateY(${dy}px)`, opacity:0, backgroundColor:INK },   // ...the other emerges at center
                   { opacity:1, offset:0.08 },
                   { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5' } ];
