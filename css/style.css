@@ -1240,6 +1240,10 @@
      so the circle never covers the text while it dissolves */
   .contact-info .info-row{ z-index:40; }
   a.contact-box:hover{ background:var(--ink); color:var(--paper); }
+  /* just-copied confirmation — listed after :hover, and repeated with :hover, so it
+     still shows green while the cursor is still sitting on the box after the click */
+  a.contact-box.is-copied,
+  a.contact-box.is-copied:hover{ background:#00B34A; color:var(--paper); }
   .contact-box[data-label="Instagram"]{
     background:linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D, #F56040, #F77737, #FCAF45, #FFDC80, #405DE6);
     background-size:400% 400%;

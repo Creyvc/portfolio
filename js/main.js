@@ -782,6 +782,60 @@
       })();
     })();
 
+    // Clicking a box with data-copy puts that text on the clipboard instead of
+    // following the link. The href stays a real mailto: so the box still does
+    // something sensible if this script never runs.
+    (function(){
+      const boxes = document.querySelectorAll('.contact-box[data-copy]');
+      if (!boxes.length) return;
+
+      function copy(text){
+        if (navigator.clipboard && window.isSecureContext){
+          return navigator.clipboard.writeText(text);
+        }
+        // fallback for non-secure contexts (plain http, older browsers)
+        return new Promise(function(resolve, reject){
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.setAttribute('readonly', '');
+          ta.style.cssText = 'position:fixed;top:0;left:-9999px;opacity:0;';
+          document.body.appendChild(ta);
+          ta.select();
+          ta.setSelectionRange(0, text.length);
+          let ok = false;
+          try { ok = document.execCommand('copy'); } catch(_){}
+          ta.remove();
+          ok ? resolve() : reject();
+        });
+      }
+
+      boxes.forEach(function(box){
+        const text = box.getAttribute('data-copy');
+        // the big word inside the box — swapped in place, so it stays exactly where
+        // it already sits (same element, same centring, same slide-on-scroll)
+        const glyph = box.querySelector('.email-glyph');
+        const original = glyph ? glyph.textContent : null;
+        let revert = null;
+
+        function showCopied(){
+          clearTimeout(revert);
+          box.classList.add('is-copied');
+          if (glyph) glyph.textContent = 'Copied';
+          revert = setTimeout(function(){
+            box.classList.remove('is-copied');
+            if (glyph) glyph.textContent = original;
+          }, 2000);
+        }
+
+        box.addEventListener('click', function(e){
+          // let modifier / middle clicks fall through to the real mailto: link
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          e.preventDefault();
+          copy(text).then(showCopied, function(){});
+        });
+      });
+    })();
+
     (function(){
       const src = document.querySelector('.github-icon-src');
       const img = document.querySelector('.github-icon');
