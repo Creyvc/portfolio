@@ -57,6 +57,7 @@
   }
   .home-blurb .blurb-text{ display:block; width:100%; }
   .home-blurb u{ white-space:nowrap; }   /* keep multi-word phrases on one line */
+  .home-blurb a.collab-link{ color:inherit; text-decoration:none; cursor:pointer; }   /* "Interested in collaborating?" -> contact page */
   /* big letter C in row 1, column 3 (67%-97% x, 0-33% y) */
   .cell-c{
     position:fixed;
