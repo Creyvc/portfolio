@@ -476,16 +476,8 @@
         return scroller.scrollWidth - scroller.clientWidth;
       }
 
-      // scroll-snap (x proximity) snaps a programmatic scrollLeft back to the
-      // nearest box, so small wheel steps never accumulate. Turn snapping off
-      // while the user is actively swiping, and restore it shortly after so the
-      // boxes still settle onto a box when they stop.
-      let snapTimer = null;
-      function suspendSnap(){
-        scroller.style.scrollSnapType = 'none';
-        clearTimeout(snapTimer);
-        snapTimer = setTimeout(function(){ scroller.style.scrollSnapType = ''; }, 160);
-      }
+      // snapping is off (scroll-snap-type:none) so the boxes rest exactly where
+      // the user stops — no yanking to the nearest box after a swipe.
 
       // wheel handler on the whole window so a swipe ANYWHERE on the contact
       // page scrolls the boxes — driven by whichever axis the swipe favours.
@@ -500,7 +492,6 @@
         const atEnd = scroller.scrollLeft >= max - 1;
         // release to the page when there's no more room in that direction
         if ((d < 0 && atStart) || (d > 0 && atEnd)) return;
-        suspendSnap();
         scroller.scrollLeft += d;
         e.preventDefault();
       }, { passive:false });
@@ -518,7 +509,6 @@
         const move = Math.abs(dy) > Math.abs(dx) ? dy : dx;
         const max = maxScroll();
         const clamped = Math.max(0, Math.min(max, startLeft - move));
-        suspendSnap();
         scroller.scrollLeft = clamped;
         // keep the page still only while the boxes still have somewhere to go
         if (clamped > 0 && clamped < max) e.preventDefault();
