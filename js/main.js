@@ -524,7 +524,8 @@
     // circle travelling between the two pages.
     (function(){
       const BLUE = '#0000FF';
-      const EASE = 'cubic-bezier(0.65,0,0.35,1)';
+      const EASE_FLY = 'cubic-bezier(0.4, 0, 0.2, 1)';   // home: smooth accelerate -> gentle landing
+      const EASE_OUT = 'cubic-bezier(0.22, 1, 0.36, 1)'; // contact: continues the motion, eases to rest
       const KEY  = 'collabCircle';
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -575,12 +576,14 @@
           const anim = c.animate([
             { transform:'translate('+(sCx-sR)+'px,'+(sCy-sR)+'px) scale(1)' },
             { transform:'translate('+(tCx-sR)+'px,'+(tCy-sR)+'px) scale('+scale+')' }
-          ], { duration:680, easing:EASE, fill:'forwards' });
+          ], { duration:640, easing:EASE_FLY, fill:'forwards' });
 
+          // navigate slightly BEFORE the fly fully settles so the contact page's
+          // circle picks the motion up mid-glide — no dead stop at the page seam
           let gone = false;
           function go(){ if (gone) return; gone = true; window.location.href = HREF; }
           anim.onfinish = go;
-          setTimeout(go, 820); // safety net if onfinish never fires
+          setTimeout(go, 760); // safety net if onfinish never fires
         });
       })();
 
@@ -589,26 +592,41 @@
         let data = null;
         try { data = JSON.parse(sessionStorage.getItem(KEY) || 'null'); sessionStorage.removeItem(KEY); } catch(_){}
         const infoCircle = document.querySelector('.info-circle');
-        if (!data || !infoCircle) return;
-        if (reduce) return; // just show the page normally
+        const infoBox    = document.querySelector('.contact-info');
 
-        document.body.classList.add('collab-arrive'); // hides content until the circle lands
+        // an inline <body> script may have already hidden the page + painted the
+        // incoming circle so it's on screen from the very first frame (no flash).
+        const prefab = document.getElementById('collabOverlay');
+        function abort(){
+          document.body.classList.remove('collab-arrive');
+          if (prefab && prefab.parentNode) prefab.remove();
+        }
+        if (!data || !infoCircle){ abort(); return; }
+        if (reduce){ abort(); return; }
 
-        // incoming circle starts EXACTLY where the home circle finished
-        const c = document.createElement('div');
-        c.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;border-radius:50%;background:'+BLUE+
-          ';width:'+(data.r*2)+'px;height:'+(data.r*2)+'px;pointer-events:none;will-change:transform,width,height;';
-        c.style.transform = 'translate('+(data.cx-data.r)+'px,'+(data.cy-data.r)+'px)';
-        document.body.appendChild(c);
+        document.body.classList.add('collab-arrive'); // no-op if inline script set it
 
-        // safety net: never leave the page stuck hidden if the anim never finishes
-        setTimeout(function(){
-          if (document.body.classList.contains('collab-arrive')){
-            document.body.classList.add('collab-arrived');
-            document.body.classList.remove('collab-arrive');
-            if (c.parentNode) c.remove();
-          }
-        }, 1400);
+        // reuse the pre-painted circle (seamless), else create one now
+        let c = prefab;
+        if (!c){
+          c = document.createElement('div');
+          c.id = 'collabOverlay';
+          c.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;border-radius:50%;background:'+BLUE+
+            ';width:'+(data.r*2)+'px;height:'+(data.r*2)+'px;pointer-events:none;'+
+            'transform:translate('+(data.cx-data.r)+'px,'+(data.cy-data.r)+'px);';
+          document.body.appendChild(c);
+        }
+        c.style.willChange = 'transform, width, height, clip-path';
+
+        function reveal(){
+          document.body.classList.add('collab-arrived');
+          document.body.classList.remove('collab-arrive'); // real info-circle fades in
+          if (c){ c.style.transition = 'opacity 0.22s ease'; c.style.opacity = '0'; }
+          setTimeout(function(){ if (c && c.parentNode) c.remove(); }, 260);
+        }
+        // safety net: never leave the page stuck hidden if the anim never runs
+        let done = false;
+        const guard = setTimeout(function(){ if (!done){ done = true; reveal(); } }, 1500);
 
         // wait for layout so the info-circle's real resting rect is settled
         requestAnimationFrame(function(){ requestAnimationFrame(function(){
@@ -617,21 +635,29 @@
           const rCx = rect.left + rR;
           const rCy = rect.top + rR;
 
+          // clip the overlay down to the box the info-circle lives in, so the
+          // circle "tucks into" the box instead of snapping from full -> clipped
+          let inT = 0, inR = 0, inB = 0, inL = 0;
+          if (infoBox){
+            const br = infoBox.getBoundingClientRect();
+            inT = Math.max(0, br.top    - (rCy - rR));
+            inR = Math.max(0, (rCx + rR) - br.right);
+            inB = Math.max(0, (rCy + rR) - br.bottom);
+            inL = Math.max(0, br.left   - (rCx - rR));
+          }
+          const endClip = 'inset('+inT+'px '+inR+'px '+inB+'px '+inL+'px)';
+
           const anim = c.animate([
-            { transform:'translate('+(data.cx-data.r)+'px,'+(data.cy-data.r)+'px)', width:(data.r*2)+'px', height:(data.r*2)+'px' },
-            { transform:'translate('+(rCx-rR)+'px,'+(rCy-rR)+'px)', width:(rR*2)+'px', height:(rR*2)+'px' }
-          ], { duration:560, easing:EASE, fill:'forwards' });
+            { transform:'translate('+(data.cx-data.r)+'px,'+(data.cy-data.r)+'px)', width:(data.r*2)+'px', height:(data.r*2)+'px', clipPath:'inset(0px 0px 0px 0px)' },
+            { transform:'translate('+(rCx-rR)+'px,'+(rCy-rR)+'px)', width:(rR*2)+'px', height:(rR*2)+'px', clipPath:endClip }
+          ], { duration:620, easing:EASE_OUT, fill:'forwards' });
 
           // fade the page content in as the circle nears its resting place
-          setTimeout(function(){ document.body.classList.add('collab-arrived'); }, 280);
+          setTimeout(function(){ document.body.classList.add('collab-arrived'); }, 180);
 
           anim.onfinish = function(){
-            // crossfade: real info-circle takes over, overlay bows out — hides the
-            // box clip so there's no visible pop at the handoff
-            c.style.transition = 'opacity 0.18s ease';
-            c.style.opacity = '0';
-            document.body.classList.remove('collab-arrive');
-            setTimeout(function(){ c.remove(); }, 220);
+            if (done) return; done = true; clearTimeout(guard);
+            reveal(); // overlay now pixel-matches the clipped info-circle -> invisible crossfade
           };
         }); });
       })();

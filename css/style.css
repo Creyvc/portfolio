@@ -1228,6 +1228,7 @@
   body.collab-arrived .contact-box,
   body.collab-arrived .contact-marquee{
     opacity:1;
+    transition:opacity 0.55s ease; /* keep the fade even after collab-arrive is removed */
   }
   a.contact-box:hover{ background:var(--ink); color:var(--paper); }
   .contact-box[data-label="Instagram"]{
