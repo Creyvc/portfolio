@@ -515,6 +515,128 @@
       }, { passive:false });
     })();
 
+    // ===== Collab -> Contact shared-circle transition =====
+    // On the HOME page: clicking "Interested in collaborating?" turns the CONTACT
+    // cell into a blue circle (same #0000FF as the info-circle) that grows and
+    // flies to where the contact page's circle will sit. We stash that landing
+    // spot, then on the CONTACT page a matching circle arrives from the exact
+    // same spot and settles into the info-circle — so it reads as one continuous
+    // circle travelling between the two pages.
+    (function(){
+      const BLUE = '#0000FF';
+      const EASE = 'cubic-bezier(0.65,0,0.35,1)';
+      const KEY  = 'collabCircle';
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // ---- HOME: departure ----
+      (function(){
+        const link  = document.querySelector('.home-blurb a.collab-link');
+        const cellC = document.querySelector('.cell-c');
+        if (!link || !cellC) return;
+        const HREF = link.getAttribute('href') || 'contact.html';
+
+        link.addEventListener('click', function(e){
+          // let modifier / middle clicks open a new tab as usual
+          if (reduce || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          e.preventDefault();
+
+          // measure the CONTACT text tightly so the circle is born on the word
+          let tb;
+          try { const r = document.createRange(); r.selectNodeContents(cellC); tb = r.getBoundingClientRect(); } catch(_){}
+          if (!tb || !tb.width) tb = cellC.getBoundingClientRect();
+          const sCx = tb.left + tb.width / 2;
+          const sCy = tb.top + tb.height / 2;
+          const sR  = Math.max(14, tb.height / 2);
+
+          // landing spot = where the contact page's info-circle rests (left-centre)
+          const tR  = 240;                              // == info-circle maxDiameter / 2
+          const tCx = window.innerWidth * 0.24;
+          const tCy = window.innerHeight * 0.50;
+          try { sessionStorage.setItem(KEY, JSON.stringify({ cx:tCx, cy:tCy, r:tR })); } catch(_){}
+
+          // the flying circle
+          const c = document.createElement('div');
+          c.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;border-radius:50%;background:'+BLUE+
+            ';width:'+(sR*2)+'px;height:'+(sR*2)+'px;pointer-events:none;will-change:transform;';
+          c.style.transform = 'translate('+(sCx-sR)+'px,'+(sCy-sR)+'px) scale(1)';
+          document.body.appendChild(c);
+
+          // the CONTACT text dissolves into the circle
+          cellC.style.transition = 'opacity 0.18s ease';
+          cellC.style.opacity = '0';
+
+          // veil the rest of the page so the circle is the only thing left moving
+          const veil = document.createElement('div');
+          veil.style.cssText = 'position:fixed;inset:0;z-index:99998;background:var(--paper);opacity:0;transition:opacity 0.5s ease;pointer-events:none;';
+          document.body.appendChild(veil);
+          requestAnimationFrame(function(){ veil.style.opacity = '1'; });
+
+          const scale = tR / sR;
+          const anim = c.animate([
+            { transform:'translate('+(sCx-sR)+'px,'+(sCy-sR)+'px) scale(1)' },
+            { transform:'translate('+(tCx-sR)+'px,'+(tCy-sR)+'px) scale('+scale+')' }
+          ], { duration:680, easing:EASE, fill:'forwards' });
+
+          let gone = false;
+          function go(){ if (gone) return; gone = true; window.location.href = HREF; }
+          anim.onfinish = go;
+          setTimeout(go, 820); // safety net if onfinish never fires
+        });
+      })();
+
+      // ---- CONTACT: arrival ----
+      (function(){
+        let data = null;
+        try { data = JSON.parse(sessionStorage.getItem(KEY) || 'null'); sessionStorage.removeItem(KEY); } catch(_){}
+        const infoCircle = document.querySelector('.info-circle');
+        if (!data || !infoCircle) return;
+        if (reduce) return; // just show the page normally
+
+        document.body.classList.add('collab-arrive'); // hides content until the circle lands
+
+        // incoming circle starts EXACTLY where the home circle finished
+        const c = document.createElement('div');
+        c.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;border-radius:50%;background:'+BLUE+
+          ';width:'+(data.r*2)+'px;height:'+(data.r*2)+'px;pointer-events:none;will-change:transform,width,height;';
+        c.style.transform = 'translate('+(data.cx-data.r)+'px,'+(data.cy-data.r)+'px)';
+        document.body.appendChild(c);
+
+        // safety net: never leave the page stuck hidden if the anim never finishes
+        setTimeout(function(){
+          if (document.body.classList.contains('collab-arrive')){
+            document.body.classList.add('collab-arrived');
+            document.body.classList.remove('collab-arrive');
+            if (c.parentNode) c.remove();
+          }
+        }, 1400);
+
+        // wait for layout so the info-circle's real resting rect is settled
+        requestAnimationFrame(function(){ requestAnimationFrame(function(){
+          const rect = infoCircle.getBoundingClientRect();
+          const rR  = rect.width / 2;
+          const rCx = rect.left + rR;
+          const rCy = rect.top + rR;
+
+          const anim = c.animate([
+            { transform:'translate('+(data.cx-data.r)+'px,'+(data.cy-data.r)+'px)', width:(data.r*2)+'px', height:(data.r*2)+'px' },
+            { transform:'translate('+(rCx-rR)+'px,'+(rCy-rR)+'px)', width:(rR*2)+'px', height:(rR*2)+'px' }
+          ], { duration:560, easing:EASE, fill:'forwards' });
+
+          // fade the page content in as the circle nears its resting place
+          setTimeout(function(){ document.body.classList.add('collab-arrived'); }, 280);
+
+          anim.onfinish = function(){
+            // crossfade: real info-circle takes over, overlay bows out — hides the
+            // box clip so there's no visible pop at the handoff
+            c.style.transition = 'opacity 0.18s ease';
+            c.style.opacity = '0';
+            document.body.classList.remove('collab-arrive');
+            setTimeout(function(){ c.remove(); }, 220);
+          };
+        }); });
+      })();
+    })();
+
     (function(){
       const src = document.querySelector('.github-icon-src');
       const img = document.querySelector('.github-icon');

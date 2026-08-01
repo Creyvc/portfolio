@@ -1197,6 +1197,7 @@
     transform:translateY(-50%);
     z-index:0;
     pointer-events:none;
+    transition:opacity 0.25s ease;
   }
   .info-row span.on-circle{
     color:#fff;
@@ -1212,6 +1213,22 @@
     border-bottom:1px solid rgba(23,24,28,0.2);
   }
   .info-label{ color:var(--ink); opacity:1; }
+  /* collab -> contact arrival: keep the page hidden until the shared circle lands,
+     then fade the content in (the info-circle stays hidden until the JS crossfade) */
+  body.collab-arrive header,
+  body.collab-arrive .contact-progress,
+  body.collab-arrive .contact-box,
+  body.collab-arrive .contact-marquee{
+    opacity:0;
+    transition:opacity 0.5s ease;
+  }
+  body.collab-arrive .info-circle{ opacity:0; }
+  body.collab-arrived header,
+  body.collab-arrived .contact-progress,
+  body.collab-arrived .contact-box,
+  body.collab-arrived .contact-marquee{
+    opacity:1;
+  }
   a.contact-box:hover{ background:var(--ink); color:var(--paper); }
   .contact-box[data-label="Instagram"]{
     background:linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D, #F56040, #F77737, #FCAF45, #FFDC80, #405DE6);
@@ -1367,6 +1384,9 @@
     stroke-linejoin:round;
   }
   .top-btn:hover{ color:var(--accent); opacity:1; }
+  /* back button: arrows sit side-by-side and slide LEFT on hover (reads as "back") */
+  .back-btn .top-btn-stack{ flex-direction:row; }
+  .back-btn:hover .top-btn-stack{ transform:translateX(-1.8rem); }
 
   .reveal{
     opacity:0;
