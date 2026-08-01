@@ -736,9 +736,18 @@
             const midT  = Math.max(ct, br.top);
             const midH  = Math.min(ct + rR*2, br.bottom) - midT;
 
-            const top  = makeFlap(cl, ct, rR*2, topH, 0, 0, 'center bottom', rR);
-            const bot  = makeFlap(cl, br.bottom, rR*2, botH, 0, -(br.bottom - ct), 'center top', rR);
-            const left = makeFlap(cl, midT, leftW, midH, 0, -(midT - ct), 'right center', rR);
+            // Each flap stops at the box's OUTER edge, but the clipped circle inside
+            // starts after the box's 1px border — that hairline of border/background
+            // read as a white line along every seam. Push each flap a couple of px
+            // past its hinge so it covers the border (and overlaps its neighbour),
+            // and keep the fold axis on the box edge with an explicit origin.
+            const OV = 2;
+            const top = topH > 0.5
+              ? makeFlap(cl, ct, rR*2, topH + OV, 0, 0, 'center ' + topH + 'px', rR) : null;
+            const bot = botH > 0.5
+              ? makeFlap(cl, br.bottom - OV, rR*2, botH + OV, 0, -(br.bottom - OV - ct), 'center ' + OV + 'px', rR) : null;
+            const left = leftW > 0.5
+              ? makeFlap(cl, midT, leftW + OV, midH, 0, -(midT - ct), leftW + 'px center', rR) : null;
 
             if (c && c.parentNode){ c.remove(); c = null; }   // flaps now draw the caps
 
