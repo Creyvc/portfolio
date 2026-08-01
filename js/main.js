@@ -726,22 +726,29 @@
             if (done) return;
             const br = infoBox.getBoundingClientRect();
             const cl = rCx - rR, ct = rCy - rR;           // circle bounding box
-            const leftW = Math.max(0, br.left - cl);      // left cap (a semicircle)
-            const topH  = Math.max(0, br.top - ct);       // sliver above the box
+            // Split the overhang into three non-overlapping bands. The top and bottom
+            // flaps run the FULL circle width so that once they fold nothing is left
+            // poking above or below the box; the left flap is then just the middle
+            // band, which folds in last.
+            const topH  = Math.max(0, br.top - ct);
             const botH  = Math.max(0, (ct + rR*2) - br.bottom);
-            const rightW = (cl + rR*2) - br.left;
+            const leftW = Math.max(0, br.left - cl);
+            const midT  = Math.max(ct, br.top);
+            const midH  = Math.min(ct + rR*2, br.bottom) - midT;
 
-            const left = makeFlap(cl, ct, leftW, rR*2, 0, 0, 'right center', rR);
-            const top  = makeFlap(br.left, ct, rightW, topH, -leftW, 0, 'center bottom', rR);
-            const bot  = makeFlap(br.left, br.bottom, rightW, botH, -leftW, -(br.bottom - ct), 'center top', rR);
+            const top  = makeFlap(cl, ct, rR*2, topH, 0, 0, 'center bottom', rR);
+            const bot  = makeFlap(cl, br.bottom, rR*2, botH, 0, -(br.bottom - ct), 'center top', rR);
+            const left = makeFlap(cl, midT, leftW, midH, 0, -(midT - ct), 'right center', rR);
 
             if (c && c.parentNode){ c.remove(); c = null; }   // flaps now draw the caps
 
-            const FOLD = 560, STEP = 150;
+            // top and bottom fold together first, then the left semicircle folds over
+            // them — the slight overlap keeps it one continuous motion, not two beats
+            const FOLD = 560, LEFT_DELAY = FOLD - 120;
             const folds = [
               [top,  'perspective(900px) rotateX(90deg)',  0],
-              [bot,  'perspective(900px) rotateX(-90deg)', STEP],
-              [left, 'perspective(900px) rotateY(-90deg)', STEP * 2]
+              [bot,  'perspective(900px) rotateX(-90deg)', 0],
+              [left, 'perspective(900px) rotateY(-90deg)', LEFT_DELAY]
             ].filter(function(f){ return f[0]; });
 
             if (!folds.length){ if (!done){ done = true; clearTimeout(guard); finish(); } return; }
