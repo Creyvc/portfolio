@@ -1190,7 +1190,9 @@
   .info-circle{
     position:absolute;
     top:50%;
-    left:0;
+    /* rest position (matches what the scroll handler computes at scrollLeft 0:
+       diameter 30rem, left -radius) so the very first paint is already correct */
+    left:-15rem;
     width:30rem; height:30rem;
     border-radius:50%;
     background:#0000FF;
@@ -1212,19 +1214,21 @@
     border-bottom:1px solid rgba(23,24,28,0.2);
   }
   .info-label{ color:var(--ink); opacity:1; }
-  /* collab -> contact arrival: keep the page hidden until the shared circle lands,
-     then fade the content in (the info-circle stays hidden until the JS crossfade).
+  /* collab -> contact arrival: fade the surrounding page in, but leave the info box
+     ITSELF visible from the first frame — its text must be readable immediately, not
+     hidden behind the arriving circle.
      NOTE: .contact-box is deliberately NOT given a `transition` here — it keeps its
      own transition list (which drives the swipe-shrink), and its opacity fade rides
-     on the `opacity` entry added to that list. */
+     on the `opacity` entry added to that list.
+     .contact-info must never drop below opacity 1: a fractional opacity would make it
+     a stacking context and trap .info-row underneath the arriving overlay. */
   body.collab-arrive header,
   body.collab-arrive .contact-progress,
   body.collab-arrive .contact-marquee{
     opacity:0;
     transition:opacity 0.5s ease;
   }
-  body.collab-arrive .contact-box{ opacity:0; }
-  body.collab-arrive .info-circle{ opacity:0; }
+  body.collab-arrive .contact-box:not(.contact-info){ opacity:0; }
   body.collab-arrived header,
   body.collab-arrived .contact-progress,
   body.collab-arrived .contact-marquee{
@@ -1232,6 +1236,9 @@
     transition:opacity 0.55s ease; /* keep the fade even after collab-arrive is removed */
   }
   body.collab-arrived .contact-box{ opacity:1; }
+  /* the arriving overlay sits at z-index 30 (see js/main.js); the labels ride above it
+     so the circle never covers the text while it dissolves */
+  .contact-info .info-row{ z-index:40; }
   a.contact-box:hover{ background:var(--ink); color:var(--paper); }
   .contact-box[data-label="Instagram"]{
     background:linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D, #F56040, #F77737, #FCAF45, #FFDC80, #405DE6);

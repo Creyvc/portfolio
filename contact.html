@@ -35,9 +35,10 @@
 </head>
 <body class="loaded">
   <script>
-  /* Arriving from the home "collaborate" link: paint the incoming blue circle and
-     hide the page content on the FIRST frame, so the shared circle never blinks
-     out during the page navigation. main.js then animates it into the box. */
+  /* Arriving from the home "collaborate" link: paint the incoming blue circle on the
+     FIRST frame so the shared circle never blinks out during the page navigation.
+     z-index 30 keeps it under the info-row labels (z 40) — the box text stays
+     readable the whole time the circle is dissolving. */
   (function(){
     var d; try { d = JSON.parse(sessionStorage.getItem('collabCircle') || 'null'); } catch(e){}
     if (!d || !d.r) return;
@@ -45,7 +46,7 @@
     document.body.classList.add('collab-arrive');
     var c = document.createElement('div');
     c.id = 'collabOverlay';
-    c.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;border-radius:50%;background:#0000FF;'
+    c.style.cssText = 'position:fixed;left:0;top:0;z-index:30;border-radius:50%;background:#0000FF;'
       + 'width:' + (d.r*2) + 'px;height:' + (d.r*2) + 'px;'
       + 'transform:translate(' + (d.cx-d.r) + 'px,' + (d.cy-d.r) + 'px);'
       + 'pointer-events:none;';

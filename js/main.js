@@ -635,32 +635,43 @@
         if (!c){
           c = document.createElement('div');
           c.id = 'collabOverlay';
-          c.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;border-radius:50%;background:'+BLUE+
+          // z-index 30 keeps the overlay under the .info-row labels (z 40)
+          c.style.cssText = 'position:fixed;left:0;top:0;z-index:30;border-radius:50%;background:'+BLUE+
             ';width:'+(data.r*2)+'px;height:'+(data.r*2)+'px;pointer-events:none;'+
             'transform:translate('+(data.cx-data.r)+'px,'+(data.cy-data.r)+'px);';
           document.body.appendChild(c);
         }
         c.style.willChange = 'transform, width, height, opacity';
 
-        // bring the real (clipped) circle in underneath — INSTANTLY, not faded.
-        // Both are the same blue, so while the overlay still covers it nothing
-        // changes on screen; fading it instead would make the overlapping area
-        // dip in opacity and read as a flash.
-        function showRealCircle(){
-          if (!infoCircle) return;
-          const prev = infoCircle.style.transition;
-          infoCircle.style.transition = 'none';
-          document.body.classList.remove('collab-arrive');
-          void infoCircle.offsetWidth;                       // commit before restoring
-          infoCircle.style.transition = prev || '';
+        // The bits of the circle sticking outside the box are rebuilt as three hinged
+        // flaps — left semicircle, top sliver, bottom sliver — each a window onto the
+        // same circle. Folding them about the box edges makes the circle look like it
+        // is being folded into the box. They live outside the box, so they never cover
+        // the labels.
+        let flaps = [];
+        function makeFlap(l, t, w, h, innerL, innerT, origin, rR){
+          if (w <= 0.5 || h <= 0.5) return null;
+          const wrap = document.createElement('div');
+          wrap.style.cssText = 'position:fixed;z-index:30;overflow:hidden;pointer-events:none;'+
+            'left:'+l+'px;top:'+t+'px;width:'+w+'px;height:'+h+'px;'+
+            'transform-origin:'+origin+';backface-visibility:hidden;will-change:transform;';
+          const inner = document.createElement('div');
+          inner.style.cssText = 'position:absolute;border-radius:50%;background:'+BLUE+';'+
+            'width:'+(rR*2)+'px;height:'+(rR*2)+'px;left:'+innerL+'px;top:'+innerT+'px;';
+          wrap.appendChild(inner);
+          document.body.appendChild(wrap);
+          flaps.push(wrap);
+          return wrap;
         }
         function cleanup(){
           if (c && c.parentNode) c.remove();
           c = null;
+          flaps.forEach(function(f){ if (f && f.parentNode) f.remove(); });
+          flaps = [];
         }
         function finish(){
           document.body.classList.add('collab-arrived');
-          showRealCircle();
+          document.body.classList.remove('collab-arrive');
           cleanup();
         }
         // safety net: never leave the page stuck hidden if the anim never runs
@@ -686,14 +697,13 @@
             localStorage.setItem(GEO, JSON.stringify({ w:window.innerWidth, cx:rCx, cy:rCy, r:rR }));
           } catch(_){}
 
-          const TRAVEL = 900;   // glide to the resting spot
-          const SETTLE = 540;   // by here the ease-out has all but stopped
-          const FADE   = 700;   // slow dissolve of the parts outside the box
+          const TRAVEL = 900;   // glide to the resting spot (only if a correction is needed)
 
           // If the handoff already landed on the mark there is nothing to correct —
           // skip the travel so the circle never visibly drifts on arrival.
           const off = Math.hypot(rCx - data.cx, rCy - data.cy) + Math.abs(rR - data.r);
-          if (off > 1.5){
+          const needsTravel = off > 1.5;
+          if (needsTravel){
             c.animate([
               { transform:'translate('+(data.cx-data.r)+'px,'+(data.cy-data.r)+'px)', width:(data.r*2)+'px', height:(data.r*2)+'px' },
               { transform:'translate('+(rCx-rR)+'px,'+(rCy-rR)+'px)', width:(rR*2)+'px', height:(rR*2)+'px' }
@@ -704,22 +714,54 @@
             c.style.transform = 'translate('+(rCx-rR)+'px,'+(rCy-rR)+'px)';
           }
 
-          // fade the page content in as the circle nears its resting place
-          setTimeout(function(){ document.body.classList.add('collab-arrived'); }, 280);
+          // fade the surrounding page in straight away (the info box + its labels are
+          // already visible — the flaps sit outside the box, so nothing covers the text)
+          setTimeout(function(){ document.body.classList.add('collab-arrived'); }, 60);
 
-          // once it's essentially at rest, drop the solid half-circle in behind it
-          // and dissolve the overlay away — the in-box area never changes, only the
-          // caps sticking outside the box melt off. No slice, no pop.
-          setTimeout(showRealCircle, SETTLE);
+          // Build the three flaps over the parts of the circle that stick out of the
+          // box, then swap the full circle out for them (identical pixels, so the swap
+          // is invisible) and fold each one down onto its box edge.
+          const SETTLE = needsTravel ? TRAVEL - 120 : 0;
+          setTimeout(function(){
+            if (done) return;
+            const br = infoBox.getBoundingClientRect();
+            const cl = rCx - rR, ct = rCy - rR;           // circle bounding box
+            const leftW = Math.max(0, br.left - cl);      // left cap (a semicircle)
+            const topH  = Math.max(0, br.top - ct);       // sliver above the box
+            const botH  = Math.max(0, (ct + rR*2) - br.bottom);
+            const rightW = (cl + rR*2) - br.left;
 
-          const fade = c.animate(
-            [ { opacity:1 }, { opacity:1, offset:0.0001 }, { opacity:0 } ],
-            { delay:SETTLE, duration:FADE, easing:'cubic-bezier(0.33, 0, 0.67, 1)', fill:'forwards' }
-          );
-          fade.onfinish = function(){
-            if (done) return; done = true; clearTimeout(guard);
-            finish();
-          };
+            const left = makeFlap(cl, ct, leftW, rR*2, 0, 0, 'right center', rR);
+            const top  = makeFlap(br.left, ct, rightW, topH, -leftW, 0, 'center bottom', rR);
+            const bot  = makeFlap(br.left, br.bottom, rightW, botH, -leftW, -(br.bottom - ct), 'center top', rR);
+
+            if (c && c.parentNode){ c.remove(); c = null; }   // flaps now draw the caps
+
+            const FOLD = 560, STEP = 150;
+            const folds = [
+              [top,  'perspective(900px) rotateX(90deg)',  0],
+              [bot,  'perspective(900px) rotateX(-90deg)', STEP],
+              [left, 'perspective(900px) rotateY(-90deg)', STEP * 2]
+            ].filter(function(f){ return f[0]; });
+
+            if (!folds.length){ if (!done){ done = true; clearTimeout(guard); finish(); } return; }
+
+            let pending = folds.length;
+            folds.forEach(function(f){
+              const a = f[0].animate(
+                [ // the trailing opacity ramp hides the 1px edge-on sliver at 90°
+                  { transform:'perspective(900px) rotateX(0deg)', opacity:1 },
+                  { opacity:1, offset:0.8 },
+                  { transform:f[1], opacity:0 }
+                ],
+                { duration:FOLD, delay:f[2], easing:'cubic-bezier(0.5, 0, 0.3, 1)', fill:'forwards' }
+              );
+              a.onfinish = function(){
+                if (--pending > 0 || done) return;
+                done = true; clearTimeout(guard); finish();
+              };
+            });
+          }, SETTLE);
         }); });
       })();
     })();
