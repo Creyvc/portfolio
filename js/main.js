@@ -476,39 +476,49 @@
         return scroller.scrollWidth - scroller.clientWidth;
       }
 
-      // wheel handler: let the browser natively scroll horizontal gestures
-      // (smooth trackpad swipe on Mac), and only translate VERTICAL wheel/scroll
-      // into horizontal movement (what mouse-only users on Windows need).
-      scroller.addEventListener('wheel', function(e){
-        // horizontal gesture already present -> leave it to native overflow-x
-        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-        // normalize vertical delta: many Windows mice report lines/pages, not px
-        let dy = e.deltaY;
-        if (e.deltaMode === 1) dy *= 16;                       // lines -> px
-        else if (e.deltaMode === 2) dy *= scroller.clientHeight; // pages -> px
-        if (dy === 0) return;
+      // scroll-snap (x proximity) snaps a programmatic scrollLeft back to the
+      // nearest box, so small wheel steps never accumulate. Turn snapping off
+      // while the user is actively swiping, and restore it shortly after so the
+      // boxes still settle onto a box when they stop.
+      let snapTimer = null;
+      function suspendSnap(){
+        scroller.style.scrollSnapType = 'none';
+        clearTimeout(snapTimer);
+        snapTimer = setTimeout(function(){ scroller.style.scrollSnapType = ''; }, 160);
+      }
+
+      // wheel handler on the whole window so a swipe ANYWHERE on the contact
+      // page scrolls the boxes — driven by whichever axis the swipe favours.
+      window.addEventListener('wheel', function(e){
         const max = maxScroll();
+        if (max <= 0) return;
+        let d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+        if (e.deltaMode === 1) d *= 16;                        // lines -> px
+        else if (e.deltaMode === 2) d *= scroller.clientWidth;  // pages -> px
+        if (d === 0) return;
         const atStart = scroller.scrollLeft <= 0;
         const atEnd = scroller.scrollLeft >= max - 1;
         // release to the page when there's no more room in that direction
-        if ((dy < 0 && atStart) || (dy > 0 && atEnd)) return;
-        scroller.scrollLeft += dy;
+        if ((d < 0 && atStart) || (d > 0 && atEnd)) return;
+        suspendSnap();
+        scroller.scrollLeft += d;
         e.preventDefault();
       }, { passive:false });
 
-      // touch: dominant axis of the swipe drives horizontal scroll
+      // touch: dominant axis of the swipe drives horizontal scroll (anywhere on the page)
       let startX = 0, startY = 0, startLeft = 0;
-      scroller.addEventListener('touchstart', function(e){
+      window.addEventListener('touchstart', function(e){
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
         startLeft = scroller.scrollLeft;
       }, { passive:true });
-      scroller.addEventListener('touchmove', function(e){
+      window.addEventListener('touchmove', function(e){
         const dx = e.touches[0].clientX - startX;
         const dy = e.touches[0].clientY - startY;
         const move = Math.abs(dy) > Math.abs(dx) ? dy : dx;
         const max = maxScroll();
         const clamped = Math.max(0, Math.min(max, startLeft - move));
+        suspendSnap();
         scroller.scrollLeft = clamped;
         // keep the page still only while the boxes still have somewhere to go
         if (clamped > 0 && clamped < max) e.preventDefault();
