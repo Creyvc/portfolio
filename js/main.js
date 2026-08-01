@@ -527,7 +527,30 @@
       const EASE_FLY = 'cubic-bezier(0.4, 0, 0.2, 1)';   // home: smooth accelerate -> gentle landing
       const EASE_OUT = 'cubic-bezier(0.22, 1, 0.36, 1)'; // contact: continues the motion, eases to rest
       const KEY  = 'collabCircle';
+      const GEO  = 'collabCircleGeo';   // cached exact resting spot, measured on the contact page
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // Where the contact page's info-circle comes to rest. At rest the circle is
+      // 480px wide with left:-240px inside .contact-info and vertically centred,
+      // so its centre is exactly (box.left, box.centreY).
+      // The home page can't measure that box, so it predicts it: X follows the
+      // .contact-boxes padding-left formula, Y is a layout-flow constant (it does
+      // NOT scale with viewport height). The contact page then caches its real
+      // measurement, so every later visit is exact rather than predicted.
+      function restingSpot(){
+        const cached = (function(){
+          try { return JSON.parse(localStorage.getItem(GEO) || 'null'); } catch(_){ return null; }
+        })();
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        // matches: padding-left:max(0, (100vw - 42rem)/2 - 2rem) on .contact-boxes
+        const cx = Math.max(0, (window.innerWidth - 42 * rem) / 2 - 2 * rem);
+        // 27.31rem ≈ header + progress block + box offsets + half the box height
+        const cy = 27.31 * rem;
+        if (cached && cached.w === window.innerWidth && isFinite(cached.cx) && isFinite(cached.cy)){
+          return { cx:cached.cx, cy:cached.cy, r:cached.r || 240 };
+        }
+        return { cx:cx, cy:cy, r:240 };
+      }
 
       // ---- HOME: departure ----
       (function(){
@@ -550,9 +573,10 @@
           const sR  = Math.max(14, tb.height / 2);
 
           // landing spot = where the contact page's info-circle rests (left-centre)
-          const tR  = 240;                              // == info-circle maxDiameter / 2
-          const tCx = window.innerWidth * 0.24;
-          const tCy = window.innerHeight * 0.50;
+          const spot = restingSpot();
+          const tR  = spot.r;
+          const tCx = spot.cx;
+          const tCy = spot.cy;
           try { sessionStorage.setItem(KEY, JSON.stringify({ cx:tCx, cy:tCy, r:tR })); } catch(_){}
 
           // the flying circle
@@ -563,12 +587,12 @@
           document.body.appendChild(c);
 
           // the CONTACT text dissolves into the circle
-          cellC.style.transition = 'opacity 0.18s ease';
+          cellC.style.transition = 'opacity 0.28s ease';
           cellC.style.opacity = '0';
 
           // veil the rest of the page so the circle is the only thing left moving
           const veil = document.createElement('div');
-          veil.style.cssText = 'position:fixed;inset:0;z-index:99998;background:var(--paper);opacity:0;transition:opacity 0.5s ease;pointer-events:none;';
+          veil.style.cssText = 'position:fixed;inset:0;z-index:99998;background:var(--paper);opacity:0;transition:opacity 0.7s ease;pointer-events:none;';
           document.body.appendChild(veil);
           requestAnimationFrame(function(){ veil.style.opacity = '1'; });
 
@@ -576,14 +600,14 @@
           const anim = c.animate([
             { transform:'translate('+(sCx-sR)+'px,'+(sCy-sR)+'px) scale(1)' },
             { transform:'translate('+(tCx-sR)+'px,'+(tCy-sR)+'px) scale('+scale+')' }
-          ], { duration:640, easing:EASE_FLY, fill:'forwards' });
+          ], { duration:950, easing:EASE_FLY, fill:'forwards' });
 
           // navigate slightly BEFORE the fly fully settles so the contact page's
           // circle picks the motion up mid-glide — no dead stop at the page seam
           let gone = false;
           function go(){ if (gone) return; gone = true; window.location.href = HREF; }
           anim.onfinish = go;
-          setTimeout(go, 760); // safety net if onfinish never fires
+          setTimeout(go, 1080); // safety net if onfinish never fires
         });
       })();
 
@@ -616,48 +640,85 @@
             'transform:translate('+(data.cx-data.r)+'px,'+(data.cy-data.r)+'px);';
           document.body.appendChild(c);
         }
-        c.style.willChange = 'transform, width, height, clip-path';
+        c.style.willChange = 'transform, width, height, opacity';
 
-        function reveal(){
+        // bring the real (clipped) circle in underneath — INSTANTLY, not faded.
+        // Both are the same blue, so while the overlay still covers it nothing
+        // changes on screen; fading it instead would make the overlapping area
+        // dip in opacity and read as a flash.
+        function showRealCircle(){
+          if (!infoCircle) return;
+          const prev = infoCircle.style.transition;
+          infoCircle.style.transition = 'none';
+          document.body.classList.remove('collab-arrive');
+          void infoCircle.offsetWidth;                       // commit before restoring
+          infoCircle.style.transition = prev || '';
+        }
+        function cleanup(){
+          if (c && c.parentNode) c.remove();
+          c = null;
+        }
+        function finish(){
           document.body.classList.add('collab-arrived');
-          document.body.classList.remove('collab-arrive'); // real info-circle fades in
-          if (c){ c.style.transition = 'opacity 0.22s ease'; c.style.opacity = '0'; }
-          setTimeout(function(){ if (c && c.parentNode) c.remove(); }, 260);
+          showRealCircle();
+          cleanup();
         }
         // safety net: never leave the page stuck hidden if the anim never runs
         let done = false;
-        const guard = setTimeout(function(){ if (!done){ done = true; reveal(); } }, 1500);
+        const guard = setTimeout(function(){ if (!done){ done = true; finish(); } }, 2100);
 
-        // wait for layout so the info-circle's real resting rect is settled
+        // wait for layout so the box's resting rect is settled
         requestAnimationFrame(function(){ requestAnimationFrame(function(){
-          const rect = infoCircle.getBoundingClientRect();
-          const rR  = rect.width / 2;
-          const rCx = rect.left + rR;
-          const rCy = rect.top + rR;
-
-          // clip the overlay down to the box the info-circle lives in, so the
-          // circle "tucks into" the box instead of snapping from full -> clipped
-          let inT = 0, inR = 0, inB = 0, inL = 0;
-          if (infoBox){
-            const br = infoBox.getBoundingClientRect();
-            inT = Math.max(0, br.top    - (rCy - rR));
-            inR = Math.max(0, (rCx + rR) - br.right);
-            inB = Math.max(0, (rCy + rR) - br.bottom);
-            inL = Math.max(0, br.left   - (rCx - rR));
+          // Measure the BOX, not the circle: at rest the circle's centre is exactly
+          // (box.left, box.centreY). The circle's own left/width are set by the
+          // scroll handler in a rAF, so reading it here can catch a stale value —
+          // the box rect is correct immediately.
+          let rR = data.r, rCx = data.cx, rCy = data.cy;
+          const boxRect = infoBox && infoBox.getBoundingClientRect();
+          if (boxRect && boxRect.width){
+            rR  = infoCircle.getBoundingClientRect().width / 2 || data.r;
+            rCx = boxRect.left;
+            rCy = boxRect.top + boxRect.height / 2;
           }
-          const endClip = 'inset('+inT+'px '+inR+'px '+inB+'px '+inL+'px)';
 
-          const anim = c.animate([
-            { transform:'translate('+(data.cx-data.r)+'px,'+(data.cy-data.r)+'px)', width:(data.r*2)+'px', height:(data.r*2)+'px', clipPath:'inset(0px 0px 0px 0px)' },
-            { transform:'translate('+(rCx-rR)+'px,'+(rCy-rR)+'px)', width:(rR*2)+'px', height:(rR*2)+'px', clipPath:endClip }
-          ], { duration:620, easing:EASE_OUT, fill:'forwards' });
+          // remember the real spot so the next departure predicts it exactly
+          try {
+            localStorage.setItem(GEO, JSON.stringify({ w:window.innerWidth, cx:rCx, cy:rCy, r:rR }));
+          } catch(_){}
+
+          const TRAVEL = 900;   // glide to the resting spot
+          const SETTLE = 540;   // by here the ease-out has all but stopped
+          const FADE   = 700;   // slow dissolve of the parts outside the box
+
+          // If the handoff already landed on the mark there is nothing to correct —
+          // skip the travel so the circle never visibly drifts on arrival.
+          const off = Math.hypot(rCx - data.cx, rCy - data.cy) + Math.abs(rR - data.r);
+          if (off > 1.5){
+            c.animate([
+              { transform:'translate('+(data.cx-data.r)+'px,'+(data.cy-data.r)+'px)', width:(data.r*2)+'px', height:(data.r*2)+'px' },
+              { transform:'translate('+(rCx-rR)+'px,'+(rCy-rR)+'px)', width:(rR*2)+'px', height:(rR*2)+'px' }
+            ], { duration:TRAVEL, easing:EASE_OUT, fill:'forwards' });
+          } else {
+            c.style.width  = (rR*2)+'px';
+            c.style.height = (rR*2)+'px';
+            c.style.transform = 'translate('+(rCx-rR)+'px,'+(rCy-rR)+'px)';
+          }
 
           // fade the page content in as the circle nears its resting place
-          setTimeout(function(){ document.body.classList.add('collab-arrived'); }, 180);
+          setTimeout(function(){ document.body.classList.add('collab-arrived'); }, 280);
 
-          anim.onfinish = function(){
+          // once it's essentially at rest, drop the solid half-circle in behind it
+          // and dissolve the overlay away — the in-box area never changes, only the
+          // caps sticking outside the box melt off. No slice, no pop.
+          setTimeout(showRealCircle, SETTLE);
+
+          const fade = c.animate(
+            [ { opacity:1 }, { opacity:1, offset:0.0001 }, { opacity:0 } ],
+            { delay:SETTLE, duration:FADE, easing:'cubic-bezier(0.33, 0, 0.67, 1)', fill:'forwards' }
+          );
+          fade.onfinish = function(){
             if (done) return; done = true; clearTimeout(guard);
-            reveal(); // overlay now pixel-matches the clipped info-circle -> invisible crossfade
+            finish();
           };
         }); });
       })();
