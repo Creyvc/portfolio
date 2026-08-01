@@ -1212,7 +1212,7 @@
     padding:1.4rem 0;
     border-bottom:1px solid rgba(23,24,28,0.2);
   }
-  .info-label{ color:#fff; opacity:1; }
+  .info-label{ color:var(--ink); opacity:1; }
   a.contact-box:hover{ background:var(--ink); color:var(--paper); }
   .contact-box[data-label="Instagram"]{
     background:linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D, #F56040, #F77737, #FCAF45, #FFDC80, #405DE6);
