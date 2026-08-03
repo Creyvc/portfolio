@@ -1239,7 +1239,9 @@
     align-items:center;
     justify-content:center;
     gap:0.5rem;
-    margin:2rem 0 0;
+    /* the footer block is vertically centred, so half of any margin change is
+       given back — each 1rem here nets 8px of movement */
+    margin:-4rem 0 0;
   }
   .contact-progress .tick{
     width:2px;
@@ -1538,7 +1540,7 @@
      them fills with ink, leaving a white X. The brackets go transparent rather
      than display:none so they hold their width and the X never shifts. */
   .close-btn{
-    position:absolute; right:1.6rem; top:0.5rem; z-index:20;
+    position:absolute; left:1.6rem; top:0.5rem; z-index:20;
     display:inline-flex; align-items:center; justify-content:center;
     /* uneven padding on purpose: [X] is three glyphs wide but one line tall, so
        these are the values that make the filled box come out square */
