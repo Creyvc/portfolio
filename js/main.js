@@ -396,10 +396,15 @@
       if (!scroller || !emailBox || !glyph) return;
 
       function update(){
-        const viewCenter = scroller.scrollLeft + scroller.clientWidth / 2;
-        const boxCenter = emailBox.offsetLeft + emailBox.offsetWidth / 2;
-        const windowDist = emailBox.offsetWidth + 24;
-        const signedDist = boxCenter - viewCenter;
+        // Measured from viewport rects, not offsetLeft: .contact-boxes is not
+        // positioned, so a box's offsetLeft resolves against .contact and does
+        // not share an origin with scrollLeft. Mixing the two put the zero point
+        // outside the box's travel, so progress sat clamped and the word never
+        // swept through centre.
+        const boxRect = emailBox.getBoundingClientRect();
+        const scRect = scroller.getBoundingClientRect();
+        const signedDist = (boxRect.left + boxRect.width / 2) - (scRect.left + scRect.width / 2);
+        const windowDist = boxRect.width + 24;
         const progress = Math.max(-1, Math.min(1, signedDist / windowDist));
 
         const glyphWidth = glyph.offsetWidth;

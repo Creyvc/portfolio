@@ -1289,9 +1289,7 @@
        min-height + 2px border + this row's own 2.25rem/0.5rem padding — so there
        is no dead space in the row, while still staying constant when the boxes
        shrink to 17.5rem on scroll. */
-    /* tall enough for whichever state is bigger: the full-size boxes at rest, or
-       the shrunken boxes once they are sized to the grid rows on a tall viewport */
-    height:max(calc(25rem + 2px + 2.75rem), calc(34vh + 2.75rem));
+    height:calc(34vh + 1px + 2.75rem);
     gap:var(--box-gap);
     margin:3.5rem -2rem 0;
     padding-top:2.25rem;
@@ -1329,7 +1327,18 @@
     display:flex; align-items:center;
     flex-shrink:0;
     width:var(--box-w);
-    min-height:25rem;
+    /* Every box spans the grid rows — 34vh is the gap between the .hlh lines at
+       33% and 67%, and the +1px lands the bottom border ON the 67% line rather
+       than one row short of it (a box spanning [a,b] paints its last row at b-1,
+       while a 1px line at b paints AT b). Applied in both states so the info box
+       lines up too: it is only ever centred at scrollLeft 0, where .is-scrolled
+       is off, so a shrunken-only rule never reached it.
+
+       A definite height, not min-height: the artwork inside is capped with
+       max-height:100%, and a percentage cannot resolve against a parent whose
+       height is driven by that same content — so with min-height the caps were
+       ignored and the taller marks still pushed their box off the grid. */
+    height:calc(34vh + 1px);
     padding:3.25rem;
     border:1px solid rgba(23,24,28,0.15);
     font-family:var(--sans);
@@ -1353,16 +1362,6 @@
   }
   .contact-boxes.is-scrolled .contact-box{
     width:var(--box-shrunk);
-    /* 34vh is exactly the gap between the .hlh grid lines at 33% and 67%, so the
-       shrunken box spans them edge to edge. Being centred on the viewport puts
-       its top on the 33% line and its bottom on the 67% line automatically.
-
-       The +1px and the matching half-pixel in .contact-inner's translateY are a
-       fill-rule correction, not a fudge: a box spanning [33vh, 67vh] paints its
-       last row at 67vh-1, while the 1px .hlh-2 line paints AT 67vh — so the
-       bottom border landed one row short of the line and read as a thin gap,
-       even though the top sat exactly on it. */
-    min-height:calc(34vh + 1px);
     padding:2.28rem;
     font-size:1.61rem;
   }
@@ -1465,6 +1464,14 @@
   a.contact-box[data-label="GitHub"]:hover .github-icon{
     filter:invert(1);
   }
+  /* The marks are sized in rem but the boxes are sized to the grid rows in vh,
+     so on a shorter window the artwork was taller than its row and pushed the
+     box past the 33% / 67% lines. Capping them keeps every box on the grid. */
+  .github-icon, .threads-icon{
+    max-width:100%;
+    max-height:100%;
+    object-fit:contain;
+  }
   .github-icon{
     width:11rem;
     height:11rem;
@@ -1535,12 +1542,15 @@
   .contact-box[data-label="Email"]{
     justify-content:center;
     text-align:center;
-    font-size:11.5rem;
+    /* sized to leave the word room to travel: it slides with the scroll and has
+       to stay fully inside the box, so the smaller it is the further it can move.
+       At 11.5rem it filled the box and had ~43px of slack, which read as static. */
+    font-size:7.25rem;
     font-weight:900;
     white-space:nowrap;
   }
   .contact-boxes.is-scrolled .contact-box[data-label="Email"]{
-    font-size:8.1rem;
+    font-size:5rem;
   }
   .email-clip{
     position:absolute;
