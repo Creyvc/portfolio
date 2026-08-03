@@ -1261,6 +1261,15 @@
     --box-gap: 1.5rem;
     display:flex;
     align-items:center;
+    /* Constant row height so nothing above it ever moves. The row is
+       align-items:center, so the boxes still grow, shrink and slide exactly as
+       before — they now centre inside a fixed-height row instead of resizing it.
+       Sized to the tallest state: the X box at its full 22rem glyph (22rem +
+       2 x 3.25rem padding + 2px border = 28.5rem) plus this row's own
+       2.25rem/0.5rem padding. Without it the row collapsed by ~176px as the X
+       glyph shrank toward centre, dragging the progress bar ~68px down the page
+       every time you scrolled past that box. */
+    height:31.4rem;
     gap:var(--box-gap);
     margin:3.5rem -2rem 0;
     padding-top:2.25rem;
