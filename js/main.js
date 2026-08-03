@@ -887,9 +887,10 @@
 
     // live cursor position + frame rate readout (home page only)
     (function(){
-      const posEl = document.getElementById('hudPos');
+      const xEl   = document.getElementById('hudX');
+      const yEl   = document.getElementById('hudY');
       const fpsEl = document.getElementById('hudFps');
-      if (!posEl || !fpsEl) return;
+      if (!xEl || !yEl || !fpsEl) return;
 
       // fixed-width numbers so the readout never jitters as digits change
       function pad(n, w){ return String(n).padStart(w, ' '); }
@@ -903,13 +904,14 @@
       function tick(now){
         frames++;
         if (posDirty){
-          posEl.textContent = 'X ' + pad(x, 4) + '   Y ' + pad(y, 4);
+          xEl.textContent = 'X ' + pad(x, 4);
+          yEl.textContent = 'Y ' + pad(y, 4);
           posDirty = false;
         }
         // average over ~250ms windows — per-frame deltas are far too noisy to read
         const dt = now - last;
         if (dt >= 250){
-          fpsEl.textContent = pad(Math.round(frames * 1000 / dt), 3) + ' FPS';
+          fpsEl.textContent = 'FPS ' + pad(Math.round(frames * 1000 / dt), 4);
           frames = 0; last = now;
         }
         requestAnimationFrame(tick);
