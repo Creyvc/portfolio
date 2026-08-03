@@ -26,13 +26,14 @@
   }
   .home-lines .hlh-1{ top:33%; }
   .home-lines .hlh-2{ top:67%; }
-  /* The same grid on pages other than the home hero. Home puts its own content
-     at z-index 2 and lets the grid sit at 1; elsewhere the content is unlayered,
-     so the grid drops to 0 and — being first in the document — paints behind it.
-     No --dx / --dy on those pages' plus marks: those only feed the home intro's
+  /* The same grid on pages other than the home hero, drawn OVER the content:
+     the lines and plus marks cross the contact boxes rather than passing behind
+     them. z-index 1 clears .contact-inner, which creates a stacking context of
+     its own via transform and so paints at the 0 level. pointer-events:none is
+     already on .home-lines, so the boxes underneath stay clickable.
+     No --dx / --dy on these plus marks: those only feed the home intro's
      fly-out, which never runs anywhere else. */
-  .home-lines.page-lines{ z-index:0; }
-  .home-lines.page-lines .plus{ z-index:0; }
+  .home-lines.page-lines{ z-index:1; }
 
   /* ===== Intro grid-build (loader -> home) =====
      The grid lines draw out from center while the plus marks fly out from
@@ -1273,11 +1274,11 @@
     /* Constant row height so nothing above it ever moves. The row is
        align-items:center, so the boxes still grow, shrink and slide exactly as
        before — they now centre inside a fixed-height row instead of resizing it.
-       Sized to the tallest state: the X box at its full 22rem glyph (22rem +
-       2 x 3.25rem padding + 2px border = 28.5rem) plus this row's own
-       2.25rem/0.5rem padding. Without it the row collapsed by ~176px as the X
-       glyph shrank toward centre, dragging the progress bar ~68px down the page
-       every time you scrolled past that box. */
+       Without it the row's height followed whichever box was tallest, so it
+       collapsed as the boxes shrank on scroll and dragged the progress bar down
+       the page with it. The value is comfortably above the tallest state and is
+       what holds the current vertical position; changing it moves the whole
+       footer block, so tune the progress bar's own margin instead. */
     height:31.4rem;
     gap:var(--box-gap);
     margin:3.5rem -2rem 0;
@@ -1368,6 +1369,9 @@
     padding:1.4rem 0;
     border-bottom:1px solid rgba(23,24,28,0.2);
   }
+  /* the rule reads as a divider between rows, so the last one has nothing to
+     divide — drop it rather than leave a line hanging under City */
+  .info-row:last-child{ border-bottom:none; }
   .info-label{ color:var(--ink); opacity:1; }
   a.contact-box:hover{ background:var(--ink); color:var(--paper); }
   /* just-copied confirmation — listed after :hover, and repeated with :hover, so it
@@ -1479,6 +1483,19 @@
     font-family:'Press Start 2P', var(--sans);
     font-size:9rem;
     line-height:1;
+    /* Out of flow so only the X animates. In flow, its 9rem -> 22rem scaling fed
+       straight into the box's height (line-height:1), so the whole box grew and
+       shrank with it. Absolutely centred, the box keeps its min-height like every
+       other one and the glyph scales inside it. */
+    position:absolute;
+    top:50%; left:50%;
+    /* The +0.0625em drops the letterform onto the box's true centre. Centring the
+       element only centres its em box, and this face carries no descender under
+       the X: the ink runs from the baseline up a full em, leaving its centre
+       0.0625em high (measured from the font's own metrics, and the same ratio at
+       every size). Stated in em so it tracks the 9rem -> 22rem scaling instead of
+       drifting as the glyph grows. */
+    transform:translate(-50%, calc(-50% + 0.0625em));
   }
   .contact-box[data-label="Email"]{
     justify-content:center;

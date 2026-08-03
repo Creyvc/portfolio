@@ -321,7 +321,10 @@
       if (!scroller || !xBox || !glyph) return;
 
       const originalSize = 9;
-      const bigSize = 22;
+      // 15rem, not 22: the glyph no longer stretches the box, so at 22 its ink
+      // ran the full height of the shrunken box and touched both edges. This
+      // leaves it breathing room at the top of the scale.
+      const bigSize = 15;
 
       function update(){
         const viewCenter = scroller.scrollLeft + scroller.clientWidth / 2;
