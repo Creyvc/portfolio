@@ -42,6 +42,8 @@
     sessionStorage.removeItem('pageTransition');
   } catch(e){ return; }
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  /* No .pt-grid: nothing here for the lines to rest on, so they carry all the
+     way out to the page edges. */
   document.documentElement.className += ' pt pt-open';
 })();
 </script>

@@ -43,7 +43,9 @@
     sessionStorage.removeItem('pageTransition');
   } catch(e){ return; }
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  document.documentElement.className += ' pt pt-open';
+  /* .pt-grid: this page has a grid, so its lines come to rest on .hl-1 / .hl-4
+     at 3% / 97% and hand straight over to them. */
+  document.documentElement.className += ' pt pt-open pt-grid';
 })();
 </script>
 </head>

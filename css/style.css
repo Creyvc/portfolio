@@ -598,6 +598,18 @@
      ::before/::after on <html> rather than injected elements, so the wipe is
      already painted on the new page's FIRST frame and reopens on its own:
      nothing waits on main.js, and if JS never runs the page still uncovers. */
+  html.pt{
+    /* How far the panels sit off-centre at rest, as a share of their own width.
+       100% parks each leading edge exactly on a page edge — the default, for any
+       page with no grid to rest on. .pt-grid narrows it to 94%, which parks them
+       on 3% / 97% instead: the home grid's .hl-1 / .hl-4. Each page picks its own
+       (main.js on the way out, the inline head script on the way in), so leaving
+       home the lines start on its grid and the page you land on carries them out
+       to its edges — and the trip home runs that in reverse. */
+    --pt-travel:100%;
+  }
+  html.pt-grid{ --pt-travel:94%; }
+
   html.pt::before,
   html.pt::after{
     content:'';
@@ -608,7 +620,27 @@
        — and no sub-pixel gap shows through on odd viewport widths */
     width:calc(50% + 1px);
     height:100%;
-    background:var(--paper);
+    /* The panels carry the grid's two horizontal rules across themselves, at the
+       same 33% / 67% the real .hlh lines sit at. Those lines overhang past .hl-1
+       and .hl-4, so without this the panels blank out their last 3% for the whole
+       transition — the ends look snipped off and then snap back the instant the
+       wipe clears. Painted on, the horizontal rules read as continuous and dead
+       still throughout, and they line up frame-for-frame across the page swap,
+       so there is nothing to give the seam away either.
+
+       The +0.33px / +0.67px are not fudge factors. A percentage in
+       background-position resolves against (height - image height), so plain 33%
+       puts the rule at 0.33*(H-1) while the real .hlh sits at top:33% = 0.33*H —
+       short by exactly p px, whatever the viewport height. Correcting it makes
+       the two land on the same subpixel and therefore snap to the same device
+       pixel; without it there is a visible 1px jog where panel meets page.
+       (Hairlines as gradient colour stops instead of positioned layers do not
+       survive the gradient rasteriser — one of the two bands drops out.) */
+    background:
+      linear-gradient(#dfe2e5, #dfe2e5) 0 calc(33% + 0.33px) / 100% 1px no-repeat,
+      linear-gradient(#dfe2e5, #dfe2e5) 0 calc(67% + 0.67px) / 100% 1px no-repeat,
+      var(--paper);
+    background-origin:border-box;
     z-index:100000;
     pointer-events:none;
   }
@@ -617,10 +649,13 @@
   html.pt::before{ left:0;  border-right:1px solid #dfe2e5; }
   html.pt::after { right:0; border-left:1px solid #dfe2e5; }
 
-  /* the real end lines step aside while the moving ones are out, so you see one
-     line travelling rather than a copy detaching from a stationary original */
-  html.pt .home-lines .hl-1,
-  html.pt .home-lines .hl-4{ opacity:0; }
+  /* Only when the lines are anchored to the grid: the real end lines step aside
+     while the moving ones are out, so you see one line travelling rather than a
+     copy detaching from a stationary original. On the edge variant the moving
+     lines never sit on .hl-1 / .hl-4, so those stay put and are simply uncovered
+     as the panels sweep past them. */
+  html.pt-grid .home-lines .hl-1,
+  html.pt-grid .home-lines .hl-4{ opacity:0; }
 
   /* Arrived through the transition (e.g. the back button): the preloader is for
      first arrivals only — the two lines are the whole animation. These kill the
@@ -633,28 +668,32 @@
 
   /* leaving: pull the two lines together — easeInQuart, so they barely creep at
      first and then rush the last stretch into the middle */
-  html.pt-close::before{ animation:pt-close-l 480ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
-  html.pt-close::after { animation:pt-close-r 480ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
+  html.pt-close::before{ animation:pt-close-l 780ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
+  html.pt-close::after { animation:pt-close-r 780ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
   /* arriving: they start met in the middle and push back out — easeOutQuart, the
-     exact mirror: they break away fast and coast to a stop on 3% / 97% */
-  html.pt-open::before{ animation:pt-open-l 560ms cubic-bezier(0.25, 1, 0.5, 1) forwards,
-                                  pt-fade-l  560ms linear forwards; }
-  html.pt-open::after { animation:pt-open-r 560ms cubic-bezier(0.25, 1, 0.5, 1) forwards,
-                                  pt-fade-r  560ms linear forwards; }
+     exact mirror: they break away fast and coast to their rest position */
+  html.pt-open::before{ animation:pt-open-l 900ms cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+  html.pt-open::after { animation:pt-open-r 900ms cubic-bezier(0.25, 1, 0.5, 1) forwards; }
 
-  /* ±94% of a (50% + 1px) panel parks its leading edge on 3% / 97% to within
-     0.06px — all percentages, so it uses the same containing block as
-     .home-lines and can't drift by the scrollbar width the way vw would */
-  @keyframes pt-close-l{ from{ transform:translateX(-94%); } to{ transform:translateX(0); } }
-  @keyframes pt-close-r{ from{ transform:translateX(94%);  } to{ transform:translateX(0); } }
-  @keyframes pt-open-l { from{ transform:translateX(0); } to{ transform:translateX(-94%); } }
-  @keyframes pt-open-r { from{ transform:translateX(0); } to{ transform:translateX(94%);  } }
+  /* Percentages all the way, never vw — this way the travel resolves against the
+     same containing block .home-lines uses and can't drift by the scrollbar
+     width. At 94% a (50% + 1px) panel parks its leading edge on 3% / 97% to
+     within 0.06px; at 100% it parks exactly on the page edge. */
+  @keyframes pt-close-l{ from{ transform:translateX(calc(var(--pt-travel) * -1)); } to{ transform:translateX(0); } }
+  @keyframes pt-close-r{ from{ transform:translateX(var(--pt-travel)); } to{ transform:translateX(0); } }
+  @keyframes pt-open-l { from{ transform:translateX(0); } to{ transform:translateX(calc(var(--pt-travel) * -1)); } }
+  @keyframes pt-open-r { from{ transform:translateX(0); } to{ transform:translateX(var(--pt-travel)); } }
 
-  /* The rule fades over the last stretch of the way out: on the home page it is
-     handing off to the real .hl-1 / .hl-4, and on pages with no grid it would
-     otherwise blink off when the class is dropped. Kept as its own animation
-     rather than a 70% stop inside pt-open-*, so the eased transform stays a
-     single uninterrupted 0->100% interval with no stutter at the fade's edge. */
+  /* Grid variant only: the rule fades over the last stretch of the way out,
+     because it is handing off to the real .hl-1 / .hl-4 underneath and would
+     otherwise blink off when the class is dropped. The edge variant needs no
+     fade — the line leaves the page under its own steam. Kept as its own
+     animation rather than a 70% stop inside pt-open-*, so the eased transform
+     stays a single uninterrupted 0->100% interval with no stutter mid-flight. */
+  html.pt-grid.pt-open::before{ animation:pt-open-l 900ms cubic-bezier(0.25, 1, 0.5, 1) forwards,
+                                          pt-fade-l 900ms linear forwards; }
+  html.pt-grid.pt-open::after { animation:pt-open-r 900ms cubic-bezier(0.25, 1, 0.5, 1) forwards,
+                                          pt-fade-r 900ms linear forwards; }
   @keyframes pt-fade-l{ 0%, 70%{ border-right-color:#dfe2e5; } 100%{ border-right-color:transparent; } }
   @keyframes pt-fade-r{ 0%, 70%{ border-left-color:#dfe2e5;  } 100%{ border-left-color:transparent;  } }
 

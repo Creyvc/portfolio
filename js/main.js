@@ -528,13 +528,18 @@
     })();
 
     // ===== Page transition =====
-    // Clicking an internal link pulls the grid's two end lines inward until they
-    // meet, wiping the page blank; the page you land on pushes them back out.
+    // Clicking an internal link pulls two lines inward until they meet, wiping
+    // the page blank; the page you land on pushes them back out. Every page owns
+    // where its own lines rest: the home page has a grid, so they sit on .hl-1 /
+    // .hl-4 at 3% / 97% (the .pt-grid variant); every other page has nothing to
+    // rest on, so they sit on the page edges. That means a trip out of home
+    // starts on the grid and ends at the edges, and the trip back does the
+    // reverse — each half anchored to whichever page is on screen for it.
     // The wipe is ::before/::after on <html> (see style.css) and the reopen is a
     // plain CSS animation, so this only has to close it and follow the link.
     (function(){
       const KEY = 'pageTransition';
-      const CLOSE = 480;
+      const CLOSE = 780, OPEN = 900;      // must match the pt-close-* / pt-open-* durations in style.css
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const html = document.documentElement;
 
@@ -551,9 +556,9 @@
 
       // ---- arriving: the inline head script already put the cover up ----
       if (html.classList.contains('pt-open')){
-        const done = function(){ html.classList.remove('pt', 'pt-open'); };
+        const done = function(){ html.classList.remove('pt', 'pt-open', 'pt-grid'); };
         onCoverEnd(done);
-        setTimeout(done, 1200);            // safety net if animationend never fires
+        setTimeout(done, OPEN + 400);      // safety net if animationend never fires
       }
 
       // ---- leaving: close the cover, then navigate ----
@@ -581,7 +586,10 @@
         e.preventDefault();
         leaving = true;
 
+        // anchor to the grid only if this page actually has one to anchor to;
+        // the page we are heading for makes the same call for itself in its head
         html.classList.add('pt', 'pt-close');
+        if (document.querySelector('.home-lines')) html.classList.add('pt-grid');
         try { sessionStorage.setItem(KEY, '1'); } catch(_){}   // tells the next page to open
 
         let gone = false;
@@ -595,7 +603,7 @@
       window.addEventListener('pageshow', function(e){
         if (!e.persisted) return;
         leaving = false;
-        html.classList.remove('pt', 'pt-close', 'pt-open');
+        html.classList.remove('pt', 'pt-close', 'pt-open', 'pt-grid');
       });
     })();
 
