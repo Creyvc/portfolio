@@ -516,10 +516,10 @@
     })();
 
     // ===== Page transition =====
-    // Clicking an internal link pulls two lines in from the left and right edges
-    // until they meet and cover the page; the page you land on pushes them back
-    // out. The cover is ::before/::after on <html> (see style.css) and the reopen
-    // is a plain CSS animation, so this only has to close it and follow the link.
+    // Clicking an internal link pulls the grid's two end lines inward until they
+    // meet, wiping the page blank; the page you land on pushes them back out.
+    // The wipe is ::before/::after on <html> (see style.css) and the reopen is a
+    // plain CSS animation, so this only has to close it and follow the link.
     (function(){
       const KEY = 'pageTransition';
       const CLOSE = 480;

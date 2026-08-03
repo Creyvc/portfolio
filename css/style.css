@@ -589,41 +589,64 @@
     user-select:none;
   }
   /* ===== Page transition =====
-     Two lines sweep in from the left and right edges, meet in the middle to
-     cover the page, then sweep straight back out to reveal the page you landed
-     on. Drawn as ::before/::after on <html> rather than injected elements, so
-     the cover is already painted on the new page's FIRST frame and reopens on
-     its own — nothing waits on main.js, and if JS never runs the cover still
-     lifts. The accent leading edge is what reads as the "line": it shows up
-     against the white page on the way in and the dark cover on the way out. */
+     The home grid's two outermost lines (.hl-1 at 3%, .hl-4 at 97%) pull inward
+     until they meet, wiping the page to blank paper behind them; on the page you
+     land on they push straight back out to 3% / 97% again.
+
+     Each "line" is really the leading edge of a paper-coloured panel — the panel
+     is what erases the page, the 1px rule is what you see moving. Drawn as
+     ::before/::after on <html> rather than injected elements, so the wipe is
+     already painted on the new page's FIRST frame and reopens on its own:
+     nothing waits on main.js, and if JS never runs the page still uncovers. */
   html.pt::before,
   html.pt::after{
     content:'';
     position:fixed;
     top:0;
-    /* the spare 1px makes the two halves overlap by exactly their border width,
-       so the leading lines land on top of each other as a single centred line
-       when they meet — and no sub-pixel gap shows on odd viewport widths */
+    /* the spare 1px makes the two halves overlap by exactly their rule width, so
+       the two lines land on top of each other as one centred line when they meet
+       — and no sub-pixel gap shows through on odd viewport widths */
     width:calc(50% + 1px);
     height:100%;
-    background:var(--ink);
+    background:var(--paper);
     z-index:100000;
     pointer-events:none;
   }
-  html.pt::before{ left:0;  border-right:2px solid var(--accent); }
-  html.pt::after { right:0; border-left:2px solid var(--accent); }
+  /* same 1px #dfe2e5 rule as .home-lines .hl, so the moving line is visibly the
+     same line the home grid is drawn with */
+  html.pt::before{ left:0;  border-right:1px solid #dfe2e5; }
+  html.pt::after { right:0; border-left:1px solid #dfe2e5; }
+
+  /* the real end lines step aside while the moving ones are out, so you see one
+     line travelling rather than a copy detaching from a stationary original */
+  html.pt .home-lines .hl-1,
+  html.pt .home-lines .hl-4{ opacity:0; }
 
   /* leaving: pull the two lines together */
   html.pt-close::before{ animation:pt-close-l 480ms cubic-bezier(0.65, 0, 0.35, 1) forwards; }
   html.pt-close::after { animation:pt-close-r 480ms cubic-bezier(0.65, 0, 0.35, 1) forwards; }
-  /* arriving: they start closed (no transform) and push back out */
+  /* arriving: they start met in the middle and push back out */
   html.pt-open::before{ animation:pt-open-l 560ms cubic-bezier(0.33, 1, 0.68, 1) forwards; }
   html.pt-open::after { animation:pt-open-r 560ms cubic-bezier(0.33, 1, 0.68, 1) forwards; }
 
-  @keyframes pt-close-l{ from{ transform:translateX(-100%); } to{ transform:translateX(0); } }
-  @keyframes pt-close-r{ from{ transform:translateX(100%);  } to{ transform:translateX(0); } }
-  @keyframes pt-open-l { from{ transform:translateX(0); } to{ transform:translateX(-100%); } }
-  @keyframes pt-open-r { from{ transform:translateX(0); } to{ transform:translateX(100%);  } }
+  /* ±94% of a (50% + 1px) panel parks its leading edge on 3% / 97% to within
+     0.06px — all percentages, so it uses the same containing block as
+     .home-lines and can't drift by the scrollbar width the way vw would */
+  @keyframes pt-close-l{ from{ transform:translateX(-94%); } to{ transform:translateX(0); } }
+  @keyframes pt-close-r{ from{ transform:translateX(94%);  } to{ transform:translateX(0); } }
+  /* the rule fades over the last stretch of the way out: on the home page it is
+     handing off to the real .hl-1 / .hl-4, and on pages with no grid it would
+     otherwise just blink off when the class is dropped */
+  @keyframes pt-open-l{
+    from{ transform:translateX(0); }
+    70% { border-right-color:#dfe2e5; }
+    to  { transform:translateX(-94%); border-right-color:transparent; }
+  }
+  @keyframes pt-open-r{
+    from{ transform:translateX(0); }
+    70% { border-left-color:#dfe2e5; }
+    to  { transform:translateX(94%); border-left-color:transparent; }
+  }
 
   .h-bottom-line{
     position:fixed;
