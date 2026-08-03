@@ -622,6 +622,15 @@
   html.pt .home-lines .hl-1,
   html.pt .home-lines .hl-4{ opacity:0; }
 
+  /* Arrived through the transition (e.g. the back button): the preloader is for
+     first arrivals only — the two lines are the whole animation. These kill the
+     loader before it can paint, since main.js runs behind a render-blocking CDN
+     script and the wipe may already be retracting by the time it executes.
+     main.js also adds body.loaded in the same case, which is what holds the page
+     revealed once .pt-open is dropped. */
+  html.pt-open .loader{ display:none; }
+  html.pt-open .reveal{ opacity:1; transform:none; transition:none; }
+
   /* leaving: pull the two lines together */
   html.pt-close::before{ animation:pt-close-l 480ms cubic-bezier(0.65, 0, 0.35, 1) forwards; }
   html.pt-close::after { animation:pt-close-r 480ms cubic-bezier(0.65, 0, 0.35, 1) forwards; }

@@ -21,6 +21,18 @@
       const fillEl = document.getElementById('loaderFill');
       if (!loader) return;
 
+      // Came in through the page transition (back button, logo, any internal
+      // link) — skip the preloader and the grid build entirely and hand the page
+      // over already settled, so the two lines pulling apart are the only thing
+      // that plays. The grid is drawn at rest, which is exactly where the wipe's
+      // lines land, so they hand off to .hl-1 / .hl-4 without a seam.
+      if (document.documentElement.classList.contains('pt-open')){
+        loader.style.display = 'none';
+        document.body.classList.remove('is-loading');
+        document.body.classList.add('loaded');
+        return;
+      }
+
       const PreloaderDelay = 5000;   // total ms scroll stays locked until the grid build + reveal finish
       const countDuration = 1900;    // counter run time
       const start = performance.now();
