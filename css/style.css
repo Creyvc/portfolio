@@ -588,6 +588,12 @@
     pointer-events:none;
     user-select:none;
   }
+  /* Page transition: the whole page pushes up out of the viewport, and the black
+     canvas behind it is revealed. body already paints its own --paper background,
+     so giving <html> a dark background is enough to make the "black page" appear
+     behind it — no overlay element, nothing layered over the content. */
+  html.pt-active{ background:var(--ink); overflow:hidden; }
+  html.pt-enter body{ transform:translateY(100vh); }   /* arrives waiting below the fold */
   .h-bottom-line{
     position:fixed;
     left:0;

@@ -515,6 +515,86 @@
       }, { passive:false });
     })();
 
+    // ===== Page transition =====
+    // The whole page slides up and off the top, uncovering the black canvas behind
+    // it; the page you land on starts one viewport below and pushes up into place.
+    // Transforming <body> is safe here even though the layout leans on position:fixed
+    // — body's padding box matches the viewport, so nothing shifts (verified).
+    (function(){
+      const KEY = 'pageTransition';
+      const OUT = 520, IN = 620;
+      const EASE = 'cubic-bezier(0.32, 0, 0.67, 0)';   // ease-in: creeps off, then accelerates away
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const html = document.documentElement;
+
+      // ---- arriving: push up into place ----
+      if (html.classList.contains('pt-enter')){
+        if (reduce){
+          html.classList.remove('pt-enter', 'pt-active');
+        } else {
+          const a = document.body.animate(
+            [ { transform:'translateY(100vh)' }, { transform:'translateY(0)' } ],
+            { duration:IN, easing:EASE, fill:'forwards' }
+          );
+          const settle = function(){
+            // drop the class first, then cancel — the animation is still holding the
+            // final frame, so the swap back to untransformed CSS is invisible
+            html.classList.remove('pt-enter', 'pt-active');
+            try { a.cancel(); } catch(_){}
+          };
+          a.onfinish = settle;
+          setTimeout(settle, IN + 400);     // safety net if onfinish never fires
+        }
+      }
+
+      // ---- leaving: push up and out ----
+      if (reduce) return;
+
+      function isInternal(a){
+        if (!a || !a.getAttribute) return false;
+        const href = a.getAttribute('href');
+        if (!href) return false;
+        if (a.target && a.target !== '_self') return false;
+        if (a.hasAttribute('download')) return false;
+        if (a.hasAttribute('data-copy')) return false;          // the copy-email box
+        if (/^(#|mailto:|tel:|javascript:)/i.test(href)) return false;
+        return a.origin === window.location.origin &&           // same site only
+               a.pathname !== window.location.pathname;         // not the page we're on
+      }
+
+      let leaving = false;
+      document.addEventListener('click', function(e){
+        if (leaving) return;
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        const link = e.target.closest && e.target.closest('a[href]');
+        if (!isInternal(link)) return;
+
+        e.preventDefault();
+        leaving = true;
+
+        html.classList.add('pt-active');        // black canvas behind the page
+        try { sessionStorage.setItem(KEY, '1'); } catch(_){}   // tells the next page to push up
+
+        const a = document.body.animate(
+          [ { transform:'translateY(0)' }, { transform:'translateY(-100vh)' } ],
+          { duration:OUT, easing:EASE, fill:'forwards' }
+        );
+        let gone = false;
+        const go = function(){ if (gone) return; gone = true; window.location.href = link.href; };
+        a.onfinish = go;
+        setTimeout(go, OUT + 200);         // safety net if onfinish never fires
+      });
+
+      // the back button can restore a page from bfcache mid-transition — reset it so
+      // it isn't left pushed off-screen against a black canvas
+      window.addEventListener('pageshow', function(e){
+        if (!e.persisted) return;
+        leaving = false;
+        html.classList.remove('pt-enter', 'pt-active');
+        document.body.getAnimations().forEach(function(a){ a.cancel(); });
+      });
+    })();
+
     // Clicking a box with data-copy puts that text on the clipboard instead of
     // following the link. The href stays a real mailto: so the box still does
     // something sensible if this script never runs.
