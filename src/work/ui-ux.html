@@ -42,13 +42,30 @@
     sessionStorage.removeItem('pageTransition');
   } catch(e){ return; }
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  /* No .pt-grid: nothing here for the lines to rest on, so they carry all the
-     way out to the page edges. */
-  document.documentElement.className += ' pt pt-open';
+  /* .pt-grid: this page has a grid now, so its lines come to rest on
+     .hl-1 / .hl-4 at 3% / 97% and hand straight over to them. */
+  document.documentElement.className += ' pt pt-open pt-grid';
 })();
 </script>
 </head>
 <body class="loaded">
+
+  <div class="home-lines page-lines" aria-hidden="true">
+    <span class="hl hl-1"></span>
+    <span class="hl hl-2"></span>
+    <span class="hl hl-3"></span>
+    <span class="hl hl-4"></span>
+    <span class="hlh hlh-1"></span>
+    <span class="hlh hlh-2"></span>
+    <span class="plus" style="left:3%;top:33%"></span>
+    <span class="plus" style="left:3%;top:67%"></span>
+    <span class="plus" style="left:33%;top:33%"></span>
+    <span class="plus" style="left:33%;top:67%"></span>
+    <span class="plus" style="left:67%;top:33%"></span>
+    <span class="plus" style="left:67%;top:67%"></span>
+    <span class="plus" style="left:97%;top:33%"></span>
+    <span class="plus" style="left:97%;top:67%"></span>
+  </div>
 
   <header>
     <a class="close-btn reveal reveal-1" href="../../index.html" aria-label="Back to home">
