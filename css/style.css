@@ -1398,7 +1398,9 @@
        off the inherited mono, plus the weight that "Black" implies. */
     font-family:'Avenir Next', 'Avenir', 'Myriad Pro', 'Myriad', 'Futura',
                 'Century Gothic', 'Segoe UI', system-ui, 'Helvetica Neue', Arial, sans-serif;
-    font-weight:900;
+    /* 700, not 800 — Avenir Next has no face between Bold and Heavy, so 800 and
+       900 both render as Heavy and only 700 actually reads lighter */
+    font-weight:700;
   }
   .contact-box[data-label="GitHub"]{
     justify-content:center;
