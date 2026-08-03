@@ -1614,7 +1614,7 @@
      home page paragraphs (.home-blurb) exactly. The brackets are always in the
      layout at opacity 0, so they only fade in and the word never shifts. */
   .close-btn{
-    position:absolute; left:1.6rem; top:0.5rem; z-index:20;
+    position:absolute; left:3.6rem; top:0.5rem; z-index:20;
     display:inline-flex; align-items:center; justify-content:center;
     padding:0.6rem 0.4rem;
     font-family:var(--sans);
