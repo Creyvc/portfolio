@@ -562,14 +562,19 @@
     background:transparent;
     box-sizing:border-box;
   }
-  /* live cursor / fps readout — bottom-RIGHT, the only corner the hero grid leaves
-     free (bottom-left is taken by the UI/UX cell) */
+  /* live cursor / fps readout — column 2, row 1, directly under the logo.
+     Centred with left/right:0 rather than a transform, because .reveal animates
+     translateY on this element and a transform here would override it. */
   .hud{
     position:fixed;
-    right:2rem; bottom:1.4rem;
+    /* the column-2 / row-1 cell: vertical lines at 33%/67%, row line at 33% */
+    left:33%; right:33%;
+    top:33%;
+    margin-top:-1.6rem;          /* sit the row just above the cell's bottom line */
     z-index:9995;
-    /* stacked: X over Y, with FPS beneath both */
-    display:flex; flex-direction:column; align-items:flex-end; gap:0.3rem;
+    /* X hugs the bottom-left corner, Y the bottom-right, FPS centred between them */
+    display:flex; justify-content:space-between; align-items:flex-end;
+    padding:0 1.5rem;            /* pulls X and Y inward, off the cell edges */
     font-family:var(--sans);
     font-size:0.72rem;
     font-weight:400;
