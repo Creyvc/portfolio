@@ -339,12 +339,7 @@
       scroller.addEventListener('scroll', () => {
         if (!ticking){ requestAnimationFrame(() => { update(); ticking = false; }); ticking = true; }
       }, { passive:true });
-      // the boxes keep resizing for 0.4s after the scroll that triggered it, so
-      // recompute once they settle — otherwise the offsets stay sized to the
-      // width the boxes had when the scroll fired and overshoot the new one
-      scroller.addEventListener('transitionend', (e) => {
-        if (e.propertyName === 'width') update();
-      });
+      trackBoxResize(scroller, update);
       window.addEventListener('resize', update);
       update();
     })();
@@ -379,15 +374,41 @@
       scroller.addEventListener('scroll', () => {
         if (!ticking){ requestAnimationFrame(() => { update(); ticking = false; }); ticking = true; }
       }, { passive:true });
-      // the boxes keep resizing for 0.4s after the scroll that triggered it, so
-      // recompute once they settle — otherwise the offsets stay sized to the
-      // width the boxes had when the scroll fired and overshoot the new one
-      scroller.addEventListener('transitionend', (e) => {
-        if (e.propertyName === 'width') update();
-      });
+      trackBoxResize(scroller, update);
       window.addEventListener('resize', update);
       update();
     })();
+
+    // Runs fn every frame while the boxes are mid-resize. They grow or shrink over
+    // 0.4s when .is-scrolled flips, but the scroll-driven effects only fire on
+    // scroll — so if the swipe has already stopped (which is exactly what happens
+    // when you come to rest back on the info box) nothing recomputed until the
+    // transition ended, and the artwork snapped into place instead of following.
+    function trackBoxResize(scroller, fn){
+      let until = 0, running = false;
+      function loop(now){
+        fn();
+        if (now < until) requestAnimationFrame(loop);
+        else running = false;
+      }
+      scroller.addEventListener('transitionstart', function(e){
+        if (e.propertyName !== 'width') return;
+        until = performance.now() + 500;      // a little past the 0.4s transition
+        if (!running){ running = true; requestAnimationFrame(loop); }
+      });
+    }
+
+    // The boxes' full-size width, straight from the --box-w custom property, so
+    // scroll-driven effects can divide by a number that does not change while the
+    // boxes are mid-shrink. Read live so it still tracks a root font-size change.
+    function refBoxWidth(){
+      const el = document.querySelector('.contact-boxes');
+      if (!el) return 0;
+      const raw = getComputedStyle(el).getPropertyValue('--box-w').trim();
+      const n = parseFloat(raw);
+      if (!raw.endsWith('rem')) return n || 0;
+      return n * parseFloat(getComputedStyle(document.documentElement).fontSize);
+    }
 
     (function(){
       const scroller = document.querySelector('.contact-boxes');
@@ -404,17 +425,22 @@
         const boxRect = emailBox.getBoundingClientRect();
         const scRect = scroller.getBoundingClientRect();
         const signedDist = (boxRect.left + boxRect.width / 2) - (scRect.left + scRect.width / 2);
-        const windowDist = boxRect.width + 24;
+        // Denominator is the box's full-size width, not its live one. The boxes
+        // shrink over 0.4s the moment scrolling starts, and dividing by a width
+        // that is mid-transition made progress lurch through that window — the
+        // jump you see in the word while the info circle is resizing.
+        const windowDist = refBoxWidth() + 24;
         const progress = Math.max(-1, Math.min(1, signedDist / windowDist));
 
+        // The word slides right out of the box, .email-clip trimming it at the
+        // edges, so only VISIBLE_CHARS of it remain at either extreme: IL when
+        // the box is still to the right, EM once it has passed to the left.
+        const TOTAL_CHARS = 5, VISIBLE_CHARS = 2;
         const glyphWidth = glyph.offsetWidth;
+        const hideWidth = glyphWidth * (1 - VISIBLE_CHARS / TOTAL_CHARS);
         const sideGap = (emailBox.clientWidth - glyphWidth) / 2;
 
-        // Travel is capped at the slack either side of the word, so at the far
-        // end of the drift it lands flush with the box edge and never spills
-        // past it. It used to travel (hideWidth + sideGap) — far more than the
-        // gap available — which left the word cut off for most of the scroll.
-        const translateX = -progress * Math.max(0, sideGap);
+        const translateX = -progress * (hideWidth + sideGap);
         glyph.style.transform = `translateX(${translateX.toFixed(2)}px)`;
       }
 
@@ -422,12 +448,7 @@
       scroller.addEventListener('scroll', () => {
         if (!ticking){ requestAnimationFrame(() => { update(); ticking = false; }); ticking = true; }
       }, { passive:true });
-      // the boxes keep resizing for 0.4s after the scroll that triggered it, so
-      // recompute once they settle — otherwise the offsets stay sized to the
-      // width the boxes had when the scroll fired and overshoot the new one
-      scroller.addEventListener('transitionend', (e) => {
-        if (e.propertyName === 'width') update();
-      });
+      trackBoxResize(scroller, update);
       window.addEventListener('resize', update);
       update();
     })();
@@ -461,7 +482,9 @@
       function update(){
         const boxWidth = infoBox.offsetWidth;
         const gapPx = parseFloat(getComputedStyle(scroller).columnGap || getComputedStyle(scroller).gap) || 24;
-        const maxDist = boxWidth + gapPx;
+        // full-size width, not the live one — see the note in the email effect:
+        // a denominator that shrinks mid-swipe makes the circle jump
+        const maxDist = refBoxWidth() + gapPx;
         const progress = Math.min(Math.max(scroller.scrollLeft / maxDist, 0), 1);
 
         const diameter = maxDiameter - progress * (maxDiameter - minDiameter);
@@ -508,6 +531,10 @@
       scroller.addEventListener('scroll', onScroll, { passive:true });
       scroller.addEventListener('scrollend', update);
       window.addEventListener('resize', requestUpdate);
+      // the circle is positioned against the info box's live width, so it has to
+      // keep up while that box resizes — otherwise it holds still through the
+      // 0.4s grow-back and then jumps
+      trackBoxResize(scroller, update);
       requestUpdate();
     })();
 

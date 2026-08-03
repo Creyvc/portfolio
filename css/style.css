@@ -1542,15 +1542,12 @@
   .contact-box[data-label="Email"]{
     justify-content:center;
     text-align:center;
-    /* sized to leave the word room to travel: it slides with the scroll and has
-       to stay fully inside the box, so the smaller it is the further it can move.
-       At 11.5rem it filled the box and had ~43px of slack, which read as static. */
-    font-size:7.25rem;
+    font-size:11.5rem;
     font-weight:900;
     white-space:nowrap;
   }
   .contact-boxes.is-scrolled .contact-box[data-label="Email"]{
-    font-size:5rem;
+    font-size:8.1rem;
   }
   .email-clip{
     position:absolute;
