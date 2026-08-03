@@ -1181,7 +1181,7 @@
     font-weight:400;
     letter-spacing:0.03em;
     text-transform:uppercase;
-    transition:background 0.15s, color 0.15s, width 0.4s ease-out, min-height 0.4s ease-out, padding 0.4s ease-out, font-size 0.4s ease-out, opacity 0.5s ease;
+    transition:background 0.15s, color 0.15s, width 0.4s ease-out, min-height 0.4s ease-out, padding 0.4s ease-out, font-size 0.4s ease-out;
   }
   .contact-box[data-label]::before{
     content:attr(data-label);
@@ -1240,31 +1240,6 @@
     border-bottom:1px solid rgba(23,24,28,0.2);
   }
   .info-label{ color:var(--ink); opacity:1; }
-  /* collab -> contact arrival: fade the surrounding page in, but leave the info box
-     ITSELF visible from the first frame — its text must be readable immediately, not
-     hidden behind the arriving circle.
-     NOTE: .contact-box is deliberately NOT given a `transition` here — it keeps its
-     own transition list (which drives the swipe-shrink), and its opacity fade rides
-     on the `opacity` entry added to that list.
-     .contact-info must never drop below opacity 1: a fractional opacity would make it
-     a stacking context and trap .info-row underneath the arriving overlay. */
-  body.collab-arrive header,
-  body.collab-arrive .contact-progress,
-  body.collab-arrive .contact-marquee{
-    opacity:0;
-    transition:opacity 0.5s ease;
-  }
-  body.collab-arrive .contact-box:not(.contact-info){ opacity:0; }
-  body.collab-arrived header,
-  body.collab-arrived .contact-progress,
-  body.collab-arrived .contact-marquee{
-    opacity:1;
-    transition:opacity 0.55s ease; /* keep the fade even after collab-arrive is removed */
-  }
-  body.collab-arrived .contact-box{ opacity:1; }
-  /* the arriving overlay sits at z-index 30 (see js/main.js); the labels ride above it
-     so the circle never covers the text while it dissolves */
-  .contact-info .info-row{ z-index:40; }
   a.contact-box:hover{ background:var(--ink); color:var(--paper); }
   /* just-copied confirmation — listed after :hover, and repeated with :hover, so it
      still shows green while the cursor is still sitting on the box after the click */
