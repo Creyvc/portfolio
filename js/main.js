@@ -515,6 +515,78 @@
       }, { passive:false });
     })();
 
+    // ===== Page transition =====
+    // Clicking an internal link pulls two lines in from the left and right edges
+    // until they meet and cover the page; the page you land on pushes them back
+    // out. The cover is ::before/::after on <html> (see style.css) and the reopen
+    // is a plain CSS animation, so this only has to close it and follow the link.
+    (function(){
+      const KEY = 'pageTransition';
+      const CLOSE = 480;
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const html = document.documentElement;
+
+      // animationend bubbles, so the loader and .reveal animations reach <html>
+      // too — only the cover's own pseudo-elements count
+      function onCoverEnd(fn){
+        const h = function(e){
+          if (e.target !== html || !e.pseudoElement) return;
+          html.removeEventListener('animationend', h);
+          fn();
+        };
+        html.addEventListener('animationend', h);
+      }
+
+      // ---- arriving: the inline head script already put the cover up ----
+      if (html.classList.contains('pt-open')){
+        const done = function(){ html.classList.remove('pt', 'pt-open'); };
+        onCoverEnd(done);
+        setTimeout(done, 1200);            // safety net if animationend never fires
+      }
+
+      // ---- leaving: close the cover, then navigate ----
+      if (reduce) return;
+
+      function isInternal(a){
+        if (!a || !a.getAttribute) return false;
+        const href = a.getAttribute('href');
+        if (!href) return false;
+        if (a.target && a.target !== '_self') return false;
+        if (a.hasAttribute('download')) return false;
+        if (a.hasAttribute('data-copy')) return false;          // the copy-email box
+        if (/^(#|mailto:|tel:|javascript:)/i.test(href)) return false;
+        return a.origin === window.location.origin &&           // same site only
+               a.pathname !== window.location.pathname;         // not the page we're on
+      }
+
+      let leaving = false;
+      document.addEventListener('click', function(e){
+        if (leaving) return;
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        const link = e.target.closest && e.target.closest('a[href]');
+        if (!isInternal(link)) return;
+
+        e.preventDefault();
+        leaving = true;
+
+        html.classList.add('pt', 'pt-close');
+        try { sessionStorage.setItem(KEY, '1'); } catch(_){}   // tells the next page to open
+
+        let gone = false;
+        const go = function(){ if (gone) return; gone = true; window.location.href = link.href; };
+        onCoverEnd(go);
+        setTimeout(go, CLOSE + 200);       // safety net if animationend never fires
+      });
+
+      // the back button can restore a page from bfcache mid-transition — clear the
+      // cover so it isn't left sitting closed over the page
+      window.addEventListener('pageshow', function(e){
+        if (!e.persisted) return;
+        leaving = false;
+        html.classList.remove('pt', 'pt-close', 'pt-open');
+      });
+    })();
+
     // Clicking a box with data-copy puts that text on the clipboard instead of
     // following the link. The href stays a real mailto: so the box still does
     // something sensible if this script never runs.

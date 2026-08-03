@@ -588,6 +588,43 @@
     pointer-events:none;
     user-select:none;
   }
+  /* ===== Page transition =====
+     Two lines sweep in from the left and right edges, meet in the middle to
+     cover the page, then sweep straight back out to reveal the page you landed
+     on. Drawn as ::before/::after on <html> rather than injected elements, so
+     the cover is already painted on the new page's FIRST frame and reopens on
+     its own — nothing waits on main.js, and if JS never runs the cover still
+     lifts. The accent leading edge is what reads as the "line": it shows up
+     against the white page on the way in and the dark cover on the way out. */
+  html.pt::before,
+  html.pt::after{
+    content:'';
+    position:fixed;
+    top:0;
+    /* the spare 1px makes the two halves overlap by exactly their border width,
+       so the leading lines land on top of each other as a single centred line
+       when they meet — and no sub-pixel gap shows on odd viewport widths */
+    width:calc(50% + 1px);
+    height:100%;
+    background:var(--ink);
+    z-index:100000;
+    pointer-events:none;
+  }
+  html.pt::before{ left:0;  border-right:2px solid var(--accent); }
+  html.pt::after { right:0; border-left:2px solid var(--accent); }
+
+  /* leaving: pull the two lines together */
+  html.pt-close::before{ animation:pt-close-l 480ms cubic-bezier(0.65, 0, 0.35, 1) forwards; }
+  html.pt-close::after { animation:pt-close-r 480ms cubic-bezier(0.65, 0, 0.35, 1) forwards; }
+  /* arriving: they start closed (no transform) and push back out */
+  html.pt-open::before{ animation:pt-open-l 560ms cubic-bezier(0.33, 1, 0.68, 1) forwards; }
+  html.pt-open::after { animation:pt-open-r 560ms cubic-bezier(0.33, 1, 0.68, 1) forwards; }
+
+  @keyframes pt-close-l{ from{ transform:translateX(-100%); } to{ transform:translateX(0); } }
+  @keyframes pt-close-r{ from{ transform:translateX(100%);  } to{ transform:translateX(0); } }
+  @keyframes pt-open-l { from{ transform:translateX(0); } to{ transform:translateX(-100%); } }
+  @keyframes pt-open-r { from{ transform:translateX(0); } to{ transform:translateX(100%);  } }
+
   .h-bottom-line{
     position:fixed;
     left:0;

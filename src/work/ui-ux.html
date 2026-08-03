@@ -32,6 +32,19 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500&family=Noto+Sans+Thai:wght@400;500&family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Jersey+10&family=VT323&family=Space+Grotesk:wght@400;500;700&family=Boogaloo&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../css/style.css">
+<script>
+/* Arrived through a page transition: mark <html> BEFORE the body renders so the
+   cover is already closed on this page's first frame — CSS then pushes the two
+   lines back out. Without this you would see the page for a frame first. */
+(function(){
+  try {
+    if (sessionStorage.getItem('pageTransition') !== '1') return;
+    sessionStorage.removeItem('pageTransition');
+  } catch(e){ return; }
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.documentElement.className += ' pt pt-open';
+})();
+</script>
 </head>
 <body class="loaded">
 
