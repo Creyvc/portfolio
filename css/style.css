@@ -1220,7 +1220,7 @@
   /* translateY is the knob for the whole block's vertical position — it moves the
      progress bar and the boxes together without changing layout, so the row's
      fixed height keeps doing its job. Less negative = lower on the page. */
-  .contact-inner{ max-width:100%; margin:0; transform:translateY(-2rem); }
+  .contact-inner{ max-width:100%; margin:0; transform:translateY(calc(-2.75rem + 0.5px)); }
   .contact h2.contact-marquee{
     margin:auto -2rem -4rem;
     overflow:hidden;
@@ -1289,7 +1289,9 @@
        min-height + 2px border + this row's own 2.25rem/0.5rem padding — so there
        is no dead space in the row, while still staying constant when the boxes
        shrink to 17.5rem on scroll. */
-    height:calc(25rem + 2px + 2.75rem);
+    /* tall enough for whichever state is bigger: the full-size boxes at rest, or
+       the shrunken boxes once they are sized to the grid rows on a tall viewport */
+    height:max(calc(25rem + 2px + 2.75rem), calc(34vh + 2.75rem));
     gap:var(--box-gap);
     margin:3.5rem -2rem 0;
     padding-top:2.25rem;
@@ -1351,7 +1353,16 @@
   }
   .contact-boxes.is-scrolled .contact-box{
     width:var(--box-shrunk);
-    min-height:17.5rem;
+    /* 34vh is exactly the gap between the .hlh grid lines at 33% and 67%, so the
+       shrunken box spans them edge to edge. Being centred on the viewport puts
+       its top on the 33% line and its bottom on the 67% line automatically.
+
+       The +1px and the matching half-pixel in .contact-inner's translateY are a
+       fill-rule correction, not a fudge: a box spanning [33vh, 67vh] paints its
+       last row at 67vh-1, while the 1px .hlh-2 line paints AT 67vh — so the
+       bottom border landed one row short of the line and read as a thin gap,
+       even though the top sat exactly on it. */
+    min-height:calc(34vh + 1px);
     padding:2.28rem;
     font-size:1.61rem;
   }

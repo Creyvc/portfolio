@@ -339,6 +339,12 @@
       scroller.addEventListener('scroll', () => {
         if (!ticking){ requestAnimationFrame(() => { update(); ticking = false; }); ticking = true; }
       }, { passive:true });
+      // the boxes keep resizing for 0.4s after the scroll that triggered it, so
+      // recompute once they settle — otherwise the offsets stay sized to the
+      // width the boxes had when the scroll fired and overshoot the new one
+      scroller.addEventListener('transitionend', (e) => {
+        if (e.propertyName === 'width') update();
+      });
       window.addEventListener('resize', update);
       update();
     })();
@@ -356,7 +362,14 @@
         const windowDist = liBox.offsetWidth + 24;
         const progress = Math.min(Math.abs(boxCenter - viewCenter) / windowDist, 1);
 
-        const maxOffset = Math.max(0, (liBox.clientWidth / 2) - (letterI.offsetWidth / 2));
+        // Travel is the room each letter actually has before its outer edge meets
+        // the box edge, taken from layout positions so the current transform does
+        // not feed back into it. The old half-the-box formula ignored that the
+        // pair starts side by side rather than both at the centre, so each letter
+        // overshot by ~140px and spent most of the scroll clipped out of sight.
+        const roomLeft  = letterI.offsetLeft;
+        const roomRight = liBox.clientWidth - (letterN.offsetLeft + letterN.offsetWidth);
+        const maxOffset = Math.max(0, Math.min(roomLeft, roomRight));
         const offset = progress * maxOffset;
         letterI.style.transform = `translateX(${(-offset).toFixed(2)}px)`;
         letterN.style.transform = `translateX(${offset.toFixed(2)}px)`;
@@ -366,6 +379,12 @@
       scroller.addEventListener('scroll', () => {
         if (!ticking){ requestAnimationFrame(() => { update(); ticking = false; }); ticking = true; }
       }, { passive:true });
+      // the boxes keep resizing for 0.4s after the scroll that triggered it, so
+      // recompute once they settle — otherwise the offsets stay sized to the
+      // width the boxes had when the scroll fired and overshoot the new one
+      scroller.addEventListener('transitionend', (e) => {
+        if (e.propertyName === 'width') update();
+      });
       window.addEventListener('resize', update);
       update();
     })();
@@ -376,9 +395,6 @@
       const glyph = document.querySelector('.email-glyph');
       if (!scroller || !emailBox || !glyph) return;
 
-      const totalChars = 5;
-      const visibleChars = 2;
-
       function update(){
         const viewCenter = scroller.scrollLeft + scroller.clientWidth / 2;
         const boxCenter = emailBox.offsetLeft + emailBox.offsetWidth / 2;
@@ -387,11 +403,13 @@
         const progress = Math.max(-1, Math.min(1, signedDist / windowDist));
 
         const glyphWidth = glyph.offsetWidth;
-        const charWidth = glyphWidth / totalChars;
-        const hideWidth = glyphWidth - visibleChars * charWidth;
         const sideGap = (emailBox.clientWidth - glyphWidth) / 2;
 
-        const translateX = -progress * (hideWidth + sideGap);
+        // Travel is capped at the slack either side of the word, so at the far
+        // end of the drift it lands flush with the box edge and never spills
+        // past it. It used to travel (hideWidth + sideGap) — far more than the
+        // gap available — which left the word cut off for most of the scroll.
+        const translateX = -progress * Math.max(0, sideGap);
         glyph.style.transform = `translateX(${translateX.toFixed(2)}px)`;
       }
 
@@ -399,6 +417,12 @@
       scroller.addEventListener('scroll', () => {
         if (!ticking){ requestAnimationFrame(() => { update(); ticking = false; }); ticking = true; }
       }, { passive:true });
+      // the boxes keep resizing for 0.4s after the scroll that triggered it, so
+      // recompute once they settle — otherwise the offsets stay sized to the
+      // width the boxes had when the scroll fired and overshoot the new one
+      scroller.addEventListener('transitionend', (e) => {
+        if (e.propertyName === 'width') update();
+      });
       window.addEventListener('resize', update);
       update();
     })();
