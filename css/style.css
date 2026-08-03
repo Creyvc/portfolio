@@ -1220,7 +1220,7 @@
   /* translateY is the knob for the whole block's vertical position — it moves the
      progress bar and the boxes together without changing layout, so the row's
      fixed height keeps doing its job. Less negative = lower on the page. */
-  .contact-inner{ max-width:100%; margin:0; transform:translateY(calc(-2.75rem + 0.5px)); }
+  .contact-inner{ max-width:100%; margin:0; transform:translateY(calc(-4.25rem + 0.5px)); }
   .contact h2.contact-marquee{
     margin:auto -2rem -4rem;
     overflow:hidden;
@@ -1246,13 +1246,21 @@
     letter-spacing:0.01em;
   }
   .contact-progress{
+    /* Pinned to the middle of the grid's row 1 / column 2 cell: row 1 spans
+       0-33% so its centre is 16.5vh, and the cell spans 33-67% horizontally,
+       whose centre is the page centre. translateY(-50%) puts the bar's own
+       centre on that line rather than its top edge. */
+    position:fixed;
+    top:16.5vh;
+    left:0; right:0;
+    transform:translateY(-50%);
+    z-index:4;
     display:flex;
     align-items:center;
     justify-content:center;
     gap:0.5rem;
-    /* the footer block is vertically centred, so half of any margin change is
-       given back — each 1rem here nets 8px of movement */
-    margin:-4rem 0 0;
+    margin:0;
+    pointer-events:none;
   }
   .contact-progress .tick{
     width:2px;

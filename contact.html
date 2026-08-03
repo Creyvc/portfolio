@@ -79,8 +79,11 @@
       <span class="plus" style="left:97%;top:67%"></span>
     </div>
 
+    <!-- outside .contact-inner: that wrapper carries a transform, which would
+         make position:fixed resolve against it instead of the viewport -->
+    <div class="contact-progress" id="contactProgress"></div>
+
     <div class="contact-inner">
-      <div class="contact-progress" id="contactProgress"></div>
       <div class="contact-boxes">
         <div class="contact-box contact-info">
           <div class="info-circle"></div>
