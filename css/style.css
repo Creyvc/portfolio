@@ -1225,12 +1225,14 @@
     display:inline-block;
     padding:0 0.6rem;
     font-family:var(--sans);
-    font-weight:900;
+    /* weight 300 and no stroke, so this renders identically to the home page's
+       type (.home-blurb / .cell-*) — same family, same weight. It was always the
+       same family; the 900 weight and the 3.5px stroke were what made it read as
+       a different typeface. Size, spacing and the marquee itself are unchanged. */
+    font-weight:300;
     text-transform:uppercase;
     font-size:clamp(2.5rem, 8vw, 6rem);
     letter-spacing:0.01em;
-    -webkit-text-stroke:3.5px currentColor;
-    paint-order:stroke fill;
   }
   .contact-progress{
     display:flex;
@@ -1389,6 +1391,14 @@
   }
   .li-letter{
     display:inline-block;
+    /* LinkedIn's mark is set in a geometric humanist sans in a very heavy weight.
+       Avenir Next / Futura ship on macOS and Century Gothic / Segoe UI cover
+       Windows; the rest of the stack degrades to whatever geometric sans is
+       around. Nothing else about the box changes — this only swaps the typeface
+       off the inherited mono, plus the weight that "Black" implies. */
+    font-family:'Avenir Next', 'Avenir', 'Myriad Pro', 'Myriad', 'Futura',
+                'Century Gothic', 'Segoe UI', system-ui, 'Helvetica Neue', Arial, sans-serif;
+    font-weight:900;
   }
   .contact-box[data-label="GitHub"]{
     justify-content:center;
