@@ -570,7 +570,7 @@
     /* the column-2 / row-1 cell: vertical lines at 33%/67%, row line at 33% */
     left:33%; right:33%;
     top:33%;
-    margin-top:-1.6rem;          /* sit the row just above the cell's bottom line */
+    margin-top:-1.9rem;          /* sit the row above the cell's bottom line */
     z-index:9995;
     /* X hugs the bottom-left corner, Y the bottom-right, FPS centred between them */
     display:flex; justify-content:space-between; align-items:flex-end;
