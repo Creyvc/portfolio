@@ -900,19 +900,31 @@
         x = e.clientX; y = e.clientY; posDirty = true;
       }, { passive:true });
 
-      let frames = 0, last = performance.now();
+      // Rolling average over the last N frames, recomputed EVERY frame. A fixed
+      // 250ms window smoothed away the short dips a hover or transition causes;
+      // this reacts within a few frames while still being readable.
+      const SAMPLES = 10;
+      const stamps = [];
+      let shownFps = -1;
+
       function tick(now){
-        frames++;
         if (posDirty){
           xEl.textContent = 'X ' + pad(x, 4);
           yEl.textContent = 'Y ' + pad(y, 4);
           posDirty = false;
         }
-        // average over ~250ms windows — per-frame deltas are far too noisy to read
-        const dt = now - last;
-        if (dt >= 250){
-          fpsEl.textContent = 'FPS ' + pad(Math.round(frames * 1000 / dt), 4);
-          frames = 0; last = now;
+
+        stamps.push(now);
+        if (stamps.length > SAMPLES) stamps.shift();
+        if (stamps.length > 1){
+          const span = stamps[stamps.length - 1] - stamps[0];
+          if (span > 0){
+            const fps = Math.round((stamps.length - 1) * 1000 / span);
+            if (fps !== shownFps){            // only touch the DOM when it changes
+              shownFps = fps;
+              fpsEl.textContent = 'FPS ' + pad(fps, 4);
+            }
+          }
         }
         requestAnimationFrame(tick);
       }
