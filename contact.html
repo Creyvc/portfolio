@@ -42,9 +42,9 @@
     sessionStorage.removeItem('pageTransition');
   } catch(e){ return; }
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  /* No .pt-grid: nothing here for the lines to rest on, so they carry all the
-     way out to the page edges. */
-  document.documentElement.className += ' pt pt-open';
+  /* .pt-grid: this page has a grid too now, so its lines come to rest on
+     .hl-1 / .hl-4 at 3% / 97% and hand straight over to them. */
+  document.documentElement.className += ' pt pt-open pt-grid';
 })();
 </script>
 </head>
@@ -57,6 +57,28 @@
   </header>
 
   <footer class="contact" id="contact" style="border-top:none">
+    <!-- inside the footer on purpose: .contact is z-index:3 with an opaque
+         background and forms its own stacking context, so a grid placed outside
+         it can only sit fully above (covering the boxes) or fully below (hidden).
+         In here it paints over the footer's background and under the boxes.
+         Still position:fixed, so it spans the viewport as it does on home. -->
+    <div class="home-lines page-lines" aria-hidden="true">
+      <span class="hl hl-1"></span>
+      <span class="hl hl-2"></span>
+      <span class="hl hl-3"></span>
+      <span class="hl hl-4"></span>
+      <span class="hlh hlh-1"></span>
+      <span class="hlh hlh-2"></span>
+      <span class="plus" style="left:3%;top:33%"></span>
+      <span class="plus" style="left:3%;top:67%"></span>
+      <span class="plus" style="left:33%;top:33%"></span>
+      <span class="plus" style="left:33%;top:67%"></span>
+      <span class="plus" style="left:67%;top:33%"></span>
+      <span class="plus" style="left:67%;top:67%"></span>
+      <span class="plus" style="left:97%;top:33%"></span>
+      <span class="plus" style="left:97%;top:67%"></span>
+    </div>
+
     <div class="contact-inner">
       <div class="contact-progress" id="contactProgress"></div>
       <div class="contact-boxes">

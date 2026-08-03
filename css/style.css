@@ -26,6 +26,13 @@
   }
   .home-lines .hlh-1{ top:33%; }
   .home-lines .hlh-2{ top:67%; }
+  /* The same grid on pages other than the home hero. Home puts its own content
+     at z-index 2 and lets the grid sit at 1; elsewhere the content is unlayered,
+     so the grid drops to 0 and — being first in the document — paints behind it.
+     No --dx / --dy on those pages' plus marks: those only feed the home intro's
+     fly-out, which never runs anywhere else. */
+  .home-lines.page-lines{ z-index:0; }
+  .home-lines.page-lines .plus{ z-index:0; }
 
   /* ===== Intro grid-build (loader -> home) =====
      The grid lines draw out from center while the plus marks fly out from
