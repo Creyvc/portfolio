@@ -1217,7 +1217,10 @@
     border-top:1px solid rgba(23,24,28,0.1);
     padding:4rem 2rem;
   }
-  .contact-inner{ max-width:100%; margin:0; transform:translateY(-3rem); }
+  /* translateY is the knob for the whole block's vertical position — it moves the
+     progress bar and the boxes together without changing layout, so the row's
+     fixed height keeps doing its job. Less negative = lower on the page. */
+  .contact-inner{ max-width:100%; margin:0; transform:translateY(-2rem); }
   .contact h2.contact-marquee{
     margin:auto -2rem -4rem;
     overflow:hidden;
@@ -1268,6 +1271,12 @@
   }
   .contact-boxes{
     --box-w: 42rem;
+    /* --box-shrunk is the width the boxes take once scrolling shrinks them. Both
+       the box width and the row's end padding are written out from these two
+       constants rather than routed through a variable that changes: Chrome will
+       not re-resolve a transitioned property when the var() behind it changes,
+       so width/padding simply never updated when that was tried. */
+    --box-shrunk: calc(42rem * 0.7);
     --box-gap: 1.5rem;
     display:flex;
     align-items:center;
@@ -1276,24 +1285,39 @@
        before — they now centre inside a fixed-height row instead of resizing it.
        Without it the row's height followed whichever box was tallest, so it
        collapsed as the boxes shrank on scroll and dragged the progress bar down
-       the page with it. The value is comfortably above the tallest state and is
-       what holds the current vertical position; changing it moves the whole
-       footer block, so tune the progress bar's own margin instead. */
-    height:31.4rem;
+       the page with it. Sized to fit the boxes exactly at their largest — 25rem
+       min-height + 2px border + this row's own 2.25rem/0.5rem padding — so there
+       is no dead space in the row, while still staying constant when the boxes
+       shrink to 17.5rem on scroll. */
+    height:calc(25rem + 2px + 2.75rem);
     gap:var(--box-gap);
     margin:3.5rem -2rem 0;
     padding-top:2.25rem;
     padding-bottom:0.5rem;
-    padding-left:max(0px, calc((100vw - var(--box-w)) / 2 - 2rem));
-    padding-right:max(0px, calc((100vw - var(--box-w)) / 2 - 2rem));
+    /* no -2rem here: the row's own -2rem side margins already cancel .contact's
+       2rem padding, so it spans the full viewport and subtracting again pushed
+       every box 32px left of centre */
+    padding-left:max(0px, calc((100vw - var(--box-w)) / 2));
+    padding-right:max(0px, calc((100vw - var(--box-w)) / 2));
     overflow-x:auto;
     scrollbar-width:none;
     scroll-snap-type:none;
-    transition:transform 0.4s ease-out;
+    /* padding rides along with the shrink so the end padding stays in step with
+       the box width instead of snapping to its new value in one frame */
+    transition:transform 0.4s ease-out, padding 0.4s ease-out;
   }
   .contact-boxes::-webkit-scrollbar{ display:none; }
   .contact-boxes.is-scrolled{
-    transform:translateY(2.5rem);
+    /* No translateY here any more. The 2.5rem drop existed to offset the row
+       getting shorter as the boxes shrank, which used to lift them; now the row
+       has a fixed height and the boxes centre inside it, so nothing lifts and
+       that offset showed up as the boxes sitting ~40px below centre once you
+       started scrolling. */
+    /* end padding follows the shrunken box width, so the first and last box can
+       still reach dead centre. Left at the full-size value it fell ~100px short
+       and every box sat left of centre from 20px of scroll onward. */
+    padding-left:max(0px, calc((100vw - var(--box-shrunk)) / 2));
+    padding-right:max(0px, calc((100vw - var(--box-shrunk)) / 2));
   }
   .contact-box{
     position:relative;
@@ -1326,7 +1350,7 @@
     opacity:0.55;
   }
   .contact-boxes.is-scrolled .contact-box{
-    width:calc(var(--box-w) * 0.7);
+    width:var(--box-shrunk);
     min-height:17.5rem;
     padding:2.28rem;
     font-size:1.61rem;
