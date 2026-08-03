@@ -884,6 +884,39 @@
         }
       }, { passive:false });
     })();
+
+    // live cursor position + frame rate readout (home page only)
+    (function(){
+      const posEl = document.getElementById('hudPos');
+      const fpsEl = document.getElementById('hudFps');
+      if (!posEl || !fpsEl) return;
+
+      // fixed-width numbers so the readout never jitters as digits change
+      function pad(n, w){ return String(n).padStart(w, ' '); }
+
+      let x = 0, y = 0, posDirty = false;
+      window.addEventListener('mousemove', function(e){
+        x = e.clientX; y = e.clientY; posDirty = true;
+      }, { passive:true });
+
+      let frames = 0, last = performance.now();
+      function tick(now){
+        frames++;
+        if (posDirty){
+          posEl.textContent = 'X ' + pad(x, 4) + '   Y ' + pad(y, 4);
+          posDirty = false;
+        }
+        // average over ~250ms windows — per-frame deltas are far too noisy to read
+        const dt = now - last;
+        if (dt >= 250){
+          fpsEl.textContent = pad(Math.round(frames * 1000 / dt), 3) + ' FPS';
+          frames = 0; last = now;
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    })();
+
 (function(){
   // ===== Dot Grid Background =====
   // Physics-inspired cursor interaction: dots break from the grid and orbit in
