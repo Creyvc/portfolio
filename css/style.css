@@ -1609,31 +1609,26 @@
   .back-btn .top-btn-stack{ flex-direction:row; }
   .back-btn:hover .top-btn-stack{ transform:translateX(-1.8rem); }
 
-  /* Bracketed close mark — stands in for the logo and the back arrow on the
-     contact page. Reads [X]; on hover the brackets drop out while the box behind
-     them fills with ink, leaving a white X. The brackets go transparent rather
-     than display:none so they hold their width and the X never shifts. */
+  /* Close control on the contact page, standing in for the logo and back arrow.
+     Reads CLOSE, and gains its brackets on hover -> [CLOSE]. Type matches the
+     home page paragraphs (.home-blurb) exactly. The brackets are always in the
+     layout at opacity 0, so they only fade in and the word never shifts. */
   .close-btn{
     position:absolute; left:1.6rem; top:0.5rem; z-index:20;
     display:inline-flex; align-items:center; justify-content:center;
-    /* uneven padding on purpose: [X] is three glyphs wide but one line tall, so
-       these are the values that make the filled box come out square */
-    padding:0.7rem 0.3rem;
+    padding:0.6rem 0.4rem;
     font-family:var(--sans);
-    font-size:1rem;
-    font-weight:400;
-    line-height:1;
+    font-weight:300;
+    font-size:0.82rem;
+    line-height:1.7;
     color:var(--ink);
     text-decoration:none;
-    background:transparent;
     cursor:pointer;
     user-select:none;
-    transition:background 0.18s ease, color 0.18s ease;
   }
-  .close-bracket{ transition:opacity 0.18s ease; }
-  .close-x{ padding:0 0.06em; }   /* nudge the X off the brackets */
-  .close-btn:hover{ background:var(--ink); color:var(--paper); }
-  .close-btn:hover .close-bracket{ opacity:0; }
+  .close-bracket{ opacity:0; transition:opacity 0.18s ease; }
+  .close-label{ padding:0 0.08em; }        /* room for the brackets to fade into */
+  .close-btn:hover .close-bracket{ opacity:1; }
 
   .reveal{
     opacity:0;
