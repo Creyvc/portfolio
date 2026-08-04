@@ -1908,13 +1908,18 @@
   // — is driven off scrollLeft, so it all plays through on its own as the run
   // goes by; this only has to move the scroll position.
   (function(){
-    const REWIND = 2800;   // ms end to end
+    const REWIND = 4200;   // ms end to end
     // Exponential ease-out, so the two halves of the run read as clearly
     // different: it leaves at speed and has covered most of the ruler almost at
     // once, then spends the rest of the time easing the last stretch in. A
     // polynomial curve spreads the slowing out too evenly to feel like two
     // phases; this one is unmistakably fast, then slow.
-    const easeOut = x => x >= 1 ? 1 : 1 - Math.pow(2, -10 * x);
+    // Divided by its own value at x = 1 so it lands exactly on 1. Raw
+    // 1 - 2^-kx never quite reaches it, which left the run to close the last
+    // fraction in a single jump at the end — small at k = 10, but plainly
+    // visible at the gentler curve used here.
+    const DECAY = 8, SPAN1 = 1 - Math.pow(2, -DECAY);
+    const easeOut = x => x >= 1 ? 1 : (1 - Math.pow(2, -DECAY * x)) / SPAN1;
 
     const max = maxScroll();
     if (max <= 0) return;
@@ -1928,18 +1933,18 @@
     window.addEventListener('wheel', stop, { passive:true, once:true });
     window.addEventListener('touchstart', stop, { passive:true, once:true });
 
-    // let the page transition finish opening before the run starts
-    const delay = document.documentElement.classList.contains('pt-open') ? 620 : 140;
-    setTimeout(function(){
-      if (cancelled) return;
-      const start = performance.now();
-      (function step(now){
-        if (cancelled) return;                   // hand over the moment it is touched
-        const t = Math.min((now - start) / REWIND, 1);
-        scale.scrollLeft = max * (1 - easeOut(t));
-        sync();
-        if (t < 1) requestAnimationFrame(step);
-      })(start);
-    }, delay);
+    // Straight onto the next frame — no wait. The wipe opens from the centre
+    // outward, so the middle of the screen, which is exactly where the numbers
+    // run, is uncovered almost at once; holding the run back until the
+    // transition had finished just read as a stall before anything happened.
+    let start = null;                            // null, not 0: a 0 timestamp would never latch
+    requestAnimationFrame(function step(now){
+      if (cancelled) return;                     // hand over the moment it is touched
+      if (start === null) start = now;
+      const t = Math.min((now - start) / REWIND, 1);
+      scale.scrollLeft = max * (1 - easeOut(t));
+      sync();
+      if (t < 1) requestAnimationFrame(step);
+    });
   })();
 })();
