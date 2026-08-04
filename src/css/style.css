@@ -414,7 +414,7 @@
   }
 
   body.menu-open, body.menu-open *{
-    cursor:url("assets/icons/mac-cursor.svg") 2 2, auto;
+    cursor:url("../../assets/icons/mac-cursor.svg") 2 2, auto;
   }
   body.on-black-divider .cursor-box{
     display:none;
@@ -428,7 +428,7 @@
   body.menu-open .menu-scatter:hover *,
   body.menu-open .v-logo:hover,
   body.menu-open .v-logo:hover *{
-    cursor:url("assets/icons/mac-hand-cursor.png") 13 8, pointer;
+    cursor:url("../../assets/icons/mac-hand-cursor.png") 13 8, pointer;
   }
   .menu-overlay{
     position:fixed;
