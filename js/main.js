@@ -558,16 +558,29 @@
       // thumbnails were ~34px tall on a 36px pitch — barely 2px apart.
       const THUMB = 60;     // width of the small resolved box in the column, px
       const GAP   = 40;     // pitch down the column, leaving ~13px between them
-      const HOLD  = 400;    // the single dot sits alone
-      const SPLIT = 520;    // dot -> column
-      const GROW  = 520;    // dots -> thumbnails, resolving as they go
-      const PAUSE = 260;    // the resolved column holds
-      const OPEN  = 1500;   // column -> row, zooming the rest of the way
-      const TOTAL = HOLD + SPLIT + GROW + PAUSE + OPEN;
+      // Each move lands fast then settles, with a held beat after it — that is
+      // what gives the sequence its fast/slow, fast/slow rhythm rather than one
+      // continuous glide.
+      const HOLD   = 400;   // the single dot sits alone
+      const SPLIT  = 520;   // dot -> column
+      const SETTLE = 220;   // the column of dots holds
+      const GROW   = 520;   // dots -> thumbnails, resolving as they go
+      const PAUSE  = 300;   // the resolved column holds
+      const OPEN   = 1500;  // column -> row, zooming the rest of the way
+      const TOTAL  = HOLD + SPLIT + SETTLE + GROW + PAUSE + OPEN;
 
       const mid = (boxes.length - 1) / 2;
-      const easeOut = t => 1 - Math.pow(1 - t, 3);
-      const easeInOut = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+      // expo-out: the dots fling apart and coast to a stop
+      const easeOutExpo = t => t >= 1 ? 1 : 1 - Math.pow(2, -10 * t);
+      // back-out: the thumbnails overshoot a touch and settle — the "sticky" part
+      const easeOutBack = t => { const c1 = 1.6, c3 = c1 + 1;
+        return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+      const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+      const easeOutQuart = t => 1 - Math.pow(1 - t, 4);
+      // quart-in-out: weighty. Eases out of the held column rather than jerking,
+      // powers through the turn, then settles a long way into its final place.
+      const easeInOutQuart = t => t < 0.5 ? 8*t*t*t*t : 1 - Math.pow(-2*t + 2, 4) / 2;
+      const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
 
       // measured before any transform is applied, so these are layout positions
       const s = scroller.getBoundingClientRect();
@@ -579,22 +592,24 @@
       if (nat.some(n => !n.w || !n.h)) return;   // not laid out yet; leave the page alone
 
       function render(t){
+        const g0 = HOLD + SPLIT + SETTLE;
+        const o0 = g0 + GROW + PAUSE;
         const split = t > HOLD ? Math.min((t - HOLD) / SPLIT, 1) : 0;
-        const grow  = t > HOLD + SPLIT ? Math.min((t - HOLD - SPLIT) / GROW, 1) : 0;
-        const open  = t > HOLD + SPLIT + GROW + PAUSE
-          ? Math.min((t - HOLD - SPLIT - GROW - PAUSE) / OPEN, 1) : 0;
-        const es = easeOut(split);
-        const eg = easeInOut(grow);
-        const eo = easeInOut(open);
-        // the column closes up a little ahead of the row spreading out — that
-        // offset is what makes it read as turning rather than simply sliding
-        const ey = 1 - easeInOut(Math.min(open * 1.3, 1));
+        const grow  = t > g0 ? Math.min((t - g0) / GROW, 1) : 0;
+        const open  = t > o0 ? Math.min((t - o0) / OPEN, 1) : 0;
+        const es = easeOutExpo(split);
+        const egScale = easeOutBack(grow);      // may overshoot 1 on purpose
+        const egFade  = easeOutCubic(grow);     // kept monotonic — it drives opacity
+        const eo = easeInOutQuart(open);
+        // the column closes up ahead of the row spreading out — that offset is
+        // what makes it read as turning rather than simply sliding
+        const ey = 1 - easeOutQuart(Math.min(open * 1.35, 1));
 
         // Resolved on the grow phase, which finishes before the turn begins — the
         // boxes are fully themselves while still stacked, and it is those that
         // then rotate into the row.
-        scroller.style.setProperty('--intro-ink', (1 - eg).toFixed(3));
-        scroller.style.setProperty('--intro-show', eg.toFixed(3));
+        scroller.style.setProperty('--intro-ink', clamp01(1 - egFade).toFixed(3));
+        scroller.style.setProperty('--intro-show', clamp01(egFade).toFixed(3));
 
         for (let i = 0; i < boxes.length; i++){
           const n = nat[i], k = i - mid;
@@ -606,8 +621,8 @@
           // dot is square, so its two scales differ; the thumbnail is uniform, so
           // the box takes its true proportions back as it grows
           const thumb = THUMB / n.w;
-          const sxT = (DOT / n.w) + (thumb - DOT / n.w) * eg;
-          const syT = (DOT / n.h) + (thumb - DOT / n.h) * eg;
+          const sxT = (DOT / n.w) + (thumb - DOT / n.w) * egScale;
+          const syT = (DOT / n.h) + (thumb - DOT / n.h) * egScale;
           const sx = sxT + (1 - sxT) * eo;
           const sy = syT + (1 - syT) * eo;
           boxes[i].style.transform =
