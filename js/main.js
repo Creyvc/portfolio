@@ -538,6 +538,99 @@
       requestUpdate();
     })();
 
+    // ===== Contact boxes intro =====
+    // One dot, which splits into a vertical column of eight, which then unrolls
+    // into the row while zooming up to full size. Driven per box with transforms
+    // — the boxes' own transform is otherwise unused, so nothing else is
+    // disturbed, and everything resolves to `transform:none` at the end.
+    (function(){
+      const scroller = document.querySelector('.contact-boxes');
+      if (!scroller) return;
+      const boxes = Array.prototype.slice.call(scroller.querySelectorAll('.contact-box'));
+      if (boxes.length < 2) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const DOT   = 12;     // dot size in px
+      const GAP   = 26;     // spacing between dots down the column
+      const HOLD  = 320;    // the single dot sits alone
+      const SPLIT = 420;    // dot -> column
+      const PAUSE = 180;    // the column holds
+      const OPEN  = 1250;   // column -> row, zooming as it goes
+      const TOTAL = HOLD + SPLIT + PAUSE + OPEN;
+
+      const mid = (boxes.length - 1) / 2;
+      const easeOut = t => 1 - Math.pow(1 - t, 3);
+      const easeInOut = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+
+      // measured before any transform is applied, so these are layout positions
+      const s = scroller.getBoundingClientRect();
+      const cx = s.left + s.width / 2, cy = s.top + s.height / 2;
+      const nat = boxes.map(function(b){
+        const r = b.getBoundingClientRect();
+        return { x: r.left + r.width/2 - cx, y: r.top + r.height/2 - cy, w: r.width, h: r.height };
+      });
+      if (nat.some(n => !n.w || !n.h)) return;   // not laid out yet; leave the page alone
+
+      function render(t){
+        const split = t > HOLD ? Math.min((t - HOLD) / SPLIT, 1) : 0;
+        const open  = t > HOLD + SPLIT + PAUSE ? Math.min((t - HOLD - SPLIT - PAUSE) / OPEN, 1) : 0;
+        const es = easeOut(split);
+        const eo = easeInOut(open);
+        // the column closes up a little ahead of the row spreading out — that
+        // offset is what makes it read as turning rather than simply sliding
+        const ey = 1 - easeInOut(Math.min(open * 1.3, 1));
+
+        // hand the boxes back to their real styling partway through the zoom, so
+        // the ink fades to paper and the contents fade in while they are still
+        // moving — releasing them at the very end reads as a snap
+        if (open > 0.55) scroller.classList.remove('is-intro');
+
+        for (let i = 0; i < boxes.length; i++){
+          const n = nat[i], k = i - mid;
+          // a transform offsets from the box's own layout position, so gathering
+          // them all onto the centre means translating by -n and letting that
+          // decay to zero as they open out into their real places
+          const x = -(1 - eo) * n.x;
+          const y = -(1 - eo) * n.y + es * GAP * k * ey;
+          const sx = DOT / n.w + (1 - DOT / n.w) * eo;
+          const sy = DOT / n.h + (1 - DOT / n.h) * eo;
+          boxes[i].style.transform =
+            'translate(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px) scale(' + sx.toFixed(4) + ',' + sy.toFixed(4) + ')';
+        }
+      }
+
+      let done = false;
+      function finish(){
+        if (done) return;
+        done = true;
+        boxes.forEach(function(b){ b.style.transform = ''; });
+        scroller.classList.remove('is-intro');
+        // the scroll-driven effects measured nothing useful while the boxes were
+        // mid-transform; give them one pass now that everything has settled
+        window.dispatchEvent(new Event('resize'));
+      }
+
+      scroller.classList.add('is-intro');
+      render(0);                      // dot state is up before the first paint
+
+      // if we arrived through the page transition the wipe still covers the page
+      // for the best part of a second — no sense playing the intro behind it
+      const delay = document.documentElement.classList.contains('pt-open') ? 620 : 0;
+      setTimeout(function(){
+        const start = performance.now();
+        (function step(now){
+          const t = Math.min(now - start, TOTAL);
+          render(t);
+          if (t < TOTAL) requestAnimationFrame(step); else finish();
+        })(start);
+      }, delay);
+
+      // The boxes are dot-sized and blank until the run completes, so never let
+      // that state be the final one: if the frame loop stalls for any reason,
+      // put the page into its normal state anyway.
+      setTimeout(finish, delay + TOTAL + 900);
+    })();
+
     // let users swipe the contact boxes in ANY direction (up/down or left/right)
     (function(){
       const scroller = document.querySelector('.contact-boxes');

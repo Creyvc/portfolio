@@ -1277,6 +1277,23 @@
     border:1px solid currentColor;
     opacity:1;
   }
+  /* ===== Contact boxes intro =====
+     While the intro plays the boxes are dot-sized, and a 1px border scaled down
+     to a few percent is invisible — so each one is painted as solid ink to read
+     as a dot at all, with its contents and label held back until it has grown.
+     !important because several boxes set their own background further down. */
+  .contact-boxes.is-intro .contact-box{
+    background:var(--ink) !important;
+    border-color:var(--ink) !important;
+    transition:none !important;
+  }
+  .contact-boxes.is-intro .contact-box > *,
+  .contact-boxes.is-intro .contact-box::before{ opacity:0; }
+  /* declared outside the intro rule so it is still in effect when .is-intro is
+     dropped — that is what fades the contents in rather than snapping them on */
+  .contact-box > *,
+  .contact-box[data-label]::before{ transition:opacity 0.45s ease; }
+
   .contact-boxes{
     --box-w: 42rem;
     /* --box-shrunk is the width the boxes take once scrolling shrinks them. Both
