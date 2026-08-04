@@ -590,6 +590,7 @@
       const barMid = bar ? (function(){ const r = bar.getBoundingClientRect(); return r.left + r.width / 2; })() : 0;
       const tickNat = ticks.map(function(t){ const r = t.getBoundingClientRect(); return r.left + r.width / 2 - barMid; });
 
+
       // measured before any transform is applied, so these are layout positions
       const s = scroller.getBoundingClientRect();
       const cx = s.left + s.width / 2, cy = s.top + s.height / 2;
