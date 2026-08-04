@@ -44,16 +44,23 @@
      main.js — see the "Measure scale" block there. */
   .scale{
     position:fixed;
-    left:3%; right:3%;
+    left:0; right:0;
     top:50%;
     transform:translateY(-50%);
-    display:flex;
-    justify-content:space-between;   /* first tick on 3%, last on 97% */
-    align-items:flex-start;          /* all ticks hang from one line */
-    pointer-events:none;
+    height:3.6rem;                   /* tick band plus the numbers beneath it */
+    overflow-x:auto;                 /* one number to the next is 1.5 grid cells,
+                                        so 30 of them run far past the viewport */
+    overflow-y:hidden;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
   }
+  .scale::-webkit-scrollbar{ display:none; }
+  /* Ticks are placed absolutely rather than spaced by flex: the major ones are
+     2px and the minor 1px, and a gap-based layout would let that width
+     difference accumulate along the run instead of holding an exact pitch. */
+  .scale-track{ position:relative; height:100%; }
   .scale-tick{
-    position:relative;
+    position:absolute; top:0;
     width:1px; height:1.1rem;
     background:#a8adb3;
   }

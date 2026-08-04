@@ -1595,12 +1595,23 @@
   if (!scale) return;
 
   const MAJORS = 30;   // numbered ticks
-  const STEP = 5;      // ticks per number, so every 5th one is long and labelled
+  const STEP = 15;     // ticks per number, so every 15th one is long and labelled
+  // One number to the next spans one and a half grid cells. A cell is 3% -> 33%
+  // of the viewport, so 1.5 of them is 45vw, and the ticks that make up that run
+  // divide it evenly — raise or lower STEP alone to change how finely it is
+  // divided, and the 45vw between numbers stays put.
+  const GAP = 45 / STEP;
+  const PAD = 3;       // vw before the first tick, landing it on .hl-1 at 3%
 
-  const frag = document.createDocumentFragment();
-  for (let i = 0; i < MAJORS * STEP; i++){
+  const total = MAJORS * STEP;
+  const track = document.createElement('div');
+  track.className = 'scale-track';
+  track.style.width = (PAD * 2 + (total - 1) * GAP) + 'vw';
+
+  for (let i = 0; i < total; i++){
     const tick = document.createElement('span');
     tick.className = 'scale-tick';
+    tick.style.left = (PAD + i * GAP) + 'vw';
     if (i % STEP === 0){
       tick.classList.add('is-major');
       const num = document.createElement('span');
@@ -1608,7 +1619,7 @@
       num.textContent = i / STEP + 1;
       tick.appendChild(num);
     }
-    frag.appendChild(tick);
+    track.appendChild(tick);
   }
-  scale.appendChild(frag);
+  scale.appendChild(track);
 })();
