@@ -18,6 +18,9 @@
   .home-lines .hl-2{ left:33%; }   /* between */
   .home-lines .hl-3{ left:67%; }   /* between */
   .home-lines .hl-4{ left:97%; }   /* near right end */
+  /* dead centre — not part of the 3/33/67/97 grid, so it carries no plus marks;
+     it marks the line the measure scale's numbers come to rest on */
+  .home-lines .hl-mid{ left:50%; }
   .home-lines .hlh{
     position:absolute;
     left:0; right:0;
@@ -41,12 +44,16 @@
      above them rather than below. The track carries half a viewport of padding
      at each end (see main.js), so it rests with the 1 on the centre line and
      scrolls until the 30 lands there too.
-     No z-index: it stays below .home-lines (z-index 1), so the grid crosses it
-     the way it crosses the boxes on the contact page. Ticks are built by
-     main.js — see the "Measure scale" block there. */
+     z-index 2 puts it just above .home-lines. The band has no background, so the
+     grid still shows straight through the gaps between ticks — but a tick that
+     lands on a grid line now wins, instead of being blanked by it. That matters
+     most at the centre line, which the numbers come to rest on: below the grid,
+     the 1 lost its tick to the very line marking where it had landed.
+     Ticks are built by main.js — see the "Measure scale" block there. */
   .scale{
     position:fixed;
     left:0; right:0;
+    z-index:2;
     /* 83.5% is the midpoint of row 3 (the 67% rule to the foot of the page), and
        -50% centres the whole band on it — numbers and ticks together, rather
        than standing the tick baseline on that line. */
