@@ -539,10 +539,12 @@
     })();
 
     // ===== Contact boxes intro =====
-    // One dot, which splits into a vertical column of eight, which then unrolls
-    // into the row while zooming up to full size. Driven per box with transforms
-    // — the boxes' own transform is otherwise unused, so nothing else is
-    // disturbed, and everything resolves to `transform:none` at the end.
+    // One dot -> a vertical column of eight -> the dots grow into small, fully
+    // resolved thumbnails, still stacked -> the column unrolls into the row while
+    // zooming the rest of the way. The reveal is finished before the turn starts,
+    // so what rotates is the real boxes rather than black rectangles. Driven per
+    // box with transforms — the boxes' own transform is otherwise unused, so
+    // nothing else is disturbed, and it all resolves to `transform:none`.
     (function(){
       const scroller = document.querySelector('.contact-boxes');
       if (!scroller) return;
@@ -550,13 +552,18 @@
       if (boxes.length < 2) return;
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-      const DOT   = 12;     // dot size in px
-      const GAP   = 26;     // spacing between dots down the column
-      const HOLD  = 320;    // the single dot sits alone
-      const SPLIT = 420;    // dot -> column
-      const PAUSE = 180;    // the column holds
-      const OPEN  = 1250;   // column -> row, zooming as it goes
-      const TOTAL = HOLD + SPLIT + PAUSE + OPEN;
+      const DOT   = 12;     // square dot, px
+      // THUMB and GAP trade against each other: the column has to stay inside the
+      // row, so a wider thumbnail leaves less room between them. At 74/36 the
+      // thumbnails were ~34px tall on a 36px pitch — barely 2px apart.
+      const THUMB = 60;     // width of the small resolved box in the column, px
+      const GAP   = 40;     // pitch down the column, leaving ~13px between them
+      const HOLD  = 400;    // the single dot sits alone
+      const SPLIT = 520;    // dot -> column
+      const GROW  = 520;    // dots -> thumbnails, resolving as they go
+      const PAUSE = 260;    // the resolved column holds
+      const OPEN  = 1500;   // column -> row, zooming the rest of the way
+      const TOTAL = HOLD + SPLIT + GROW + PAUSE + OPEN;
 
       const mid = (boxes.length - 1) / 2;
       const easeOut = t => 1 - Math.pow(1 - t, 3);
@@ -573,18 +580,21 @@
 
       function render(t){
         const split = t > HOLD ? Math.min((t - HOLD) / SPLIT, 1) : 0;
-        const open  = t > HOLD + SPLIT + PAUSE ? Math.min((t - HOLD - SPLIT - PAUSE) / OPEN, 1) : 0;
+        const grow  = t > HOLD + SPLIT ? Math.min((t - HOLD - SPLIT) / GROW, 1) : 0;
+        const open  = t > HOLD + SPLIT + GROW + PAUSE
+          ? Math.min((t - HOLD - SPLIT - GROW - PAUSE) / OPEN, 1) : 0;
         const es = easeOut(split);
+        const eg = easeInOut(grow);
         const eo = easeInOut(open);
         // the column closes up a little ahead of the row spreading out — that
         // offset is what makes it read as turning rather than simply sliding
         const ey = 1 - easeInOut(Math.min(open * 1.3, 1));
 
-        // the boxes resolve gradually as they grow: the ink lifts across the first
-        // three quarters of the opening and the contents fade up behind it, so
-        // they are already fully themselves before the motion stops
-        scroller.style.setProperty('--intro-ink', (1 - Math.min(open / 0.75, 1)).toFixed(3));
-        scroller.style.setProperty('--intro-show', Math.max(0, Math.min((open - 0.25) / 0.6, 1)).toFixed(3));
+        // Resolved on the grow phase, which finishes before the turn begins — the
+        // boxes are fully themselves while still stacked, and it is those that
+        // then rotate into the row.
+        scroller.style.setProperty('--intro-ink', (1 - eg).toFixed(3));
+        scroller.style.setProperty('--intro-show', eg.toFixed(3));
 
         for (let i = 0; i < boxes.length; i++){
           const n = nat[i], k = i - mid;
@@ -593,8 +603,13 @@
           // decay to zero as they open out into their real places
           const x = -(1 - eo) * n.x;
           const y = -(1 - eo) * n.y + es * GAP * k * ey;
-          const sx = DOT / n.w + (1 - DOT / n.w) * eo;
-          const sy = DOT / n.h + (1 - DOT / n.h) * eo;
+          // dot is square, so its two scales differ; the thumbnail is uniform, so
+          // the box takes its true proportions back as it grows
+          const thumb = THUMB / n.w;
+          const sxT = (DOT / n.w) + (thumb - DOT / n.w) * eg;
+          const syT = (DOT / n.h) + (thumb - DOT / n.h) * eg;
+          const sx = sxT + (1 - sxT) * eo;
+          const sy = syT + (1 - syT) * eo;
           boxes[i].style.transform =
             'translate(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px) scale(' + sx.toFixed(4) + ',' + sy.toFixed(4) + ')';
         }
