@@ -16,6 +16,21 @@
 <title>Jewelry — Vuthy Cheam</title>
 <link rel="icon" type="image/png" href="../../assets/icons/logo.png?v=11" media="(prefers-color-scheme: light)">
 <link rel="icon" type="image/png" href="../../assets/icons/logo-white.png?v=11" media="(prefers-color-scheme: dark)">
+<script>
+/* Arrived through a page transition: mark <html> BEFORE the body renders so the
+   cover is already closed on this page's first frame — CSS then pushes the two
+   lines back out. Without this you would see the page for a frame first. */
+(function(){
+  try {
+    if (sessionStorage.getItem('pageTransition') !== '1') return;
+    sessionStorage.removeItem('pageTransition');
+  } catch(e){ return; }
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  /* .pt-grid: this page has a grid now, so its lines come to rest on
+     .hl-1 / .hl-4 at 3% / 97% and hand straight over to them. */
+  document.documentElement.className += ' pt pt-open pt-grid';
+})();
+</script>
 <style>
   :root{
     --paper:#FDFDFD; --ink:#17181C; --accent:#B4371F;
@@ -663,6 +678,116 @@
   .loader-rows span:nth-child(5){ transition-delay:105ms; }
   .loader-rows span:nth-child(6){ transition-delay:175ms; }
   .loader.is-covering .loader-rows span{ transform:translateY(0%); }
+
+  /* ===== Shared site furniture, ported from css/style.css =====
+     This page carries its own complete stylesheet and defines 73 of the same
+     selectors the shared one does (*, html, body, header, .loader, the whole
+     menu system), so linking style.css here would put half of this page in a
+     specificity fight. These are the only pieces needed, copied verbatim —
+     keep them in step with the originals if those change. */
+
+  /* --- grid: 4 verticals, 2 horizontals, plus marks at the crossings --- */
+  .home-lines{ position:fixed; top:0; left:0; right:0; bottom:0; pointer-events:none;
+    /* over the hero video and the pieces below it, but under the header (9996),
+       the cursor (9998) and the loader (9999) — the same relationship the grid
+       has to the CLOSE button on contact and ui-ux */
+    z-index:9995; }
+  .home-lines .hl{
+    position:absolute;
+    top:0; bottom:0;
+    width:1px; height:100%;
+    background:#dfe2e5;
+  }
+  .home-lines .hl-1{ left:3%; }
+  .home-lines .hl-2{ left:33%; }
+  .home-lines .hl-3{ left:67%; }
+  .home-lines .hl-4{ left:97%; }
+  .home-lines .hlh{
+    position:absolute;
+    left:0; right:0;
+    width:100%; height:1px;
+    background:#dfe2e5;
+  }
+  .home-lines .hlh-1{ top:33%; }
+  .home-lines .hlh-2{ top:67%; }
+  .home-lines .plus{
+    position:absolute;
+    transform:translate(calc(-50% + 0.5px), calc(-50% + 0.5px));
+    width:9px; height:9px;
+    z-index:2;
+    color:#b3b9bf;
+  }
+  .home-lines .plus::before,
+  .home-lines .plus::after{
+    content:"";
+    position:absolute;
+    background:currentColor;
+  }
+  .home-lines .plus::before{ left:0; right:0; top:50%; height:1.5px; transform:translateY(-50%); }
+  .home-lines .plus::after{ top:0; bottom:0; left:50%; width:1.5px; transform:translateX(-50%); }
+
+  /* --- CLOSE button, in place of the old logo + wordmark cluster --- */
+  .close-btn{
+    position:absolute; left:3.6rem; top:0.5rem; z-index:20;
+    display:inline-flex; align-items:center; justify-content:center;
+    padding:0.6rem 0.4rem;
+    font-family:var(--sans);
+    font-weight:300;
+    font-size:0.82rem;
+    line-height:1.7;
+    color:var(--ink);
+    text-decoration:none;
+    cursor:pointer;
+    user-select:none;
+  }
+  .close-bracket{ opacity:0; transition:opacity 0.18s ease; }
+  .close-label{ padding:0 0.08em; }        /* room for the brackets to fade into */
+  .close-btn:hover .close-bracket{ opacity:1; }
+  /* .close-btn is absolutely positioned, so it leaves the header's flex flow and
+     .header-right is left as the only in-flow child — justify-content has nothing
+     to space it against and it falls to the left. Pin it to the right itself. */
+  .header-right{ margin-left:auto; }
+
+  /* --- page transition: two lines pull together, then push back out --- */
+  html.pt{ --pt-travel:100%; }
+  html.pt-grid{ --pt-travel:94%; }         /* park on .hl-1 / .hl-4 at 3% / 97% */
+  html.pt::before,
+  html.pt::after{
+    content:'';
+    position:fixed;
+    top:0;
+    width:calc(50% + 1px);
+    height:100%;
+    /* the +0.33px / +0.67px are not fudge: a background-position percentage
+       resolves against (height - image height), so plain 33% lands a pixel
+       short of where the real .hlh sits at top:33% */
+    background:
+      linear-gradient(#dfe2e5, #dfe2e5) 0 calc(33% + 0.33px) / 100% 1px no-repeat,
+      linear-gradient(#dfe2e5, #dfe2e5) 0 calc(67% + 0.67px) / 100% 1px no-repeat,
+      var(--paper);
+    background-origin:border-box;
+    z-index:100000;
+    pointer-events:none;
+  }
+  html.pt::before{ left:0;  border-right:1px solid #dfe2e5; }
+  html.pt::after { right:0; border-left:1px solid #dfe2e5; }
+  html.pt-grid .home-lines .hl-1,
+  html.pt-grid .home-lines .hl-4{ opacity:0; }
+  html.pt-open .loader{ display:none; }
+  html.pt-close::before{ animation:pt-close-l 780ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
+  html.pt-close::after { animation:pt-close-r 780ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
+  html.pt-open::before{ animation:pt-open-l 900ms cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+  html.pt-open::after { animation:pt-open-r 900ms cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+  @keyframes pt-close-l{ from{ transform:translateX(calc(var(--pt-travel) * -1)); } to{ transform:translateX(0); } }
+  @keyframes pt-close-r{ from{ transform:translateX(var(--pt-travel)); } to{ transform:translateX(0); } }
+  @keyframes pt-open-l { from{ transform:translateX(0); } to{ transform:translateX(calc(var(--pt-travel) * -1)); } }
+  @keyframes pt-open-r { from{ transform:translateX(0); } to{ transform:translateX(var(--pt-travel)); } }
+  html.pt-grid.pt-open::before{ animation:pt-open-l 900ms cubic-bezier(0.25, 1, 0.5, 1) forwards,
+                                          pt-fade-l 900ms linear forwards; }
+  html.pt-grid.pt-open::after { animation:pt-open-r 900ms cubic-bezier(0.25, 1, 0.5, 1) forwards,
+                                          pt-fade-r 900ms linear forwards; }
+  @keyframes pt-fade-l{ 0%, 70%{ border-right-color:#dfe2e5; } 100%{ border-right-color:transparent; } }
+  @keyframes pt-fade-r{ 0%, 70%{ border-left-color:#dfe2e5;  } 100%{ border-left-color:transparent;  } }
 </style>
 </head>
 <body>
@@ -680,15 +805,27 @@
     </div>
   </div>
 
+  <div class="home-lines" aria-hidden="true">
+    <span class="hl hl-1"></span>
+    <span class="hl hl-2"></span>
+    <span class="hl hl-3"></span>
+    <span class="hl hl-4"></span>
+    <span class="hlh hlh-1"></span>
+    <span class="hlh hlh-2"></span>
+    <span class="plus" style="left:3%;top:33%"></span>
+    <span class="plus" style="left:3%;top:67%"></span>
+    <span class="plus" style="left:33%;top:33%"></span>
+    <span class="plus" style="left:33%;top:67%"></span>
+    <span class="plus" style="left:67%;top:33%"></span>
+    <span class="plus" style="left:67%;top:67%"></span>
+    <span class="plus" style="left:97%;top:33%"></span>
+    <span class="plus" style="left:97%;top:67%"></span>
+  </div>
+
   <header>
-    <div class="home-cluster">
-      <span class="v-logo" id="vLogo">
-        <span class="v-logo-close">
-          <span class="close-text">Close</span>
-        </span>
-      </span>
-      <a class="home-link" href="../../index.html" id="home-link">[VUTHY CHEAM]</a>
-    </div>
+    <a class="close-btn" href="../../index.html" aria-label="Back to home">
+      <span class="close-bracket" aria-hidden="true">[</span><span class="close-label">CLOSE</span><span class="close-bracket" aria-hidden="true">]</span>
+    </a>
     <div class="header-right">
       <span class="page-title">Jewelry Design</span>
       <a class="return-link" id="returnLink" href="../../index.html#projects">Return</a>
@@ -1035,6 +1172,79 @@
           goToHome('projects');
         });
       }
+    })();
+
+    // ===== Page transition =====
+    // Ported from js/main.js so this page leaves the same way every other page
+    // does: clicking an internal link pulls two lines inward until they meet,
+    // wiping the page blank, and the page you land on pushes them back out.
+    // This page has a grid now, so its lines rest on .hl-1 / .hl-4 at 3% / 97%.
+    (function(){
+      const KEY = 'pageTransition';
+      const CLOSE = 780, OPEN = 900;      // must match the pt-close-* / pt-open-* durations above
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const html = document.documentElement;
+
+      // animationend bubbles, so other animations reach <html> too — only the
+      // cover's own pseudo-elements count
+      function onCoverEnd(fn){
+        const h = function(e){
+          if (e.target !== html || !e.pseudoElement) return;
+          html.removeEventListener('animationend', h);
+          fn();
+        };
+        html.addEventListener('animationend', h);
+      }
+
+      // ---- arriving: the inline head script already put the cover up ----
+      if (html.classList.contains('pt-open')){
+        const done = function(){ html.classList.remove('pt', 'pt-open', 'pt-grid'); };
+        onCoverEnd(done);
+        setTimeout(done, OPEN + 400);      // safety net if animationend never fires
+      }
+
+      // ---- leaving: close the cover, then navigate ----
+      if (reduce) return;
+
+      function isInternal(a){
+        if (!a || !a.getAttribute) return false;
+        const href = a.getAttribute('href');
+        if (!href) return false;
+        if (a.target && a.target !== '_self') return false;
+        if (a.hasAttribute('download')) return false;
+        if (a.hasAttribute('data-copy')) return false;
+        if (/^(#|mailto:|tel:|javascript:)/i.test(href)) return false;
+        return a.origin === window.location.origin &&           // same site only
+               a.pathname !== window.location.pathname;         // not the page we're on
+      }
+
+      let leaving = false;
+      document.addEventListener('click', function(e){
+        if (leaving) return;
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        const link = e.target.closest && e.target.closest('a[href]');
+        if (!isInternal(link)) return;
+
+        e.preventDefault();
+        leaving = true;
+
+        html.classList.add('pt', 'pt-close');
+        if (document.querySelector('.home-lines')) html.classList.add('pt-grid');
+        try { sessionStorage.setItem(KEY, '1'); } catch(_){}   // tells the next page to open
+
+        let gone = false;
+        const go = function(){ if (gone) return; gone = true; window.location.href = link.href; };
+        onCoverEnd(go);
+        setTimeout(go, CLOSE + 200);       // safety net if animationend never fires
+      });
+
+      // the back button can restore a page from bfcache mid-transition — clear the
+      // cover so it isn't left sitting closed over the page
+      window.addEventListener('pageshow', function(e){
+        if (!e.persisted) return;
+        leaving = false;
+        html.classList.remove('pt', 'pt-close', 'pt-open', 'pt-grid');
+      });
     })();
   </script>
 
