@@ -1283,16 +1283,19 @@
      as a dot at all, with its contents and label held back until it has grown.
      !important because several boxes set their own background further down. */
   .contact-boxes.is-intro .contact-box{
-    background:var(--ink) !important;
-    border-color:var(--ink) !important;
+    /* An inset shadow rather than a background, so it lays ink OVER whatever the
+       box already paints — the Instagram gradient included — instead of replacing
+       it. Both values are driven per frame from JS and land exactly on the box's
+       normal appearance (alpha 0 ink, 0.15 border), so when .is-intro is finally
+       dropped nothing changes and there is no pop. */
+    box-shadow:inset 0 0 0 9999px rgba(23, 24, 28, var(--intro-ink, 1));
+    border-color:rgba(23, 24, 28, calc(0.15 + 0.85 * var(--intro-ink, 1)));
     transition:none !important;
   }
-  .contact-boxes.is-intro .contact-box > *,
-  .contact-boxes.is-intro .contact-box::before{ opacity:0; }
-  /* declared outside the intro rule so it is still in effect when .is-intro is
-     dropped — that is what fades the contents in rather than snapping them on */
-  .contact-box > *,
-  .contact-box[data-label]::before{ transition:opacity 0.45s ease; }
+  .contact-boxes.is-intro .contact-box > *{ opacity:var(--intro-show, 0); }
+  /* the label's settled opacity is 0.55, so it has to fade TO that, not to 1 —
+     driving it to 1 left it too dark and it jumped when the intro released */
+  .contact-boxes.is-intro .contact-box::before{ opacity:calc(0.55 * var(--intro-show, 0)); }
 
   .contact-boxes{
     --box-w: 42rem;

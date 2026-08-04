@@ -580,10 +580,11 @@
         // offset is what makes it read as turning rather than simply sliding
         const ey = 1 - easeInOut(Math.min(open * 1.3, 1));
 
-        // hand the boxes back to their real styling partway through the zoom, so
-        // the ink fades to paper and the contents fade in while they are still
-        // moving — releasing them at the very end reads as a snap
-        if (open > 0.55) scroller.classList.remove('is-intro');
+        // the boxes resolve gradually as they grow: the ink lifts across the first
+        // three quarters of the opening and the contents fade up behind it, so
+        // they are already fully themselves before the motion stops
+        scroller.style.setProperty('--intro-ink', (1 - Math.min(open / 0.75, 1)).toFixed(3));
+        scroller.style.setProperty('--intro-show', Math.max(0, Math.min((open - 0.25) / 0.6, 1)).toFixed(3));
 
         for (let i = 0; i < boxes.length; i++){
           const n = nat[i], k = i - mid;
@@ -605,6 +606,8 @@
         done = true;
         boxes.forEach(function(b){ b.style.transform = ''; });
         scroller.classList.remove('is-intro');
+        scroller.style.removeProperty('--intro-ink');
+        scroller.style.removeProperty('--intro-show');
         // the scroll-driven effects measured nothing useful while the boxes were
         // mid-transform; give them one pass now that everything has settled
         window.dispatchEvent(new Event('resize'));
