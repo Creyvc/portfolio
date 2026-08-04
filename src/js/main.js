@@ -1715,6 +1715,14 @@
   const SAMPLES = 120;       // points the curve is drawn through, across the box
   const WAVELENGTH = 0.8;    // one full cycle per this fraction of the box width
   const AMPLITUDE = 1;       // crest height, in viewBox units (100 = box height)
+  // Near the left and right of the window the boxes sweep upward, as though the
+  // whole run were wrapped round a cylinder and curling away at the ends.
+  // Reaches a little past the grid's outermost verticals (.hl-1 at 3%, .hl-4 at
+  // 97%) so the bend has begun by the time a box crosses the line, rather than
+  // starting abruptly at it.
+  const CURL_ZONE = 0.07;    // how far in from each edge the sweep reaches, as a share of the width
+  const CURL = 14;           // how far the very edge lifts, in viewBox units
+  const CURL_POW = 2.4;      // >1 keeps the middle flat and puts the bend at the ends
   let ftrack = null;
   if (field){
     ftrack = document.createElement('div');
@@ -1772,50 +1780,76 @@
   // as the line reaches the middle, and has settled flat again by the far edge.
   // Only one box can be on the line at a time (they never overlap), so a frame
   // touches SLICES elements at most.
-  let waving = -1;
-  function clearWave(){
-    if (waving < 0) return;
-    boxPaths[waving].setAttribute('d', FLAT);
-    waving = -1;
+  // every box that currently carries a shaped path, so it can be flattened again
+  // once it is off screen and out of both the wave and the curl
+  let shaped = [];
+
+  // How far this point of the window has curled away. Zero across the middle,
+  // rising to CURL right at either edge.
+  function curlAt(vx){
+    const W = window.innerWidth;
+    const zone = CURL_ZONE * W;
+    const near = Math.max((zone - vx) / zone, (vx - (W - zone)) / zone);
+    if (near <= 0) return 0;
+    return CURL * Math.pow(Math.min(near, 1), CURL_POW);
   }
 
-  // Top and bottom edges swell in step, so the box bulges where the crest is
-  // rather than shearing. Drawn through SAMPLES points: at 2px apart on a 250px
-  // box the straight run between two of them is far under a pixel of the true
-  // curve, so the edge reads as continuous.
-  function waveD(t, env){
+  // Top and bottom edges swell in step for the wave, so the box bulges where the
+  // crest is rather than shearing. The curl works the other way round: the top
+  // edge lifts while the bottom drops, so the box opens out as it nears the
+  // window's edge instead of sliding upward as one piece. Moving both the same
+  // way was only a translation — nothing actually bent.
+  // Drawn through SAMPLES points: at 2px apart on a 250px box the straight run
+  // between two of them is far under a pixel of the true curve, so the edge
+  // reads as continuous.
+  function boxD(left, width, t, env){
     let d = '';
     for (let i = 0; i <= SAMPLES; i++){
       const u = i / SAMPLES;
       const s = Math.sin(((u - t) / WAVELENGTH) * Math.PI * 2) * env;
-      d += (i ? 'L' : 'M') + (u * 100).toFixed(2) + ',' + (-AMPLITUDE * s).toFixed(2) + ' ';
+      const c = curlAt(left + u * width);
+      d += (i ? 'L' : 'M') + (u * 100).toFixed(2) + ',' + (-AMPLITUDE * s - c).toFixed(2) + ' ';
     }
     for (let i = SAMPLES; i >= 0; i--){
       const u = i / SAMPLES;
       const s = Math.sin(((u - t) / WAVELENGTH) * Math.PI * 2) * env;
-      d += 'L' + (u * 100).toFixed(2) + ',' + (100 + AMPLITUDE * s).toFixed(2) + ' ';
+      const c = curlAt(left + u * width);
+      d += 'L' + (u * 100).toFixed(2) + ',' + (100 + AMPLITUDE * s + c).toFixed(2) + ' ';
     }
     return d + 'Z';
   }
   function syncWave(){
     if (!boxPaths.length) return;
     const vw = window.innerWidth / 100;
-    const cx = window.innerWidth / 2;
-    const half = (28 / 2) * (window.innerHeight / 100);   // half a 28vh box, in px
-    let hit = -1, t = 0;
-    for (let k = Math.max(0, current - 1); k <= Math.min(boxCx.length - 1, current + 1); k++){
-      const x = boxCx[k] * vw - scale.scrollLeft;         // box centre, in the viewport
-      if (Math.abs(x - cx) < half){
-        hit = k;
-        t = (cx - (x - half)) / (half * 2);               // 0 at the near edge, 1 at the far
-        break;
-      }
-    }
-    if (hit !== waving) clearWave();
-    if (hit < 0) return;
-    waving = hit;
+    const W = window.innerWidth, cx = W / 2;
+    const width = 28 * (window.innerHeight / 100);   // a 28vh box, in px
+    const half = width / 2;
 
-    boxPaths[hit].setAttribute('d', waveD(t, Math.sin(Math.PI * t)));
+    // only the boxes actually on screen can be bent, and there are never more
+    // than a handful of those however long the run is
+    const lo = Math.max(0, Math.floor((scale.scrollLeft / vw - PAD) / SPAN) - 1);
+    const hi = Math.min(boxCx.length - 1, Math.ceil(((scale.scrollLeft + W) / vw - PAD) / SPAN) + 1);
+
+    const next = [];
+    for (let k = lo; k <= hi; k++){
+      const centre = boxCx[k] * vw - scale.scrollLeft;
+      const left = centre - half;
+      if (left > W || left + width < 0) continue;
+
+      // the wave only runs while the centre line is actually inside the box
+      let t = 0, env = 0;
+      if (Math.abs(centre - cx) < half){
+        t = (cx - left) / width;
+        env = Math.sin(Math.PI * t);
+      }
+      boxPaths[k].setAttribute('d', boxD(left, width, t, env));
+      next.push(k);
+    }
+
+    for (let i = 0; i < shaped.length; i++){
+      if (next.indexOf(shaped[i]) === -1) boxPaths[shaped[i]].setAttribute('d', FLAT);
+    }
+    shaped = next;
   }
 
   // The centre line reaches the foot of the ruler, but pulls up above the numbers
