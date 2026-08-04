@@ -29,18 +29,20 @@
        83.5% is where .scale is centred, + half its 3.6rem band = its bottom edge */
     height:calc(83.5% + 1.8rem);
   }
-  /* Sits just under the foot of that line, on the same 50% centre. Built from
-     borders rather than a glyph so it stays crisp at any size, and tied to the
-     same calc as .hl-mid's height so it follows if the ruler moves. */
+  /* Sits just under the foot of that line, on the same 50% centre, apex up so it
+     points at the line. Built from borders rather than a glyph so it stays crisp
+     at any size: a zero-size box whose coloured bottom border tapers to a point
+     between the two transparent side borders. Tied to the same calc as .hl-mid's
+     height, so line and arrow move together if the ruler is repositioned. */
   .home-lines .mid-arrow{
     position:absolute;
     left:50%;
-    top:calc(83.5% + 1.8rem + 0.35rem);
+    top:calc(83.5% + 1.8rem + 0.7rem);
     transform:translateX(-50%);
     width:0; height:0;
-    border-left:0.5rem solid var(--accent);
-    border-top:0.32rem solid transparent;
-    border-bottom:0.32rem solid transparent;
+    border-bottom:0.875rem solid var(--ink);
+    border-left:0.5rem solid transparent;
+    border-right:0.5rem solid transparent;
   }
   .home-lines .hlh{
     position:absolute;
@@ -114,6 +116,10 @@
     opacity:0.75;
     white-space:nowrap;
   }
+  /* the number currently on the centre line reads [7] rather than 7 */
+  .num-bracket{ opacity:0; transition:opacity 0.18s ease; }
+  .scale-tick.is-current .scale-num{ opacity:1; }
+  .scale-tick.is-current .num-bracket{ opacity:1; }
 
   /* A single field filling columns 2 and 3 across all three rows — the six cells
      read as one shape rather than six. Bounded by .hl-2 (33%) and .hl-4 (97%) and

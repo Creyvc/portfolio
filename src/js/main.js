@@ -1614,6 +1614,7 @@
   track.className = 'scale-track';
   track.style.width = (PAD * 2 + (total - 1) * GAP) + 'vw';
 
+  const majors = [];
   for (let i = 0; i < total; i++){
     const tick = document.createElement('span');
     tick.className = 'scale-tick';
@@ -1622,12 +1623,47 @@
       tick.classList.add('is-major');
       const num = document.createElement('span');
       num.className = 'scale-num';
-      num.textContent = i / STEP + 1;
+      // Brackets are always in the layout at opacity 0 and only fade in, so the
+      // number never shifts as it takes them — same trick as the CLOSE button.
+      const lb = document.createElement('span');
+      lb.className = 'num-bracket';
+      lb.textContent = '[';
+      const rb = document.createElement('span');
+      rb.className = 'num-bracket';
+      rb.textContent = ']';
+      num.appendChild(lb);
+      num.appendChild(document.createTextNode(i / STEP + 1));
+      num.appendChild(rb);
       tick.appendChild(num);
+      majors.push(tick);
     }
     track.appendChild(tick);
   }
   scale.appendChild(track);
+
+  // Bracket whichever number is sitting on the centre line. Its index comes
+  // straight out of scrollLeft rather than from measuring the ticks, so it stays
+  // free no matter how many hundred are in the track: the first major is PAD
+  // across, they repeat every SPAN, and both are vw so they follow a resize.
+  let current = -1;
+  function syncCurrent(){
+    const vw = window.innerWidth / 100;
+    const k = Math.max(0, Math.min(majors.length - 1,
+      Math.round((scale.scrollLeft + window.innerWidth / 2 - PAD * vw) / (SPAN * vw))));
+    if (k === current) return;
+    if (current >= 0) majors[current].classList.remove('is-current');
+    majors[k].classList.add('is-current');
+    current = k;
+  }
+
+  let ticking = false;
+  scale.addEventListener('scroll', function(){
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function(){ ticking = false; syncCurrent(); });
+  }, { passive:true });
+  window.addEventListener('resize', syncCurrent);
+  syncCurrent();
 
   // Let the ruler be driven from anywhere on the page, not just from the band
   // itself — the band is only ~3.6rem tall, so requiring the pointer to be over
