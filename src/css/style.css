@@ -147,9 +147,21 @@
     position:absolute;
     width:28vh; height:28vh;
     margin-left:-14vh;               /* left is the box's centre, not its edge */
-    /* solid, no border: against an ink fill a #dfe2e5 rim would read as a frame
-       around the box rather than as part of it */
+    /* The ink is carried by the slices inside, not by the box: as the centre
+       line crosses, main.js pushes each slice in and out of depth on a phase
+       delay so a wave travels through the face. A fill here as well would sit
+       flat behind them and give the depth away. */
+    perspective:620px;
+    transform-style:preserve-3d;
+  }
+  .scale-slice{
+    position:absolute;
+    top:0; bottom:0;
     background:var(--ink);
+    backface-visibility:hidden;
+    /* the overlap has to cover the parting between slices while they are turned,
+       not just when the box is flat */
+    width:calc(100% / 48 + 4px);
   }
   /* Free horizontally, but only ever resting on one of three lines: the foot of
      row 1, the head of row 2, the foot of row 2.

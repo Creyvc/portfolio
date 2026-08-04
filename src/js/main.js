@@ -1703,6 +1703,17 @@
   // Math.random: the scatter looks arbitrary but is identical on every load, so
   // the page does not reshuffle itself when you navigate back to it.
   const field = document.getElementById('scaleField');
+  const boxCx = [];        // each box's centre, in vw of track space
+  const boxSlices = [];    // its slice elements, left to right
+  const SLICES = 48;       // must match the width divisor in .scale-slice
+  const WAVES = 1.2;       // cycles of the wave across one box
+  // The wave has to read as one surface breathing, not as a row of louvres, so
+  // the slices are many and the motion small: at these values neighbours never
+  // part far enough to show paper through the overlap. Depth does most of the
+  // work — under the perspective it scales each slice slightly, which bends the
+  // silhouette smoothly — and the rotation is only a hint to catch the turn.
+  const MAXROT = 5;        // degrees a slice turns at the crest
+  const MAXZ = 22;         // px a slice travels in depth
   let ftrack = null;
   if (field){
     ftrack = document.createElement('div');
@@ -1734,10 +1745,65 @@
 
       const box = document.createElement('span');
       box.className = 'scale-box ' + SPOTS[s];
-      box.style.left = (PAD + (k + NEAR + rnd() * SPREAD) * SPAN) + 'vw';
+      const cx = PAD + (k + NEAR + rnd() * SPREAD) * SPAN;   // centre, in vw
+      box.style.left = cx + 'vw';
+      boxCx.push(cx);
+
+      const slices = [];
+      for (let j = 0; j < SLICES; j++){
+        const sl = document.createElement('span');
+        sl.className = 'scale-slice';
+        sl.style.left = (j * 100 / SLICES) + '%';
+        box.appendChild(sl);
+        slices.push(sl);
+      }
+      boxSlices.push(slices);
+
       ftrack.appendChild(box);
     }
     field.appendChild(ftrack);
+  }
+
+  // While the centre line is inside a box, a wave runs through it: each slice is
+  // pushed in and out of depth on a phase delay, so the face ripples rather than
+  // tilting as one plane. The envelope is sin(pi * t), t being how far the line
+  // has crossed the box — so it swells from nothing at the leading edge, peaks
+  // as the line reaches the middle, and has settled flat again by the far edge.
+  // Only one box can be on the line at a time (they never overlap), so a frame
+  // touches SLICES elements at most.
+  let waving = -1;
+  function clearWave(){
+    if (waving < 0) return;
+    const sl = boxSlices[waving];
+    for (let j = 0; j < sl.length; j++) sl[j].style.transform = '';
+    waving = -1;
+  }
+  function syncWave(){
+    if (!boxSlices.length) return;
+    const vw = window.innerWidth / 100;
+    const cx = window.innerWidth / 2;
+    const half = (28 / 2) * (window.innerHeight / 100);   // half a 28vh box, in px
+    let hit = -1, t = 0;
+    for (let k = Math.max(0, current - 1); k <= Math.min(boxCx.length - 1, current + 1); k++){
+      const x = boxCx[k] * vw - scale.scrollLeft;         // box centre, in the viewport
+      if (Math.abs(x - cx) < half){
+        hit = k;
+        t = (cx - (x - half)) / (half * 2);               // 0 at the near edge, 1 at the far
+        break;
+      }
+    }
+    if (hit !== waving) clearWave();
+    if (hit < 0) return;
+    waving = hit;
+
+    const env = Math.sin(Math.PI * t);
+    const sl = boxSlices[hit];
+    for (let j = 0; j < sl.length; j++){
+      const phase = ((j + 0.5) / sl.length - t) * Math.PI * 2 * WAVES;
+      const z = MAXZ * env * Math.sin(phase);
+      const rot = MAXROT * env * Math.cos(phase);
+      sl[j].style.transform = 'translateZ(' + z.toFixed(2) + 'px) rotateY(' + rot.toFixed(2) + 'deg)';
+    }
   }
 
   function sync(){
@@ -1745,6 +1811,7 @@
     syncArc();
     // the boxes do not scroll themselves — they are carried by the ruler
     if (ftrack) ftrack.style.transform = 'translateX(' + (-scale.scrollLeft) + 'px)';
+    syncWave();
   }
 
   let ticking = false;
