@@ -1588,20 +1588,24 @@
 
 /* ===== Measure scale =====
    A ruler across the page: a short tick at every step and a long numbered one
-   every fifth, 30 numbers in all. Built here rather than written out as 150
-   spans of markup — the page only has to supply the empty container. */
+   every STEP, 30 numbers in all. Built here rather than written out as several
+   hundred spans of markup — the page only has to supply the empty container. */
 (function(){
   const scale = document.getElementById('scale');
   if (!scale) return;
 
   const MAJORS = 30;   // numbered ticks
   const STEP = 30;     // ticks per number, so every 30th one is long and labelled
-  // One number to the next spans one and a half grid cells. A cell is 3% -> 33%
-  // of the viewport, so 1.5 of them is 45vw, and the ticks that make up that run
-  // divide it evenly — raise or lower STEP alone to change how finely it is
-  // divided, and the 45vw between numbers stays put.
-  const GAP = 45 / STEP;
-  const PAD = 3;       // vw before the first tick, landing it on .hl-1 at 3%
+  // One number to the next spans a single grid column. The columns are not equal
+  // — 30% / 34% / 30% — and this takes the wider middle one, 33% -> 67%, so 34vw.
+  // The ticks in between divide that run evenly: raise or lower STEP alone to
+  // change how finely it is divided, and the 34vw between numbers stays put.
+  const SPAN = 34;
+  const GAP = SPAN / STEP;
+  // Half a viewport of empty track at each end, so the run can be scrolled until
+  // the 1 sits on the centre line and again until the 30 does. Without it the
+  // first and last ticks could only ever reach the left and right edges.
+  const PAD = 50;      // vw
 
   // Stops on the last numbered tick: 29 full runs plus the 30 itself, so the
   // ruler ends on a number rather than trailing minor ticks past it.
@@ -1624,4 +1628,44 @@
     track.appendChild(tick);
   }
   scale.appendChild(track);
+
+  // Let the ruler be driven from anywhere on the page, not just from the band
+  // itself — the band is only ~3.6rem tall, so requiring the pointer to be over
+  // it made the thing feel like it was hiding. Same approach as the contact
+  // boxes: window-level listeners, whichever axis the gesture favours wins, and
+  // control is handed back to the page once the run is exhausted.
+  function maxScroll(){
+    return scale.scrollWidth - scale.clientWidth;
+  }
+
+  window.addEventListener('wheel', function(e){
+    const max = maxScroll();
+    if (max <= 0) return;
+    let d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (e.deltaMode === 1) d *= 16;                    // lines -> px
+    else if (e.deltaMode === 2) d *= scale.clientWidth;  // pages -> px
+    if (d === 0) return;
+    const atStart = scale.scrollLeft <= 0;
+    const atEnd = scale.scrollLeft >= max - 1;
+    if ((d < 0 && atStart) || (d > 0 && atEnd)) return;
+    scale.scrollLeft += d;
+    e.preventDefault();
+  }, { passive:false });
+
+  let startX = 0, startY = 0, startLeft = 0;
+  window.addEventListener('touchstart', function(e){
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    startLeft = scale.scrollLeft;
+  }, { passive:true });
+  window.addEventListener('touchmove', function(e){
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    const move = Math.abs(dy) > Math.abs(dx) ? dy : dx;
+    const max = maxScroll();
+    const clamped = Math.max(0, Math.min(max, startLeft - move));
+    scale.scrollLeft = clamped;
+    // hold the page still only while the ruler still has somewhere to go
+    if (clamped > 0 && clamped < max) e.preventDefault();
+  }, { passive:false });
 })();

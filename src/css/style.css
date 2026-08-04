@@ -38,15 +38,19 @@
   /* ===== Measure scale =====
      The reference is a vertical ruler; this is that turned on its side and then
      flipped, so the ticks rise from a shared bottom edge and the numbers sit
-     above them rather than below. Spans 3% -> 97%,
-     the same span as .hl-1 -> .hl-4, so its ends sit on the grid's outer lines.
+     above them rather than below. The track carries half a viewport of padding
+     at each end (see main.js), so it rests with the 1 on the centre line and
+     scrolls until the 30 lands there too.
      No z-index: it stays below .home-lines (z-index 1), so the grid crosses it
      the way it crosses the boxes on the contact page. Ticks are built by
      main.js — see the "Measure scale" block there. */
   .scale{
     position:fixed;
     left:0; right:0;
-    top:50%;
+    /* 83.5% is the midpoint of row 3 (the 67% rule to the foot of the page), and
+       -50% centres the whole band on it — numbers and ticks together, rather
+       than standing the tick baseline on that line. */
+    top:83.5%;
     transform:translateY(-50%);
     height:3.6rem;                   /* tick band plus the numbers above it */
     overflow-x:auto;                 /* one number to the next is 1.5 grid cells,
