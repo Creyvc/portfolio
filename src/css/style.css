@@ -35,6 +35,46 @@
      fly-out, which never runs anywhere else. */
   .home-lines.page-lines{ z-index:1; }
 
+  /* ===== Measure scale =====
+     The reference is a vertical ruler; this is that turned on its side, so the
+     ticks stand up from a shared top edge and grow downward. Spans 3% -> 97%,
+     the same span as .hl-1 -> .hl-4, so its ends sit on the grid's outer lines.
+     No z-index: it stays below .home-lines (z-index 1), so the grid crosses it
+     the way it crosses the boxes on the contact page. Ticks are built by
+     main.js — see the "Measure scale" block there. */
+  .scale{
+    position:fixed;
+    left:3%; right:3%;
+    top:50%;
+    transform:translateY(-50%);
+    display:flex;
+    justify-content:space-between;   /* first tick on 3%, last on 97% */
+    align-items:flex-start;          /* all ticks hang from one line */
+    pointer-events:none;
+  }
+  .scale-tick{
+    position:relative;
+    width:1px; height:1.1rem;
+    background:#a8adb3;
+  }
+  .scale-tick.is-major{
+    width:2px; height:2.1rem;
+    background:var(--ink);
+  }
+  .scale-num{
+    position:absolute;
+    top:calc(100% + 0.55rem);
+    left:50%;
+    transform:translateX(-50%);
+    font-family:var(--sans);
+    font-weight:300;
+    font-size:0.62rem;
+    line-height:1;
+    color:var(--ink);
+    opacity:0.75;
+    white-space:nowrap;
+  }
+
   /* A single field filling columns 2 and 3 across all three rows — the six cells
      read as one shape rather than six. Bounded by .hl-2 (33%) and .hl-4 (97%) and
      the full viewport height, so its edges land exactly on the grid. z-index 0

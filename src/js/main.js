@@ -1585,3 +1585,30 @@
     document.querySelectorAll('.home-blurb .blurb-text').forEach(scramble);
   };
 })();
+
+/* ===== Measure scale =====
+   A ruler across the page: a short tick at every step and a long numbered one
+   every fifth, 30 numbers in all. Built here rather than written out as 150
+   spans of markup — the page only has to supply the empty container. */
+(function(){
+  const scale = document.getElementById('scale');
+  if (!scale) return;
+
+  const MAJORS = 30;   // numbered ticks
+  const STEP = 5;      // ticks per number, so every 5th one is long and labelled
+
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < MAJORS * STEP; i++){
+    const tick = document.createElement('span');
+    tick.className = 'scale-tick';
+    if (i % STEP === 0){
+      tick.classList.add('is-major');
+      const num = document.createElement('span');
+      num.className = 'scale-num';
+      num.textContent = i / STEP + 1;
+      tick.appendChild(num);
+    }
+    frag.appendChild(tick);
+  }
+  scale.appendChild(frag);
+})();
