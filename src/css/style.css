@@ -35,6 +35,20 @@
      fly-out, which never runs anywhere else. */
   .home-lines.page-lines{ z-index:1; }
 
+  /* A single field filling columns 2 and 3 across all three rows — the six cells
+     read as one shape rather than six. Bounded by .hl-2 (33%) and .hl-4 (97%) and
+     the full viewport height, so its edges land exactly on the grid. z-index 0
+     keeps it under .home-lines, which means the rules and plus marks still cross
+     it instead of being buried. */
+  .grid-fill{
+    position:fixed;
+    top:0; bottom:0;
+    left:33%; right:3%;
+    background:#efefef;
+    z-index:0;
+    pointer-events:none;
+  }
+
   /* ===== Intro grid-build (loader -> home) =====
      The grid lines draw out from center while the plus marks fly out from
      the center to their own intersections, then the page content reveals.
@@ -1715,6 +1729,9 @@
     font-size:clamp(3rem, 10vw, 8rem);
     font-variant-numeric:tabular-nums;
   }
+  /* one span per digit so the count can dissolve character by character —
+     inline-block so each carries its own opacity without reflowing the rest */
+  .loader-char{ display:inline-block; }
   .loader-pct{
     display:inline-block;
     width:clamp(1.2rem, 2.8vw, 2.1rem);

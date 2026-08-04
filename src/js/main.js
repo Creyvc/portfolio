@@ -33,10 +33,69 @@
         return;
       }
 
-      const PreloaderDelay = 5000;   // total ms scroll stays locked until the grid build + reveal finish
+      // ===== Loader outro =====
+      // The count lands on 100 and then comes apart instead of cutting: each
+      // character takes its turn cycling through glyphs while fading on its own
+      // clock, so the number dissolves left to right rather than all at once.
+      // The percent mark goes last, once the final digit has started. The loader
+      // bar is deliberately left alone — it has to stay exactly where it is to
+      // become the grid's first line.
+      const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>[]{}/=+*#%';
+      const OUTRO_HOLD = 200;      // let 100 actually land before it comes apart
+      const OUTRO_TICK = 40;       // glyph cycle rate, matching the home-text scramble
+      const OUTRO_STEPS = 10;      // ticks each character spends dissolving
+      const OUTRO_STAGGER = 3;     // ticks between one character starting and the next
+      const OUTRO_MS = OUTRO_HOLD + ((3 - 1) * OUTRO_STAGGER + OUTRO_STEPS) * OUTRO_TICK;  // "100" is three characters
+
+      const pctEl = loader.querySelector('.loader-pct');
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const PreloaderDelay = 5000 + OUTRO_MS;   // total ms scroll stays locked until the grid build + reveal finish
       const countDuration = 1900;    // counter run time
       const start = performance.now();
       const ease = t => 1 - Math.pow(1 - t, 3);
+
+      // Splits the settled count into per-character spans and dissolves them in
+      // sequence, then hands over to the grid build.
+      function dissolveCount(done){
+        if (!countEl || reduce){
+          if (pctEl) pctEl.style.opacity = '0';
+          setTimeout(done, reduce ? 0 : OUTRO_MS);
+          return;
+        }
+        const spans = countEl.textContent.split('').map(function(c){
+          const s = document.createElement('span');
+          s.className = 'loader-char';
+          s.textContent = c;
+          return s;
+        });
+        countEl.textContent = '';
+        spans.forEach(function(s){ countEl.appendChild(s); });
+
+        const lastStart = (spans.length - 1) * OUTRO_STAGGER;
+        const totalSteps = lastStart + OUTRO_STEPS;
+        let step = 0;
+        setTimeout(function(){
+          const id = setInterval(function(){
+            step++;
+            for (let i = 0; i < spans.length; i++){
+              const local = step - i * OUTRO_STAGGER;   // this character's own progress
+              if (local <= 0) continue;                 // not its turn yet — still reads as the real digit
+              if (local >= OUTRO_STEPS){ spans[i].style.opacity = '0'; continue; }
+              spans[i].textContent = GLYPHS[(Math.random() * GLYPHS.length) | 0];
+              spans[i].style.opacity = (1 - local / OUTRO_STEPS).toFixed(3);
+            }
+            if (pctEl){
+              const pl = step - lastStart;              // trails the final digit
+              if (pl > 0) pctEl.style.opacity = (0.5 * Math.max(0, 1 - pl / OUTRO_STEPS)).toFixed(3);
+            }
+            if (step >= totalSteps){
+              clearInterval(id);
+              done();
+            }
+          }, OUTRO_TICK);
+        }, OUTRO_HOLD);
+      }
 
       function frame(now){
         const t = Math.min((now - start) / countDuration, 1);
@@ -46,6 +105,11 @@
         if (t < 1){
           requestAnimationFrame(frame);
         } else {
+          dissolveCount(buildGrid);
+        }
+      }
+
+      function buildGrid(){
           loader.style.display = 'none';              // hide instantly (no fade) — the loader bar connects straight into the spinning line
           document.body.classList.add('grid-build');  // hide the real grid; JS spins the line then flies it out
           const EASE = 'cubic-bezier(0.65, 0, 0.35, 1)', DUR = 2000, HOLD = 300;
@@ -92,7 +156,6 @@
             document.body.classList.add('loaded');       // reveal the blurbs / letters
             if (window.__homeScramble) window.__homeScramble();   // scramble-in the home text
           }, BUILD_DURATION);
-        }
       }
       requestAnimationFrame(frame);
 
