@@ -130,24 +130,37 @@
      overflow-y hidden, so anything reaching up into rows 1 and 2 would be cut
      off. The layer is translated by the ruler's scrollLeft each frame instead of
      scrolling itself, which keeps the two exactly in step with no second
-     scrollbar. z-index 0 keeps it under .home-lines so the grid crosses it. */
+     scrollbar. z-index 2 puts it above .home-lines (1), so the boxes cover the
+     rules and plus marks rather than being crossed by them. */
   .scale-field{
     position:fixed; inset:0;
     overflow:hidden;
     pointer-events:none;
-    z-index:0;
+    z-index:2;
   }
   .scale-field-track{ position:absolute; inset:0; will-change:transform; }
+  /* Square, and sized in vh rather than rem so it scales with the rows it has to
+     sit inside. The rows are percentages of the viewport height, so a rem-sized
+     box keeps its pixel height as the window shortens and eventually overruns
+     row 1; at 28vh it always leaves the same 5vh of headroom. */
   .scale-box{
     position:absolute;
-    width:9rem; height:6rem;
-    margin-left:-4.5rem;             /* centre it on its midpoint */
-    border:1px solid #dfe2e5;
+    width:28vh; height:28vh;
+    margin-left:-14vh;               /* left is the box's centre, not its edge */
+    /* solid, no border: against an ink fill a #dfe2e5 rim would read as a frame
+       around the box rather than as part of it */
+    background:var(--ink);
   }
-  /* the three resting places: foot of row 1, head of row 2, foot of row 2 */
-  .scale-box.is-r1b{ top:calc(33% - 6rem); }
+  /* Free horizontally, but only ever resting on one of three lines: the foot of
+     row 1, the head of row 2, the foot of row 2.
+     The +1px on the two bottom-anchored spots is a fill-rule correction, not a
+     nudge. A box ending at 33% paints its last row at 33% - 1, while the rule
+     itself paints AT 33%, so the border landed one row short of the line and the
+     two read as a doubled edge with a seam. The top-anchored spot never had the
+     problem: its first row is 33%, exactly where the rule is. */
+  .scale-box.is-r1b{ top:calc(33% - 28vh + 1px); }
   .scale-box.is-r2t{ top:33%; }
-  .scale-box.is-r2b{ top:calc(67% - 6rem); }
+  .scale-box.is-r2b{ top:calc(67% - 28vh + 1px); }
 
   /* the number currently on the centre line reads [7] rather than 7 */
   .num-bracket{ opacity:0; transition:opacity 0.18s ease; }

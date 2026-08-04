@@ -1697,21 +1697,44 @@
     lo = nlo; hi = nhi;
   }
 
-  // One box per gap between numbers — 29 of them, each centred on the midpoint
-  // between one number and the next. Vertical placement rotates through three
-  // resting places so the run does not read as a single straight row; the order
-  // is a fixed list rather than random, so the layout is the same on every load.
+  // One box per gap between numbers — 29 of them — but loose inside its gap
+  // rather than pinned to the midpoint, and free vertically instead of dropping
+  // onto one of a few fixed lines. Positions come from a seeded generator, not
+  // Math.random: the scatter looks arbitrary but is identical on every load, so
+  // the page does not reshuffle itself when you navigate back to it.
   const field = document.getElementById('scaleField');
   let ftrack = null;
   if (field){
     ftrack = document.createElement('div');
     ftrack.className = 'scale-field-track';
+
+    let seed = 20260804;
+    const rnd = function(){
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      return seed / 0x7fffffff;
+    };
+
+    // Held off the very ends of the gap so two neighbours can never collide. The
+    // closest they get is (1 - SPREAD) of a gap: 0.65 x 34vw = 309px against a
+    // 28vh box, so 57px clear at the worst case on a 900px-tall window. Note the
+    // box is sized off the viewport HEIGHT and the gap off its WIDTH, so a short
+    // wide window has the most room and a tall narrow one the least — check this
+    // clearance if either constant changes.
+    const NEAR = 0.325, SPREAD = 0.35;
+    // Vertically they only ever land on one of three lines (see the CSS). The
+    // pick never repeats the previous one, so the run cannot stall into three or
+    // four boxes at the same height, which would read as a deliberate row.
     const SPOTS = ['is-r1b', 'is-r2t', 'is-r2b'];
-    const ORDER = [0, 2, 1, 2, 0, 1, 1, 2, 0];
+    let prev = -1;
+
     for (let k = 0; k < MAJORS - 1; k++){
+      let s = Math.floor(rnd() * SPOTS.length);
+      if (s === prev) s = (s + 1 + Math.floor(rnd() * (SPOTS.length - 1))) % SPOTS.length;
+      prev = s;
+
       const box = document.createElement('span');
-      box.className = 'scale-box ' + SPOTS[ORDER[k % ORDER.length]];
-      box.style.left = (PAD + (k + 0.5) * SPAN) + 'vw';
+      box.className = 'scale-box ' + SPOTS[s];
+      box.style.left = (PAD + (k + NEAR + rnd() * SPREAD) * SPAN) + 'vw';
       ftrack.appendChild(box);
     }
     field.appendChild(ftrack);
