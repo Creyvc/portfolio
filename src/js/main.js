@@ -1900,4 +1900,46 @@
     // hold the page still only while the ruler still has somewhere to go
     if (clamped > 0 && clamped < max) e.preventDefault();
   }, { passive:false });
+
+  // ===== Entrance =====
+  // The ruler arrives already run out to 30 and rewinds to 1, fast at first and
+  // easing right down as it arrives, so it settles onto the number instead of
+  // stopping dead. Everything else — the brackets, the arc, the wave, the boxes
+  // — is driven off scrollLeft, so it all plays through on its own as the run
+  // goes by; this only has to move the scroll position.
+  (function(){
+    const REWIND = 2800;   // ms end to end
+    // Exponential ease-out, so the two halves of the run read as clearly
+    // different: it leaves at speed and has covered most of the ruler almost at
+    // once, then spends the rest of the time easing the last stretch in. A
+    // polynomial curve spreads the slowing out too evenly to feel like two
+    // phases; this one is unmistakably fast, then slow.
+    const easeOut = x => x >= 1 ? 1 : 1 - Math.pow(2, -10 * x);
+
+    const max = maxScroll();
+    if (max <= 0) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    scale.scrollLeft = max;      // set before the first paint, so 1 is never shown first
+    sync();
+
+    let cancelled = false;
+    const stop = function(){ cancelled = true; };
+    window.addEventListener('wheel', stop, { passive:true, once:true });
+    window.addEventListener('touchstart', stop, { passive:true, once:true });
+
+    // let the page transition finish opening before the run starts
+    const delay = document.documentElement.classList.contains('pt-open') ? 620 : 140;
+    setTimeout(function(){
+      if (cancelled) return;
+      const start = performance.now();
+      (function step(now){
+        if (cancelled) return;                   // hand over the moment it is touched
+        const t = Math.min((now - start) / REWIND, 1);
+        scale.scrollLeft = max * (1 - easeOut(t));
+        sync();
+        if (t < 1) requestAnimationFrame(step);
+      })(start);
+    }, delay);
+  })();
 })();
