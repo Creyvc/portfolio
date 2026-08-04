@@ -862,6 +862,21 @@
   @keyframes pt-fade-l{ 0%, 70%{ border-right-color:#dfe2e5; } 100%{ border-right-color:transparent; } }
   @keyframes pt-fade-r{ 0%, 70%{ border-left-color:#dfe2e5;  } 100%{ border-left-color:transparent;  } }
 
+  /* The jewelry page alone runs the wipe at its own pace: a long, deliberate
+     close and a quick open, so the run of the ruler behind it is not held up.
+     Every other page keeps the shared 780 / 900. The class sits on <html> in
+     jewelry.html itself, so it is there for the close (leaving the page) as well
+     as the open (arriving at it). The three-class .pt-jw.pt-grid.pt-open rules
+     are needed to outrank .pt-grid.pt-open, which matches equally otherwise. */
+  html.pt-jw.pt-close::before{ animation:pt-close-l 1120ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
+  html.pt-jw.pt-close::after { animation:pt-close-r 1120ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
+  html.pt-jw.pt-open::before{ animation:pt-open-l 360ms cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+  html.pt-jw.pt-open::after { animation:pt-open-r 360ms cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+  html.pt-jw.pt-grid.pt-open::before{ animation:pt-open-l 360ms cubic-bezier(0.25, 1, 0.5, 1) forwards,
+                                                 pt-fade-l 360ms linear forwards; }
+  html.pt-jw.pt-grid.pt-open::after { animation:pt-open-r 360ms cubic-bezier(0.25, 1, 0.5, 1) forwards,
+                                                 pt-fade-r 360ms linear forwards; }
+
   .h-bottom-line{
     position:fixed;
     left:0;

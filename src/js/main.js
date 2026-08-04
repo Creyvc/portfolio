@@ -818,7 +818,12 @@
     // plain CSS animation, so this only has to close it and follow the link.
     (function(){
       const KEY = 'pageTransition';
-      const CLOSE = 780, OPEN = 900;      // must match the pt-close-* / pt-open-* durations in style.css
+      // must match the pt-close-* / pt-open-* durations in style.css, which the
+      // jewelry page overrides via .pt-jw — these are only the safety nets that
+      // fire if animationend never does, so they have to track whichever set of
+      // durations this document is actually running
+      const jw = document.documentElement.classList.contains('pt-jw');
+      const CLOSE = jw ? 1120 : 780, OPEN = jw ? 360 : 900;
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const html = document.documentElement;
 
@@ -865,10 +870,15 @@
         e.preventDefault();
         leaving = true;
 
-        // anchor to the grid only if this page actually has one to anchor to;
-        // the page we are heading for makes the same call for itself in its head
+        // Anchor the closing lines to the grid only on the home page, whose hero
+        // grid is a plain .home-lines. Every other page carries .page-lines — a
+        // copy of the grid drawn over its content — and there the lines pull in
+        // from the page edges instead, which is where the opening wipe left them
+        // on the way in. Matching any .home-lines started them on 3% / 97%, so
+        // leaving one of those pages the lines appeared inset rather than
+        // sweeping in from the ends.
         html.classList.add('pt', 'pt-close');
-        if (document.querySelector('.home-lines')) html.classList.add('pt-grid');
+        if (!jw && document.querySelector('.home-lines')) html.classList.add('pt-grid');
         try { sessionStorage.setItem(KEY, '1'); } catch(_){}   // tells the next page to open
 
         let gone = false;
