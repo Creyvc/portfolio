@@ -1704,16 +1704,17 @@
   // the page does not reshuffle itself when you navigate back to it.
   const field = document.getElementById('scaleField');
   const boxCx = [];        // each box's centre, in vw of track space
-  const boxSlices = [];    // its slice elements, left to right
-  const SLICES = 48;       // must match the width divisor in .scale-slice
-  const WAVES = 1.2;       // cycles of the wave across one box
+  const boxPaths = [];     // the filled path that draws each box
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  const FLAT = 'M0,0 L100,0 L100,100 L0,100 Z';   // the box at rest
   // The wave has to read as one surface breathing, not as a row of louvres, so
   // the slices are many and the motion small: at these values neighbours never
-  // part far enough to show paper through the overlap. Depth does most of the
-  // work — under the perspective it scales each slice slightly, which bends the
-  // silhouette smoothly — and the rotation is only a hint to catch the turn.
-  const MAXROT = 5;        // degrees a slice turns at the crest
-  const MAXZ = 22;         // px a slice travels in depth
+  // part far enough to show paper through the overlap. Depth does the work —
+  // under the perspective it scales each slice slightly, which bends the
+  // silhouette smoothly — and the tilt is only a hint to catch the turn.
+  const SAMPLES = 120;       // points the curve is drawn through, across the box
+  const WAVELENGTH = 0.8;    // one full cycle per this fraction of the box width
+  const AMPLITUDE = 1;       // crest height, in viewBox units (100 = box height)
   let ftrack = null;
   if (field){
     ftrack = document.createElement('div');
@@ -1749,15 +1750,15 @@
       box.style.left = cx + 'vw';
       boxCx.push(cx);
 
-      const slices = [];
-      for (let j = 0; j < SLICES; j++){
-        const sl = document.createElement('span');
-        sl.className = 'scale-slice';
-        sl.style.left = (j * 100 / SLICES) + '%';
-        box.appendChild(sl);
-        slices.push(sl);
-      }
-      boxSlices.push(slices);
+      const svg = document.createElementNS(SVGNS, 'svg');
+      svg.setAttribute('class', 'scale-svg');
+      svg.setAttribute('viewBox', '0 0 100 100');
+      svg.setAttribute('preserveAspectRatio', 'none');   // stretch to the box
+      const path = document.createElementNS(SVGNS, 'path');
+      path.setAttribute('d', FLAT);
+      svg.appendChild(path);
+      box.appendChild(svg);
+      boxPaths.push(path);
 
       ftrack.appendChild(box);
     }
@@ -1774,12 +1775,30 @@
   let waving = -1;
   function clearWave(){
     if (waving < 0) return;
-    const sl = boxSlices[waving];
-    for (let j = 0; j < sl.length; j++) sl[j].style.transform = '';
+    boxPaths[waving].setAttribute('d', FLAT);
     waving = -1;
   }
+
+  // Top and bottom edges swell in step, so the box bulges where the crest is
+  // rather than shearing. Drawn through SAMPLES points: at 2px apart on a 250px
+  // box the straight run between two of them is far under a pixel of the true
+  // curve, so the edge reads as continuous.
+  function waveD(t, env){
+    let d = '';
+    for (let i = 0; i <= SAMPLES; i++){
+      const u = i / SAMPLES;
+      const s = Math.sin(((u - t) / WAVELENGTH) * Math.PI * 2) * env;
+      d += (i ? 'L' : 'M') + (u * 100).toFixed(2) + ',' + (-AMPLITUDE * s).toFixed(2) + ' ';
+    }
+    for (let i = SAMPLES; i >= 0; i--){
+      const u = i / SAMPLES;
+      const s = Math.sin(((u - t) / WAVELENGTH) * Math.PI * 2) * env;
+      d += 'L' + (u * 100).toFixed(2) + ',' + (100 + AMPLITUDE * s).toFixed(2) + ' ';
+    }
+    return d + 'Z';
+  }
   function syncWave(){
-    if (!boxSlices.length) return;
+    if (!boxPaths.length) return;
     const vw = window.innerWidth / 100;
     const cx = window.innerWidth / 2;
     const half = (28 / 2) * (window.innerHeight / 100);   // half a 28vh box, in px
@@ -1796,14 +1815,7 @@
     if (hit < 0) return;
     waving = hit;
 
-    const env = Math.sin(Math.PI * t);
-    const sl = boxSlices[hit];
-    for (let j = 0; j < sl.length; j++){
-      const phase = ((j + 0.5) / sl.length - t) * Math.PI * 2 * WAVES;
-      const z = MAXZ * env * Math.sin(phase);
-      const rot = MAXROT * env * Math.cos(phase);
-      sl[j].style.transform = 'translateZ(' + z.toFixed(2) + 'px) rotateY(' + rot.toFixed(2) + 'deg)';
-    }
+    boxPaths[hit].setAttribute('d', waveD(t, Math.sin(Math.PI * t)));
   }
 
   function sync(){

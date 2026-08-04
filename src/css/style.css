@@ -147,22 +147,19 @@
     position:absolute;
     width:28vh; height:28vh;
     margin-left:-14vh;               /* left is the box's centre, not its edge */
-    /* The ink is carried by the slices inside, not by the box: as the centre
-       line crosses, main.js pushes each slice in and out of depth on a phase
-       delay so a wave travels through the face. A fill here as well would sit
-       flat behind them and give the depth away. */
-    perspective:620px;
-    transform-style:preserve-3d;
   }
-  .scale-slice{
-    position:absolute;
-    top:0; bottom:0;
-    background:var(--ink);
-    backface-visibility:hidden;
-    /* the overlap has to cover the parting between slices while they are turned,
-       not just when the box is flat */
-    width:calc(100% / 48 + 4px);
+  /* The ink is one filled path, not a row of slices. Slices could only ever
+     approximate the wave as a staircase — each one has a flat top, so sixty of
+     them give sixty little steps, visible however small the motion gets. A path
+     bends continuously, so the edge is a true curve at any amplitude.
+     overflow:visible lets the crest swell past the box's own bounds. */
+  .scale-svg{
+    position:absolute; inset:0;
+    display:block;
+    width:100%; height:100%;
+    overflow:visible;
   }
+  .scale-svg path{ fill:var(--ink); }
   /* Free horizontally, but only ever resting on one of three lines: the foot of
      row 1, the head of row 2, the foot of row 2.
      The +1px on the two bottom-anchored spots is a fill-rule correction, not a
