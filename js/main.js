@@ -558,27 +558,25 @@
       // thumbnails were ~34px tall on a 36px pitch — barely 2px apart.
       const THUMB = 60;     // width of the small resolved box in the column, px
       const GAP   = 40;     // pitch down the column, leaving ~13px between them
-      // Each move lands fast then settles, with a held beat after it — that is
-      // what gives the sequence its fast/slow, fast/slow rhythm rather than one
-      // continuous glide.
-      const HOLD   = 400;   // the single dot sits alone
-      const SPLIT  = 520;   // dot -> column
-      const SETTLE = 220;   // the column of dots holds
-      const GROW   = 520;   // dots -> thumbnails, resolving as they go
-      const PAUSE  = 300;   // the resolved column holds
-      const OPEN   = 1500;  // column -> row, zooming the rest of the way
-      const TOTAL  = HOLD + SPLIT + SETTLE + GROW + PAUSE + OPEN;
+      // Nothing snaps and nothing overshoots. Every move eases in and out of rest,
+      // and the holds between them are long enough to read as breath rather than
+      // as beats — the whole thing is one slow exhale instead of a series of hits.
+      const FADE   = 420;   // the dot surfaces out of nothing
+      const HOLD   = 380;   // and sits alone
+      const SPLIT  = 780;   // dot -> column
+      const SETTLE = 320;   // the column of dots rests
+      const GROW   = 680;   // dots -> thumbnails, resolving as they go
+      const PAUSE  = 440;   // the resolved column rests
+      const OPEN   = 1760;  // column -> row, zooming the rest of the way
+      const TOTAL  = FADE + HOLD + SPLIT + SETTLE + GROW + PAUSE + OPEN;
 
+      let done = false;
       const mid = (boxes.length - 1) / 2;
-      // expo-out: the dots fling apart and coast to a stop
-      const easeOutExpo = t => t >= 1 ? 1 : 1 - Math.pow(2, -10 * t);
-      // back-out: the thumbnails overshoot a touch and settle — the "sticky" part
-      const easeOutBack = t => { const c1 = 1.6, c3 = c1 + 1;
-        return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
-      const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
-      const easeOutQuart = t => 1 - Math.pow(1 - t, 4);
-      // quart-in-out: weighty. Eases out of the held column rather than jerking,
-      // powers through the turn, then settles a long way into its final place.
+      // sine-in-out is the gentlest S there is: it leaves and reaches rest with
+      // no abruptness at either end, which is what keeps the moves from reading
+      // as snaps however far they travel.
+      const easeInOutSine = t => -(Math.cos(Math.PI * t) - 1) / 2;
+      // quart-in-out for the long move only — same shape, more weight behind it
       const easeInOutQuart = t => t < 0.5 ? 8*t*t*t*t : 1 - Math.pow(-2*t + 2, 4) / 2;
       const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
 
@@ -592,24 +590,28 @@
       if (nat.some(n => !n.w || !n.h)) return;   // not laid out yet; leave the page alone
 
       function render(t){
-        const g0 = HOLD + SPLIT + SETTLE;
+        if (done) return;             // a late frame must not re-apply what finish() cleared
+        const s0 = FADE + HOLD;
+        const g0 = s0 + SPLIT + SETTLE;
         const o0 = g0 + GROW + PAUSE;
-        const split = t > HOLD ? Math.min((t - HOLD) / SPLIT, 1) : 0;
+        const fade  = Math.min(t / FADE, 1);
+        const split = t > s0 ? Math.min((t - s0) / SPLIT, 1) : 0;
         const grow  = t > g0 ? Math.min((t - g0) / GROW, 1) : 0;
         const open  = t > o0 ? Math.min((t - o0) / OPEN, 1) : 0;
-        const es = easeOutExpo(split);
-        const egScale = easeOutBack(grow);      // may overshoot 1 on purpose
-        const egFade  = easeOutCubic(grow);     // kept monotonic — it drives opacity
+        const es = easeInOutSine(split);
+        const eg = easeInOutSine(grow);
         const eo = easeInOutQuart(open);
-        // the column closes up ahead of the row spreading out — that offset is
-        // what makes it read as turning rather than simply sliding
-        const ey = 1 - easeOutQuart(Math.min(open * 1.35, 1));
+        // the column closes up a little ahead of the row spreading out — enough
+        // to read as a turn, gentle enough not to look like two separate moves
+        const ey = 1 - easeInOutSine(Math.min(open * 1.2, 1));
 
+        // the dot does not simply appear; it surfaces
+        scroller.style.setProperty('--intro-alpha', easeInOutSine(fade).toFixed(3));
         // Resolved on the grow phase, which finishes before the turn begins — the
         // boxes are fully themselves while still stacked, and it is those that
         // then rotate into the row.
-        scroller.style.setProperty('--intro-ink', clamp01(1 - egFade).toFixed(3));
-        scroller.style.setProperty('--intro-show', clamp01(egFade).toFixed(3));
+        scroller.style.setProperty('--intro-ink', clamp01(1 - eg).toFixed(3));
+        scroller.style.setProperty('--intro-show', clamp01(eg).toFixed(3));
 
         for (let i = 0; i < boxes.length; i++){
           const n = nat[i], k = i - mid;
@@ -621,8 +623,8 @@
           // dot is square, so its two scales differ; the thumbnail is uniform, so
           // the box takes its true proportions back as it grows
           const thumb = THUMB / n.w;
-          const sxT = (DOT / n.w) + (thumb - DOT / n.w) * egScale;
-          const syT = (DOT / n.h) + (thumb - DOT / n.h) * egScale;
+          const sxT = (DOT / n.w) + (thumb - DOT / n.w) * eg;
+          const syT = (DOT / n.h) + (thumb - DOT / n.h) * eg;
           const sx = sxT + (1 - sxT) * eo;
           const sy = syT + (1 - syT) * eo;
           boxes[i].style.transform =
@@ -630,12 +632,12 @@
         }
       }
 
-      let done = false;
       function finish(){
         if (done) return;
         done = true;
         boxes.forEach(function(b){ b.style.transform = ''; });
         scroller.classList.remove('is-intro');
+        scroller.style.removeProperty('--intro-alpha');
         scroller.style.removeProperty('--intro-ink');
         scroller.style.removeProperty('--intro-show');
         // the scroll-driven effects measured nothing useful while the boxes were
