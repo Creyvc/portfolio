@@ -539,12 +539,14 @@
     })();
 
     // ===== Contact boxes intro =====
-    // One dot -> a vertical column of eight -> the dots grow into small, fully
-    // resolved thumbnails, still stacked -> the column unrolls into the row while
-    // zooming the rest of the way. The reveal is finished before the turn starts,
-    // so what rotates is the real boxes rather than black rectangles. Driven per
-    // box with transforms — the boxes' own transform is otherwise unused, so
-    // nothing else is disturbed, and it all resolves to `transform:none`.
+    // One dot -> it comes apart into a column of eight, and on the way apart each
+    // one is already turning from a black dot into its own small rectangle — the
+    // separating, the squaring off and the colour all run on the same progress ->
+    // the column then unrolls into the row while zooming the rest of the way. The
+    // reveal is finished before the turn starts, so what rotates is the real boxes
+    // rather than black rectangles. Driven per box with transforms — the boxes'
+    // own transform is otherwise unused, so nothing else is disturbed, and it all
+    // resolves to `transform:none`.
     (function(){
       const scroller = document.querySelector('.contact-boxes');
       if (!scroller) return;
@@ -561,14 +563,12 @@
       // Nothing snaps and nothing overshoots. Every move eases in and out of rest,
       // and the holds between them are long enough to read as breath rather than
       // as beats — the whole thing is one slow exhale instead of a series of hits.
-      const FADE   = 420;   // the dot surfaces out of nothing
-      const HOLD   = 380;   // and sits alone
-      const SPLIT  = 780;   // dot -> column
-      const SETTLE = 320;   // the column of dots rests
-      const GROW   = 680;   // dots -> thumbnails, resolving as they go
-      const PAUSE  = 440;   // the resolved column rests
-      const OPEN   = 1760;  // column -> row, zooming the rest of the way
-      const TOTAL  = FADE + HOLD + SPLIT + SETTLE + GROW + PAUSE + OPEN;
+      const FADE  = 420;    // the dot surfaces out of nothing
+      const HOLD  = 380;    // and sits alone
+      const SPLIT = 1780;   // comes apart, squares off and colours up, all as one
+      const PAUSE = 440;    // the resolved column rests
+      const OPEN  = 1760;   // column -> row, zooming the rest of the way
+      const TOTAL = FADE + HOLD + SPLIT + PAUSE + OPEN;
 
       let done = false;
       const mid = (boxes.length - 1) / 2;
@@ -603,14 +603,13 @@
       function render(t){
         if (done) return;             // a late frame must not re-apply what finish() cleared
         const s0 = FADE + HOLD;
-        const g0 = s0 + SPLIT + SETTLE;
-        const o0 = g0 + GROW + PAUSE;
+        const o0 = s0 + SPLIT + PAUSE;
         const fade  = Math.min(t / FADE, 1);
         const split = t > s0 ? Math.min((t - s0) / SPLIT, 1) : 0;
-        const grow  = t > g0 ? Math.min((t - g0) / GROW, 1) : 0;
         const open  = t > o0 ? Math.min((t - o0) / OPEN, 1) : 0;
+        // one progress drives the whole coming-apart: the spacing, the dot
+        // squaring off into a rectangle, and the ink lifting off it
         const es = easeInOutSine(split);
-        const eg = easeInOutSine(grow);
         const eo = easeInOutQuart(open);
         // the column closes up a little ahead of the row spreading out — enough
         // to read as a turn, gentle enough not to look like two separate moves
@@ -618,11 +617,11 @@
 
         // the dot does not simply appear; it surfaces
         scroller.style.setProperty('--intro-alpha', easeInOutSine(fade).toFixed(3));
-        // Resolved on the grow phase, which finishes before the turn begins — the
-        // boxes are fully themselves while still stacked, and it is those that
-        // then rotate into the row.
-        scroller.style.setProperty('--intro-ink', clamp01(1 - eg).toFixed(3));
-        scroller.style.setProperty('--intro-show', clamp01(eg).toFixed(3));
+        // Resolves across the coming-apart, so it is finished well before the turn
+        // begins — the boxes are fully themselves while still stacked, and it is
+        // those that then rotate into the row.
+        scroller.style.setProperty('--intro-ink', clamp01(1 - es).toFixed(3));
+        scroller.style.setProperty('--intro-show', clamp01(es).toFixed(3));
 
         // trails the boxes a little, so the row is already on its way out before
         // the ticks follow it rather than the two moving as one block
@@ -649,8 +648,8 @@
           // dot is square, so its two scales differ; the thumbnail is uniform, so
           // the box takes its true proportions back as it grows
           const thumb = THUMB / n.w;
-          const sxT = (DOT / n.w) + (thumb - DOT / n.w) * eg;
-          const syT = (DOT / n.h) + (thumb - DOT / n.h) * eg;
+          const sxT = (DOT / n.w) + (thumb - DOT / n.w) * es;
+          const syT = (DOT / n.h) + (thumb - DOT / n.h) * es;
           const sx = sxT + (1 - sxT) * eo;
           const sy = syT + (1 - syT) * eo;
           boxes[i].style.transform =
