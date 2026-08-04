@@ -25,8 +25,10 @@
     left:50%;
     background:var(--ink);
     bottom:auto;                    /* release .hl's full-height stretch */
-    /* stops on the ruler's baseline rather than running to the foot of the page:
-       83.5% is where .scale is centred, + half its 4.2rem band = its bottom edge */
+    /* Runs down to the foot of the ruler. main.js shortens it from here as a
+       number arrives on the line, so it clears the digits instead of striking
+       through them, and lets it back down once the number has passed. This value
+       is the resting length and what shows if the script never runs. */
     height:calc(83.5% + 2.1rem);
   }
   /* Sits just under the foot of that line, on the same 50% centre, apex up so it

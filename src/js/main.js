@@ -1818,9 +1818,35 @@
     boxPaths[hit].setAttribute('d', waveD(t, Math.sin(Math.PI * t)));
   }
 
+  // The centre line reaches the foot of the ruler, but pulls up above the numbers
+  // as one arrives on it, so it passes over a number rather than striking
+  // through it — and extends again once the number has gone by. Driven off the
+  // distance from the line to the nearest number, eased so there is no snap.
+  const midLine = document.querySelector('.hl-mid');
+  const CLEAR = 70;        // px from the line at which a number starts pushing it back
+  const TICK_GAP = 8;      // px held between the line's foot and the tick below it
+  function syncMidLine(){
+    if (!midLine) return;
+    const vw = window.innerWidth / 100;
+    const first = PAD * vw, pitch = SPAN * vw;
+    const centreTrack = scale.scrollLeft + window.innerWidth / 2;
+    const idx = Math.max(0, Math.min(MAJORS - 1, Math.round((centreTrack - first) / pitch)));
+    const d = Math.abs(first + idx * pitch - centreTrack);
+    const near = Math.max(0, 1 - d / CLEAR);
+    const ease = near * near * (3 - 2 * near);          // smoothstep
+    // Resting foot sits a fixed gap above whichever tick is under the line, not
+    // at the ruler's baseline — so as the arc lifts the ticks the line lifts with
+    // them and the gap stays even, instead of the line cutting down through them.
+    const ti = Math.max(0, Math.min(ticks.length - 1, Math.round((centreTrack - first) / (GAP * vw))));
+    const long = ticks[ti].getBoundingClientRect().top - TICK_GAP;
+    const short = scale.getBoundingClientRect().top - 4;   // just clear of the numbers
+    midLine.style.height = (long - (long - short) * ease).toFixed(1) + 'px';
+  }
+
   function sync(){
     syncCurrent();
     syncArc();
+    syncMidLine();
     // the boxes do not scroll themselves — they are carried by the ruler
     if (ftrack) ftrack.style.transform = 'translateX(' + (-scale.scrollLeft) + 'px)';
     syncWave();
