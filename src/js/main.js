@@ -1603,7 +1603,9 @@
   const GAP = 45 / STEP;
   const PAD = 3;       // vw before the first tick, landing it on .hl-1 at 3%
 
-  const total = MAJORS * STEP;
+  // Stops on the last numbered tick: 29 full runs plus the 30 itself, so the
+  // ruler ends on a number rather than trailing minor ticks past it.
+  const total = (MAJORS - 1) * STEP + 1;
   const track = document.createElement('div');
   track.className = 'scale-track';
   track.style.width = (PAD * 2 + (total - 1) * GAP) + 'vw';

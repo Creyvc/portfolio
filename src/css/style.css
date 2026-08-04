@@ -36,8 +36,9 @@
   .home-lines.page-lines{ z-index:1; }
 
   /* ===== Measure scale =====
-     The reference is a vertical ruler; this is that turned on its side, so the
-     ticks stand up from a shared top edge and grow downward. Spans 3% -> 97%,
+     The reference is a vertical ruler; this is that turned on its side and then
+     flipped, so the ticks rise from a shared bottom edge and the numbers sit
+     above them rather than below. Spans 3% -> 97%,
      the same span as .hl-1 -> .hl-4, so its ends sit on the grid's outer lines.
      No z-index: it stays below .home-lines (z-index 1), so the grid crosses it
      the way it crosses the boxes on the contact page. Ticks are built by
@@ -47,7 +48,7 @@
     left:0; right:0;
     top:50%;
     transform:translateY(-50%);
-    height:3.6rem;                   /* tick band plus the numbers beneath it */
+    height:3.6rem;                   /* tick band plus the numbers above it */
     overflow-x:auto;                 /* one number to the next is 1.5 grid cells,
                                         so 30 of them run far past the viewport */
     overflow-y:hidden;
@@ -60,7 +61,7 @@
      each tick's own width along the run and drift off the 1.5-cell spacing. */
   .scale-track{ position:relative; height:100%; }
   .scale-tick{
-    position:absolute; top:0;
+    position:absolute; bottom:0;
     width:1px; height:1.1rem;
     background:#a8adb3;
   }
@@ -70,7 +71,7 @@
   }
   .scale-num{
     position:absolute;
-    top:calc(100% + 0.55rem);
+    bottom:calc(100% + 0.55rem);     /* above the tick, which now grows upward */
     left:50%;
     transform:translateX(-50%);
     font-family:var(--sans);
