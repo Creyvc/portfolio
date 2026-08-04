@@ -580,6 +580,16 @@
       const easeInOutQuart = t => t < 0.5 ? 8*t*t*t*t : 1 - Math.pow(-2*t + 2, 4) / 2;
       const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
 
+      // The progress ticks echo the same gesture: collapsed on the centre while the
+      // boxes are still a dot / column, then spreading out to their own places as
+      // the row opens. Driven inline from here rather than via CSS because the bar
+      // sits BEFORE .contact-boxes in the document, so no sibling selector reaches
+      // it from the .is-intro class.
+      const bar = document.getElementById('contactProgress');
+      const ticks = bar ? Array.prototype.slice.call(bar.querySelectorAll('.tick')) : [];
+      const barMid = bar ? (function(){ const r = bar.getBoundingClientRect(); return r.left + r.width / 2; })() : 0;
+      const tickNat = ticks.map(function(t){ const r = t.getBoundingClientRect(); return r.left + r.width / 2 - barMid; });
+
       // measured before any transform is applied, so these are layout positions
       const s = scroller.getBoundingClientRect();
       const cx = s.left + s.width / 2, cy = s.top + s.height / 2;
@@ -613,13 +623,28 @@
         scroller.style.setProperty('--intro-ink', clamp01(1 - eg).toFixed(3));
         scroller.style.setProperty('--intro-show', clamp01(eg).toFixed(3));
 
+        // trails the boxes a little, so the row is already on its way out before
+        // the ticks follow it rather than the two moving as one block
+        if (bar){
+          const eb = easeInOutSine(clamp01((open - 0.12) / 0.78));
+          bar.style.opacity = eb.toFixed(3);
+          for (let i = 0; i < ticks.length; i++){
+            ticks[i].style.transform = 'translateX(' + (-(1 - eb) * tickNat[i]).toFixed(2) + 'px)';
+          }
+        }
+
         for (let i = 0; i < boxes.length; i++){
           const n = nat[i], k = i - mid;
           // a transform offsets from the box's own layout position, so gathering
           // them all onto the centre means translating by -n and letting that
           // decay to zero as they open out into their real places
           const x = -(1 - eo) * n.x;
-          const y = -(1 - eo) * n.y + es * GAP * k * ey;
+          // No -n.y term. The boxes all share a centre line already, so the only
+          // thing it contributed was the offset between the row's border-box
+          // centre (which n is measured from) and its content-box centre — the
+          // row's padding is 2.25rem top against 0.5rem bottom, so that gap is
+          // ~14px, and the whole column was sitting that far above the boxes.
+          const y = es * GAP * k * ey;
           // dot is square, so its two scales differ; the thumbnail is uniform, so
           // the box takes its true proportions back as it grows
           const thumb = THUMB / n.w;
@@ -636,6 +661,10 @@
         if (done) return;
         done = true;
         boxes.forEach(function(b){ b.style.transform = ''; });
+        if (bar){
+          bar.style.opacity = '';
+          ticks.forEach(function(t){ t.style.transform = ''; });
+        }
         scroller.classList.remove('is-intro');
         scroller.style.removeProperty('--intro-alpha');
         scroller.style.removeProperty('--intro-ink');
