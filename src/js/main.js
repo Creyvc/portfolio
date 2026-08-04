@@ -1595,7 +1595,7 @@
   if (!scale) return;
 
   const MAJORS = 30;   // numbered ticks
-  const STEP = 30;     // ticks per number, so every 30th one is long and labelled
+  const STEP = 45;     // ticks per number, so every 45th one is long and labelled
   // One number to the next spans a single grid column. The columns are not equal
   // — 30% / 34% / 30% — and this takes the wider middle one, 33% -> 67%, so 34vw.
   // The ticks in between divide that run evenly: raise or lower STEP alone to
@@ -1615,8 +1615,10 @@
   track.style.width = (PAD * 2 + (total - 1) * GAP) + 'vw';
 
   const majors = [];
+  const ticks = [];
   for (let i = 0; i < total; i++){
     const tick = document.createElement('span');
+    ticks.push(tick);
     tick.className = 'scale-tick';
     tick.style.left = (PAD + i * GAP) + 'vw';
     if (i % STEP === 0){
@@ -1662,14 +1664,74 @@
     current = k;
   }
 
+  // Ticks stand tallest on the centre line and ease back down to their base
+  // height further out, and the arc travels with the line as you scroll.
+  // Only minor ticks are scaled: the majors carry the numbers, and a transform
+  // on a major would stretch its digits along with the tick.
+  // Only the span within RADIUS is touched — about forty ticks of the thirteen
+  // hundred — and the previous span is cleared, so a frame costs a fixed small
+  // number of writes however long the ruler gets.
+  // Ceiling is 3.04: the numbers sit 3.35rem above the baseline (a 2.8rem major
+  // plus the 0.55rem gap) and a 1.1rem minor scaled past that would run into
+  // them. Going higher than this means lifting the numbers and growing the band.
+  const PEAK = 2.35;     // tallest multiplier, right on the line
+  const RADIUS = 0.05;   // share of the viewport the arc reaches across
+
+  let lo = 0, hi = -1;   // index span currently carrying a transform
+  function syncArc(){
+    const vw = window.innerWidth / 100;
+    const first = PAD * vw, pitch = GAP * vw;
+    const centre = scale.scrollLeft + window.innerWidth / 2;   // in track space
+    const R = RADIUS * window.innerWidth;
+    const nlo = Math.max(0, Math.ceil((centre - R - first) / pitch));
+    const nhi = Math.min(total - 1, Math.floor((centre + R - first) / pitch));
+    for (let i = lo; i <= hi; i++){
+      if (i < nlo || i > nhi) ticks[i].style.transform = '';
+    }
+    for (let i = nlo; i <= nhi; i++){
+      if (i % STEP === 0) continue;                            // leave the majors alone
+      const d = Math.min(Math.abs(first + i * pitch - centre) / R, 1);
+      const k = 1 + (PEAK - 1) * 0.5 * (1 + Math.cos(Math.PI * d));
+      ticks[i].style.transform = 'scaleY(' + k.toFixed(3) + ')';
+    }
+    lo = nlo; hi = nhi;
+  }
+
+  // One box per gap between numbers — 29 of them, each centred on the midpoint
+  // between one number and the next. Vertical placement rotates through three
+  // resting places so the run does not read as a single straight row; the order
+  // is a fixed list rather than random, so the layout is the same on every load.
+  const field = document.getElementById('scaleField');
+  let ftrack = null;
+  if (field){
+    ftrack = document.createElement('div');
+    ftrack.className = 'scale-field-track';
+    const SPOTS = ['is-r1b', 'is-r2t', 'is-r2b'];
+    const ORDER = [0, 2, 1, 2, 0, 1, 1, 2, 0];
+    for (let k = 0; k < MAJORS - 1; k++){
+      const box = document.createElement('span');
+      box.className = 'scale-box ' + SPOTS[ORDER[k % ORDER.length]];
+      box.style.left = (PAD + (k + 0.5) * SPAN) + 'vw';
+      ftrack.appendChild(box);
+    }
+    field.appendChild(ftrack);
+  }
+
+  function sync(){
+    syncCurrent();
+    syncArc();
+    // the boxes do not scroll themselves — they are carried by the ruler
+    if (ftrack) ftrack.style.transform = 'translateX(' + (-scale.scrollLeft) + 'px)';
+  }
+
   let ticking = false;
   scale.addEventListener('scroll', function(){
     if (ticking) return;
     ticking = true;
-    requestAnimationFrame(function(){ ticking = false; syncCurrent(); });
+    requestAnimationFrame(function(){ ticking = false; sync(); });
   }, { passive:true });
-  window.addEventListener('resize', syncCurrent);
-  syncCurrent();
+  window.addEventListener('resize', sync);
+  sync();
 
   // Let the ruler be driven from anywhere on the page, not just from the band
   // itself — the band is only ~3.6rem tall, so requiring the pointer to be over

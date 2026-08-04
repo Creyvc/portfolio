@@ -26,8 +26,8 @@
     background:var(--ink);
     bottom:auto;                    /* release .hl's full-height stretch */
     /* stops on the ruler's baseline rather than running to the foot of the page:
-       83.5% is where .scale is centred, + half its 3.6rem band = its bottom edge */
-    height:calc(83.5% + 1.8rem);
+       83.5% is where .scale is centred, + half its 4.2rem band = its bottom edge */
+    height:calc(83.5% + 2.1rem);
   }
   /* Sits just under the foot of that line, on the same 50% centre, apex up so it
      points at the line. Built from borders rather than a glyph so it stays crisp
@@ -37,7 +37,7 @@
   .home-lines .mid-arrow{
     position:absolute;
     left:50%;
-    top:calc(83.5% + 1.8rem + 0.7rem);
+    top:calc(83.5% + 2.1rem + 0.7rem);
     transform:translateX(-50%);
     width:0; height:0;
     border-bottom:0.875rem solid var(--ink);
@@ -82,7 +82,10 @@
        than standing the tick baseline on that line. */
     top:83.5%;
     transform:translateY(-50%);
-    height:3.6rem;                   /* tick band plus the numbers above it */
+    /* tick band plus the numbers above it: a 2.8rem major, the 0.55rem gap and
+       the ~0.62rem digits come to 3.97rem, so this clears them. overflow-y is
+       hidden, so anything taller than this would be cut off rather than spill. */
+    height:4.2rem;
     overflow-x:auto;                 /* one number to the next is 1.5 grid cells,
                                         so 30 of them run far past the viewport */
     overflow-y:hidden;
@@ -98,9 +101,14 @@
     position:absolute; bottom:0;
     width:1px; height:1.1rem;
     background:#a8adb3;
+    /* main.js scales the minor ticks vertically to build the arc around the
+       centre line; growing from the baseline keeps their feet on it */
+    transform-origin:bottom;
   }
   .scale-tick.is-major{
-    width:1px; height:2.1rem;
+    /* taller than the arc's 2.35x peak on a 1.1rem minor (41px), so the numbered
+       tick still reads as the tallest mark even at the middle of the swell */
+    width:1px; height:2.8rem;
     background:var(--ink);
   }
   .scale-num{
@@ -116,6 +124,31 @@
     opacity:0.75;
     white-space:nowrap;
   }
+  /* ===== Boxes between the numbers =====
+     One per gap, centred on the midpoint. They live in their own full-height
+     layer rather than inside .scale: that band is only 4.2rem tall with
+     overflow-y hidden, so anything reaching up into rows 1 and 2 would be cut
+     off. The layer is translated by the ruler's scrollLeft each frame instead of
+     scrolling itself, which keeps the two exactly in step with no second
+     scrollbar. z-index 0 keeps it under .home-lines so the grid crosses it. */
+  .scale-field{
+    position:fixed; inset:0;
+    overflow:hidden;
+    pointer-events:none;
+    z-index:0;
+  }
+  .scale-field-track{ position:absolute; inset:0; will-change:transform; }
+  .scale-box{
+    position:absolute;
+    width:9rem; height:6rem;
+    margin-left:-4.5rem;             /* centre it on its midpoint */
+    border:1px solid #dfe2e5;
+  }
+  /* the three resting places: foot of row 1, head of row 2, foot of row 2 */
+  .scale-box.is-r1b{ top:calc(33% - 6rem); }
+  .scale-box.is-r2t{ top:33%; }
+  .scale-box.is-r2b{ top:calc(67% - 6rem); }
+
   /* the number currently on the centre line reads [7] rather than 7 */
   .num-bracket{ opacity:0; transition:opacity 0.18s ease; }
   .scale-tick.is-current .scale-num{ opacity:1; }
