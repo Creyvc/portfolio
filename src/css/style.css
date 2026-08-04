@@ -18,9 +18,30 @@
   .home-lines .hl-2{ left:33%; }   /* between */
   .home-lines .hl-3{ left:67%; }   /* between */
   .home-lines .hl-4{ left:97%; }   /* near right end */
-  /* dead centre — not part of the 3/33/67/97 grid, so it carries no plus marks;
-     it marks the line the measure scale's numbers come to rest on */
-  .home-lines .hl-mid{ left:50%; }
+  /* dead centre — not part of the 3/33/67/97 grid, so it carries no plus marks.
+     Ink rather than the grid's grey: it is a marker for the line the measure
+     scale's numbers come to rest on, not another rule of the grid. */
+  .home-lines .hl-mid{
+    left:50%;
+    background:var(--ink);
+    bottom:auto;                    /* release .hl's full-height stretch */
+    /* stops on the ruler's baseline rather than running to the foot of the page:
+       83.5% is where .scale is centred, + half its 3.6rem band = its bottom edge */
+    height:calc(83.5% + 1.8rem);
+  }
+  /* Sits just under the foot of that line, on the same 50% centre. Built from
+     borders rather than a glyph so it stays crisp at any size, and tied to the
+     same calc as .hl-mid's height so it follows if the ruler moves. */
+  .home-lines .mid-arrow{
+    position:absolute;
+    left:50%;
+    top:calc(83.5% + 1.8rem + 0.35rem);
+    transform:translateX(-50%);
+    width:0; height:0;
+    border-left:0.5rem solid var(--accent);
+    border-top:0.32rem solid transparent;
+    border-bottom:0.32rem solid transparent;
+  }
   .home-lines .hlh{
     position:absolute;
     left:0; right:0;
