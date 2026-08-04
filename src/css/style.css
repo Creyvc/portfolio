@@ -55,9 +55,9 @@
     -ms-overflow-style:none;
   }
   .scale::-webkit-scrollbar{ display:none; }
-  /* Ticks are placed absolutely rather than spaced by flex: the major ones are
-     2px and the minor 1px, and a gap-based layout would let that width
-     difference accumulate along the run instead of holding an exact pitch. */
+  /* Ticks are placed absolutely rather than spaced by flex, so each one sits on
+     an exact multiple of the pitch. A gap-based layout would instead accumulate
+     each tick's own width along the run and drift off the 1.5-cell spacing. */
   .scale-track{ position:relative; height:100%; }
   .scale-tick{
     position:absolute; top:0;
@@ -65,7 +65,7 @@
     background:#a8adb3;
   }
   .scale-tick.is-major{
-    width:2px; height:2.1rem;
+    width:1px; height:2.1rem;
     background:var(--ink);
   }
   .scale-num{

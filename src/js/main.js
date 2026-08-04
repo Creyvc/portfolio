@@ -1595,7 +1595,7 @@
   if (!scale) return;
 
   const MAJORS = 30;   // numbered ticks
-  const STEP = 15;     // ticks per number, so every 15th one is long and labelled
+  const STEP = 30;     // ticks per number, so every 30th one is long and labelled
   // One number to the next spans one and a half grid cells. A cell is 3% -> 33%
   // of the viewport, so 1.5 of them is 45vw, and the ticks that make up that run
   // divide it evenly — raise or lower STEP alone to change how finely it is
