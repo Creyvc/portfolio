@@ -1641,15 +1641,21 @@
   }
   scale.appendChild(track);
 
-  // Bracket whichever number is sitting on the centre line. Its index comes
-  // straight out of scrollLeft rather than from measuring the ticks, so it stays
-  // free no matter how many hundred are in the track: the first major is PAD
-  // across, they repeat every SPAN, and both are vw so they follow a resize.
+  // Bracket the last number the centre line has gone past, and hold it there
+  // until the next one arrives — floor, not round. Rounding would hand the
+  // brackets over at the midpoint between two numbers, so [1] would drop before
+  // 2 ever reached the line and there would be a stretch with the brackets on a
+  // number that is not the one you last passed.
+  //   The index comes straight out of scrollLeft rather than from measuring the
+  // ticks, so it stays free no matter how many hundred are in the track: the
+  // first major is PAD across, they repeat every SPAN, both in vw so a resize
+  // carries them. The epsilon keeps the last number from falling to 29.999... on
+  // a float and bracketing 29 at the very end of the run.
   let current = -1;
   function syncCurrent(){
     const vw = window.innerWidth / 100;
     const k = Math.max(0, Math.min(majors.length - 1,
-      Math.round((scale.scrollLeft + window.innerWidth / 2 - PAD * vw) / (SPAN * vw))));
+      Math.floor((scale.scrollLeft + window.innerWidth / 2 - PAD * vw) / (SPAN * vw) + 1e-6)));
     if (k === current) return;
     if (current >= 0) majors[current].classList.remove('is-current');
     majors[k].classList.add('is-current');
