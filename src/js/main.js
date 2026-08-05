@@ -553,7 +553,22 @@
         }
       });
 
+      // Which characters sit on the circle once the page has settled, captured
+      // below before the intro ever transforms anything.
+      let settled = null;
+
       function update(){
+        // Through the intro, hold the settled answer rather than re-deriving it.
+        // Hit-testing each character against live rects mid-intro asks about a
+        // box that is being scaled and moved every frame, and the answer came
+        // out as letters flicking between black and white all through the
+        // reveal. The colours the row will end up with are already known, so
+        // show those from the start and let nothing change until it is over.
+        if (settled && scroller.classList.contains('is-intro')){
+          for (let i = 0; i < chars.length; i++) chars[i].classList.toggle('on-circle', settled[i]);
+          return;
+        }
+
         const boxWidth = infoBox.offsetWidth;
         const gapPx = parseFloat(getComputedStyle(scroller).columnGap || getComputedStyle(scroller).gap) || 24;
         // full-size width, not the live one — see the note in the email effect:
@@ -609,7 +624,12 @@
       // keep up while that box resizes — otherwise it holds still through the
       // 0.4s grow-back and then jumps
       trackBoxResize(scroller, update);
-      requestUpdate();
+      // Synchronous, not deferred: this IIFE runs before the intro's, so the
+      // boxes are still at their natural size here and this is the one chance to
+      // read the resting layout. A rAF-deferred first pass would have measured
+      // the boxes already collapsed to the intro's dot.
+      update();
+      settled = chars.map(span => span.classList.contains('on-circle'));
     })();
 
     // ===== Contact boxes intro =====
