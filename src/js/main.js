@@ -121,7 +121,7 @@
           //    2) then it splits to its rows — one continuous move, never hidden.
           // Both rows run the identical keyframes, so the bar reads as splitting
           // evenly in two. They previously differed: the top one WAS the loader
-          // bar, 3px and thinning to 1px, while the bottom merely faded in at
+          // bar, 2.5px and thinning to 1px, while the bottom merely faded in at
           // 1px — which showed as a heavier top line all the way through the
           // split. Starting both as a 3px ink bar on the midline means they
           // overlap the loader bar exactly at rest, so the substitution is still
@@ -129,9 +129,15 @@
           document.querySelectorAll('.home-lines .hlh').forEach(function(l){
             const dy = cy - parseFloat(getComputedStyle(l).top);
             l.animate([
-              // centered on the midline, exactly matching the 3px loader bar (no jump)
-              { transform:`translateY(${dy - 1.5}px)`, opacity:1, backgroundColor:INK, height:'3px' },
-              // and each thins to a grid line as it travels to its row
+              // centered on the midline, exactly matching the 2.5px loader bar (no
+              // jump) — the offset is half the height, so the two stay in step
+              { transform:`translateY(${dy - 1.25}px)`, opacity:1, backgroundColor:INK, height:'2.5px' },
+              // Sheds most of its weight in the first fifth of the move. It has
+              // to leave at the bar's full 2.5px or the handoff would step, but
+              // carrying that all the way out read as a heavy pair of rules
+              // sliding apart; dropping it early means only the bar itself is
+              // thick, and what travels is already close to a grid line.
+              { height:'1.15px', offset:0.2 },
               { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5', height:'1px' }
             ], FLY);
           });
@@ -607,7 +613,8 @@
     })();
 
     // ===== Contact boxes intro =====
-    // One dot -> it comes apart into a column of eight, and on the way apart each
+    // A hairline is struck from left to right, ink floods down it until it has
+    // become a single dot -> that dot comes apart into a column of eight, and on the way apart each
     // one is already turning from a black dot into its own small rectangle — the
     // separating, the squaring off and the colour all run on the same progress ->
     // the column then unrolls into the row while zooming the rest of the way. The
@@ -627,16 +634,21 @@
       // row, so a wider thumbnail leaves less room between them. At 74/36 the
       // thumbnails were ~34px tall on a 36px pitch — barely 2px apart.
       const THUMB = 60;     // width of the small resolved box in the column, px
-      const GAP   = 40;     // pitch down the column, leaving ~13px between them
+      const MARGIN = 16;    // px kept clear inside each rule, so it never touches
       // Nothing snaps and nothing overshoots. Every move eases in and out of rest,
       // and the holds between them are long enough to read as breath rather than
       // as beats — the whole thing is one slow exhale instead of a series of hits.
-      const FADE  = 420;    // the dot surfaces out of nothing
-      const HOLD  = 380;    // and sits alone
+      // The dot is drawn rather than faded up: a hairline strikes across from the
+      // left, then ink floods down it until the line has become the dot. Nothing
+      // appears out of nowhere — every mark on screen was made by something.
+      const LINE  = 1.5;    // px, the struck line's thickness
+      const DRAW  = 760;    // the line strikes left to right
+      const INK   = 420;    // and floods down into the dot
+      const HOLD  = 380;    // which then sits alone
       const SPLIT = 1780;   // comes apart, squares off and colours up, all as one
       const PAUSE = 440;    // the resolved column rests
       const OPEN  = 1760;   // column -> row, zooming the rest of the way
-      const TOTAL = FADE + HOLD + SPLIT + PAUSE + OPEN;
+      const TOTAL = DRAW + INK + HOLD + SPLIT + PAUSE + OPEN;
 
       let done = false;
       const mid = (boxes.length - 1) / 2;
@@ -668,13 +680,29 @@
       });
       if (nat.some(n => !n.w || !n.h)) return;   // not laid out yet; leave the page alone
 
+      // Pitch down the column, derived rather than fixed. The column has to fit
+      // between the grid's two horizontal rules at 33% and 67%, and that band is
+      // a share of the VIEWPORT height while a fixed pitch is not — so on a short
+      // window a hard-coded 40 pushed the top and bottom boxes straight through
+      // the rules. Solving for the room actually available keeps it inside at any
+      // height; the clamp stops it spreading absurdly on a very tall one or
+      // closing right up on a very short one.
+      const thumbH = THUMB * (nat[0].h / nat[0].w);
+      const room = 0.34 * window.innerHeight;    // between the two rules
+      const GAP = Math.max(22, Math.min(40,
+        (room - thumbH - MARGIN * 2) / (boxes.length - 1)));
+
       function render(t){
         if (done) return;             // a late frame must not re-apply what finish() cleared
-        const s0 = FADE + HOLD;
-        const o0 = s0 + SPLIT + PAUSE;
-        const fade  = Math.min(t / FADE, 1);
+        const i0 = DRAW;                     // the flood begins
+        const s0 = DRAW + INK + HOLD;        // the dot comes apart
+        const o0 = s0 + SPLIT + PAUSE;       // the column turns into the row
+        const draw  = Math.min(t / DRAW, 1);
+        const ink   = t > i0 ? Math.min((t - i0) / INK, 1) : 0;
         const split = t > s0 ? Math.min((t - s0) / SPLIT, 1) : 0;
         const open  = t > o0 ? Math.min((t - o0) / OPEN, 1) : 0;
+        const ed = easeInOutSine(draw);
+        const ei = easeInOutSine(ink);
         // one progress drives the whole coming-apart: the spacing, the dot
         // squaring off into a rectangle, and the ink lifting off it
         const es = easeInOutSine(split);
@@ -683,8 +711,9 @@
         // to read as a turn, gentle enough not to look like two separate moves
         const ey = 1 - easeInOutSine(Math.min(open * 1.2, 1));
 
-        // the dot does not simply appear; it surfaces
-        scroller.style.setProperty('--intro-alpha', easeInOutSine(fade).toFixed(3));
+        // Nothing to fade: the line starts at zero width, so it enters by being
+        // drawn rather than by turning up.
+        scroller.style.setProperty('--intro-alpha', '1');
         // Resolves across the coming-apart, so it is finished well before the turn
         // begins — the boxes are fully themselves while still stacked, and it is
         // those that then rotate into the row.
@@ -706,7 +735,16 @@
           // a transform offsets from the box's own layout position, so gathering
           // them all onto the centre means translating by -n and letting that
           // decay to zero as they open out into their real places
-          const x = -(1 - eo) * n.x;
+          // The mark's own size before the split: it widens to the dot while the
+          // line is being struck, then deepens from a hairline to the full square
+          // as the ink floods down. Both have finished by the time the split
+          // starts, so this hands over at exactly DOT and the rest is unchanged.
+          const dw = DOT * ed;
+          const dh = LINE + (DOT - LINE) * ei;
+          // The extra term pins the line's LEFT edge while it is being struck, so
+          // it grows rightward from a fixed point instead of opening out from its
+          // middle. It is zero the moment the line reaches full width.
+          const x = -(1 - eo) * n.x - (DOT - dw) / 2;
           // No -n.y term. The boxes all share a centre line already, so the only
           // thing it contributed was the offset between the row's border-box
           // centre (which n is measured from) and its content-box centre — the
@@ -716,8 +754,8 @@
           // dot is square, so its two scales differ; the thumbnail is uniform, so
           // the box takes its true proportions back as it grows
           const thumb = THUMB / n.w;
-          const sxT = (DOT / n.w) + (thumb - DOT / n.w) * es;
-          const syT = (DOT / n.h) + (thumb - DOT / n.h) * es;
+          const sxT = (dw / n.w) + (thumb - DOT / n.w) * es;
+          const syT = (dh / n.h) + (thumb - DOT / n.h) * es;
           const sx = sxT + (1 - sxT) * eo;
           const sy = syT + (1 - syT) * eo;
           boxes[i].style.transform =

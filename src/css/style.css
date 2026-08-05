@@ -1908,7 +1908,10 @@
   .loader-line{
     position:absolute; left:0; top:50%;
     transform:translateY(-50%);
-    width:100%; height:3px;
+    /* must stay in step with the height the grid's .hlh lines start at in the
+       build animation (see "the loader bar stays as a single horizontal line" in
+       main.js) — the bar becomes those lines, so a mismatch shows as a jump */
+    width:100%; height:2.5px;
     background:rgba(23,24,28,0.12);
   }
   .loader-line-fill{
