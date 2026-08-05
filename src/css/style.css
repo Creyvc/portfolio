@@ -63,6 +63,14 @@
      fly-out, which never runs anywhere else. */
   .home-lines.page-lines{ z-index:1; }
 
+  /* Only on the page that has the field (ui-ux): the horizontal rules stop at
+     its left edge instead of running the full width, so the grey block is left
+     clean rather than being crossed by them. Keyed off .grid-fill, which is that
+     page's own element and sits just before .home-lines in the markup.
+     width:auto is required — .hlh sets width:100%, which would otherwise win
+     over the right offset. */
+  .grid-fill ~ .home-lines .hlh{ right:67%; width:auto; }
+
   /* ===== Measure scale =====
      The reference is a vertical ruler; this is that turned on its side and then
      flipped, so the ticks rise from a shared bottom edge and the numbers sit

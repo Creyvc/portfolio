@@ -119,16 +119,21 @@
           const FLY = { duration:DUR, delay:HOLD, easing:EASE, fill:'both' };
           // 1) the loader bar stays as a single horizontal line at center for HOLD ms,
           //    2) then it splits to its rows — one continuous move, never hidden.
+          // Both rows run the identical keyframes, so the bar reads as splitting
+          // evenly in two. They previously differed: the top one WAS the loader
+          // bar, 3px and thinning to 1px, while the bottom merely faded in at
+          // 1px — which showed as a heavier top line all the way through the
+          // split. Starting both as a 3px ink bar on the midline means they
+          // overlap the loader bar exactly at rest, so the substitution is still
+          // invisible; there are simply two of them now instead of one.
           document.querySelectorAll('.home-lines .hlh').forEach(function(l){
             const dy = cy - parseFloat(getComputedStyle(l).top);
-            const spinner = l.classList.contains('hlh-1');   // one line is the held loader bar...
-            const frames = spinner
-              ? [ { transform:`translateY(${dy - 1.5}px)`, opacity:1, backgroundColor:INK, height:'3px' },   // centered on the midline, exactly matching the loader bar (no jump)
-                  { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5', height:'1px' } ]      // shrinks to a grid line
-              : [ { transform:`translateY(${dy}px)`, opacity:0, backgroundColor:INK },   // ...the other emerges at center
-                  { opacity:1, offset:0.08 },
-                  { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5' } ];
-            l.animate(frames, FLY);
+            l.animate([
+              // centered on the midline, exactly matching the 3px loader bar (no jump)
+              { transform:`translateY(${dy - 1.5}px)`, opacity:1, backgroundColor:INK, height:'3px' },
+              // and each thins to a grid line as it travels to its row
+              { transform:'translateY(0px)', opacity:1, backgroundColor:'#dfe2e5', height:'1px' }
+            ], FLY);
           });
           // vertical lines fly out from center-x to their columns (appear as they go)
           document.querySelectorAll('.home-lines .hl').forEach(function(l){
