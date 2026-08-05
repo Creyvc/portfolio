@@ -634,7 +634,7 @@
       // row, so a wider thumbnail leaves less room between them. At 74/36 the
       // thumbnails were ~34px tall on a 36px pitch — barely 2px apart.
       const THUMB = 60;     // width of the small resolved box in the column, px
-      const MARGIN = 16;    // px kept clear inside each rule, so it never touches
+      const MARGIN = 5;     // px kept clear inside each rule, so it never touches
       // Nothing snaps and nothing overshoots. Every move eases in and out of rest,
       // and the holds between them are long enough to read as breath rather than
       // as beats — the whole thing is one slow exhale instead of a series of hits.
