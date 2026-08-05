@@ -63,6 +63,17 @@
      fly-out, which never runs anywhere else. */
   .home-lines.page-lines{ z-index:1; }
 
+  /* ui-ux only (keyed off .grid-fill, that page's own element, which sits just
+     before .home-lines): the horizontal rules keep their two margin segments but
+     drop the long run between 33% and 97% — the span the field covers. Painted as
+     a gradient rather than by resizing the element, because the line has to exist
+     on BOTH sides of the gap and one element can only have one left and one right
+     edge. Truncating it left the right-hand segment missing entirely. */
+  .grid-fill ~ .home-lines .hlh{
+    background:linear-gradient(to right,
+      #dfe2e5 0 33%, transparent 33% 97%, #dfe2e5 97% 100%);
+  }
+
 
   /* ===== Measure scale =====
      The reference is a vertical ruler; this is that turned on its side and then
