@@ -887,6 +887,11 @@
       // durations this document is actually running
       const jw = document.documentElement.classList.contains('pt-jw');
       const CLOSE = jw ? 1120 : 780, OPEN = jw ? 360 : 900;
+      // The close plays on the page you are LEAVING, so it cannot be set by the
+      // destination's own stylesheet the way the open is. Heading for contact,
+      // mark <html> at click time and let CSS slow that one wipe; every other
+      // link off the same page keeps the normal speed.
+      const SLOW_TO = /\/contact\.html$/, CLOSE_SLOW = 1120;
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const html = document.documentElement;
 
@@ -940,14 +945,16 @@
         // on the way in. Matching any .home-lines started them on 3% / 97%, so
         // leaving one of those pages the lines appeared inset rather than
         // sweeping in from the ends.
+        const slow = SLOW_TO.test(link.pathname);
         html.classList.add('pt', 'pt-close');
+        if (slow) html.classList.add('pt-slow');
         if (!jw && document.querySelector('.home-lines')) html.classList.add('pt-grid');
         try { sessionStorage.setItem(KEY, '1'); } catch(_){}   // tells the next page to open
 
         let gone = false;
         const go = function(){ if (gone) return; gone = true; window.location.href = link.href; };
         onCoverEnd(go);
-        setTimeout(go, CLOSE + 200);       // safety net if animationend never fires
+        setTimeout(go, (slow ? CLOSE_SLOW : CLOSE) + 200);   // safety net if animationend never fires
       });
 
       // the back button can restore a page from bfcache mid-transition — clear the
@@ -955,7 +962,7 @@
       window.addEventListener('pageshow', function(e){
         if (!e.persisted) return;
         leaving = false;
-        html.classList.remove('pt', 'pt-close', 'pt-open', 'pt-grid');
+        html.classList.remove('pt', 'pt-close', 'pt-open', 'pt-grid', 'pt-slow');
       });
     })();
 
