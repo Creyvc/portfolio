@@ -2152,10 +2152,11 @@
         ' scale(' + (1 + (SX - 1) * p).toFixed(4) + ',' + (1 + (SY - 1) * p).toFixed(4) + ')';
       lastPath.setAttribute('d', tissue(el / RIPPLE, amp));
 
-      // the rest of the page comes back as it lands, not after
-      const back = 1 - p;
-      for (let i = 0; i < boxEls.length - 1; i++) boxEls[i].style.opacity = back.toFixed(3);
-      scale.style.opacity = back.toFixed(3);
+      // Nothing else is touched on the way down. Ramping the rest of the page
+      // back up with the fold meant the boxes behind it spent the whole flight
+      // half there, which read as a fade over the top of the travelling sheet
+      // rather than as a page arriving. They stay out until it lands and are
+      // handed back at full strength in done().
 
       if (el < HOLD + FLY) requestAnimationFrame(open);
       else done();
