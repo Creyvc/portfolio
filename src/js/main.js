@@ -1785,6 +1785,7 @@
   const field = document.getElementById('scaleField');
   const boxCx = [];        // each box's centre, in vw of track space
   const boxPaths = [];     // the filled path that draws each box
+  const boxEls = [];       // and the box each one belongs to
   const SVGNS = 'http://www.w3.org/2000/svg';
   const FLAT = 'M0,0 L100,0 L100,100 L0,100 Z';   // the box at rest
   // The wave has to read as one surface breathing, not as a row of louvres, so
@@ -1847,6 +1848,7 @@
       svg.appendChild(path);
       box.appendChild(svg);
       boxPaths.push(path);
+      boxEls.push(box);
 
       ftrack.appendChild(box);
     }
@@ -2051,14 +2053,100 @@
     // outward, so the middle of the screen, which is exactly where the numbers
     // run, is uncovered almost at once; holding the run back until the
     // transition had finished just read as a stall before anything happened.
-    let start = null;                            // null, not 0: a 0 timestamp would never latch
-    requestAnimationFrame(function step(now){
-      if (cancelled) return;                     // hand over the moment it is touched
-      if (start === null) start = now;
-      const t = Math.min((now - start) / REWIND, 1);
-      scale.scrollLeft = max * (1 - easeOut(t));
-      sync();
-      if (t < 1) requestAnimationFrame(step);
+    function rewind(){
+      let start = null;                          // null, not 0: a 0 timestamp would never latch
+      requestAnimationFrame(function step(now){
+        if (cancelled) return;                   // hand over the moment it is touched
+        if (start === null) start = now;
+        const t = Math.min((now - start) / REWIND, 1);
+        scale.scrollLeft = max * (1 - easeOut(t));
+        sync();
+        if (t < 1) requestAnimationFrame(step);
+      });
+    }
+
+    // ===== Opening: the last box, page-sized, before anything else =====
+    // It fills the window and holds there dead still, then folds down into the
+    // place it actually occupies at the far end of the run — and it is the
+    // travelling that makes it ripple, like a sheet of tissue carried through
+    // the air. Only once it lands does the ruler start its rewind. Everything
+    // else is held back until then, so there is one object on screen and not a
+    // row of them waiting behind it.
+    const HOLD = 750;        // ms hanging full-page, still
+    const FLY  = 1250;       // ms folding down into place, rippling as it goes
+    const AMP  = 2.4;        // ripple depth at its deepest, in viewBox units
+    const RIPPLE = 1400;     // ms for one pass of the ripple
+
+    const lastEl = boxEls[boxEls.length - 1], lastPath = boxPaths[boxPaths.length - 1];
+    if (!lastEl || !lastPath){ rewind(); return; }
+
+    // A sheet, not a bar: two sines of different rates running against each
+    // other, and the far edge lagging the near one so the surface twists rather
+    // than moving as one piece.
+    function tissue(tau, amp){
+      let d = '';
+      const wob = (u, lag) =>
+        Math.sin((u * 1.35 - tau + lag) * Math.PI * 2) * 0.62 +
+        Math.sin((u * 2.30 + tau * 0.75) * Math.PI * 2) * 0.38;
+      for (let i = 0; i <= SAMPLES; i++){
+        const u = i / SAMPLES;
+        d += (i ? 'L' : 'M') + (u * 100).toFixed(2) + ',' + (-amp * wob(u, 0)).toFixed(2) + ' ';
+      }
+      for (let i = SAMPLES; i >= 0; i--){
+        const u = i / SAMPLES;
+        d += 'L' + (u * 100).toFixed(2) + ',' + (100 + amp * wob(u, 0.18)).toFixed(2) + ' ';
+      }
+      return d + 'Z';
+    }
+
+    const r = lastEl.getBoundingClientRect();
+    const W = window.innerWidth, H = window.innerHeight;
+    // what it takes to make this one box cover the window, from where it sits
+    const SX = W / r.width, SY = H / r.height;
+    const DX = W / 2 - (r.left + r.width / 2), DY = H / 2 - (r.top + r.height / 2);
+
+    // hold everything else back so the sheet arrives alone
+    for (let i = 0; i < boxEls.length - 1; i++) boxEls[i].style.opacity = '0';
+    scale.style.opacity = '0';
+    lastEl.style.zIndex = '3';
+
+    const easeInOut = x => x < 0.5 ? 4*x*x*x : 1 - Math.pow(-2*x + 2, 3) / 2;
+
+    let t0 = null;
+    requestAnimationFrame(function open(now){
+      if (cancelled){ done(); return; }
+      if (t0 === null) t0 = now;
+      const el = now - t0;
+      // q is how far through the fold it is, p how much of the full-page state
+      // is left — so p is 1 for the whole hold and eases to 0 on the way down
+      const q = el < HOLD ? 0 : Math.min((el - HOLD) / FLY, 1);
+      const p = 1 - easeInOut(q);
+      // The ripple belongs to the journey, not the wait: nothing moves while it
+      // hangs, it builds as the fold gets under way, and it is flat again by the
+      // time it settles. sin() gives exactly that arc with no seam at either end.
+      const amp = AMP * Math.sin(Math.PI * q);
+
+      lastEl.style.transform =
+        'translate(' + (DX * p).toFixed(2) + 'px,' + (DY * p).toFixed(2) + 'px)' +
+        ' scale(' + (1 + (SX - 1) * p).toFixed(4) + ',' + (1 + (SY - 1) * p).toFixed(4) + ')';
+      lastPath.setAttribute('d', tissue(el / RIPPLE, amp));
+
+      // the rest of the page comes back as it lands, not after
+      const back = 1 - p;
+      for (let i = 0; i < boxEls.length - 1; i++) boxEls[i].style.opacity = back.toFixed(3);
+      scale.style.opacity = back.toFixed(3);
+
+      if (el < HOLD + FLY) requestAnimationFrame(open);
+      else done();
     });
+
+    function done(){
+      lastEl.style.transform = '';
+      lastEl.style.zIndex = '';
+      for (let i = 0; i < boxEls.length; i++) boxEls[i].style.opacity = '';
+      scale.style.opacity = '';
+      sync();                    // hands the path back to the normal wave/curl
+      if (!cancelled) rewind();
+    }
   })();
 })();
