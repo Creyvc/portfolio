@@ -2062,7 +2062,8 @@
     }
 
     // ===== Opening: the last box, page-sized, before anything else =====
-    // It fills the window and holds there dead still, then folds down into the
+    // It fills the page between the end verticals and holds there dead still,
+    // then folds down into the
     // place it actually occupies at the far end of the run — and it is the
     // travelling that makes it ripple, like a sheet of tissue carried through
     // the air. Only once it lands does the ruler start its rewind. Everything
@@ -2095,11 +2096,35 @@
       return d + 'Z';
     }
 
-    const r = lastEl.getBoundingClientRect();
-    const W = window.innerWidth, H = window.innerHeight;
-    // what it takes to make this one box cover the window, from where it sits
-    const SX = W / r.width, SY = H / r.height;
-    const DX = W / 2 - (r.left + r.width / 2), DY = H / 2 - (r.top + r.height / 2);
+    // The sheet spans the page between the two end verticals rather than edge to
+    // edge, so those lines stay clear of it and read as the margins it sits in.
+    // .hl-1 is a 1px rule at 3%, so it occupies up to 3% + 1 and the sheet starts
+    // there; .hl-4 sits at 97%, so the sheet stops short of it. That leaves the
+    // midpoint half a pixel right of centre — carried through rather than rounded
+    // away, or the two margins come out visibly unequal on a narrow window.
+    //
+    // Re-taken whenever the window changes size, with the transform off so the
+    // rect describes where the box naturally sits. The box is sized in vh and the
+    // verticals are placed in %, so a resize moves both, and a scale worked out
+    // for the old size would throw the sheet straight over the margins it is
+    // supposed to stop at. sync() is bound to resize further up, so the track has
+    // already been repositioned by the time this reads the rect.
+    let SX, SY, DX, DY;
+    function measure(){
+      const keep = lastEl.style.transform;
+      lastEl.style.transform = '';
+      const r = lastEl.getBoundingClientRect();
+      const W = window.innerWidth, H = window.innerHeight;
+      const L = W * 0.03 + 1, R = W * 0.97;
+      // what it takes to make this one box fill that span, from where it sits
+      SX = (R - L) / r.width;
+      SY = H / r.height;
+      DX = (L + R) / 2 - (r.left + r.width / 2);
+      DY = H / 2 - (r.top + r.height / 2);
+      lastEl.style.transform = keep;
+    }
+    measure();
+    window.addEventListener('resize', measure);
 
     // hold everything else back so the sheet arrives alone
     for (let i = 0; i < boxEls.length - 1; i++) boxEls[i].style.opacity = '0';
@@ -2137,6 +2162,7 @@
     });
 
     function done(){
+      window.removeEventListener('resize', measure);
       lastEl.style.transform = '';
       lastEl.style.zIndex = '';
       for (let i = 0; i < boxEls.length; i++) boxEls[i].style.opacity = '';
