@@ -261,14 +261,10 @@
   /* the "ONTACT" is collapsed (only "C" shows); it expands + fades in when
      hovering the collaborating line -> C becomes CONTACT */
   .cell-c-rest{
+    /* Empty until hovered — main.js holds the text and scrambles it in, so there
+       is no width or opacity to animate here. */
     overflow:hidden;
-    max-width:0;
-    opacity:0;
     white-space:nowrap;
-    transition:max-width 0.4s ease, opacity 0.4s ease;
-  }
-  .home-blurb-3:has(u:hover) ~ .cell-c .cell-c-rest{
-    max-width:6em; opacity:1;
   }
   /* letter A -> ABOUT ME on hover, row 3 column 1 (bottom-left) */
   .cell-a{
@@ -285,13 +281,11 @@
     z-index:2;
   }
   .cell-a-rest{
+    /* Empty until hovered — main.js holds the text and scrambles it in, so there
+       is no width or opacity to animate here. */
     overflow:hidden;
-    max-width:0;
-    opacity:0;
     white-space:nowrap;
-    transition:max-width 0.4s ease, opacity 0.4s ease;
   }
-  .home-blurb:has(.u-vc:hover) ~ .cell-a .cell-a-rest{ max-width:8em; opacity:1; }
   /* letter A -> AI/ML Engineering on hover, row 2 column 2 (center) */
   .cell-ai{
     position:fixed;
@@ -307,13 +301,11 @@
     z-index:2;
   }
   .cell-ai-rest{
+    /* Empty until hovered — main.js holds the text and scrambles it in, so there
+       is no width or opacity to animate here. */
     overflow:hidden;
-    max-width:0;
-    opacity:0;
     white-space:nowrap;
-    transition:max-width 0.4s ease, opacity 0.4s ease;
   }
-  .home-blurb:has(.u-ai:hover) ~ .cell-ai .cell-ai-rest{ max-width:14em; opacity:1; }
   /* letter J -> JEWELRY DESIGN on hover, row 3 column 3 (bottom-right) */
   .cell-j{
     position:fixed;
@@ -329,13 +321,11 @@
     z-index:2;
   }
   .cell-j-rest{
+    /* Empty until hovered — main.js holds the text and scrambles it in, so there
+       is no width or opacity to animate here. */
     overflow:hidden;
-    max-width:0;
-    opacity:0;
     white-space:nowrap;
-    transition:max-width 0.4s ease, opacity 0.4s ease;
   }
-  .home-blurb:has(.u-jw:hover) ~ .cell-j .cell-j-rest{ max-width:12em; opacity:1; }
   /* letter D -> DATA SCIENCE on hover, row 2 column 3 (right-aligned) */
   .cell-d{
     position:fixed;
@@ -354,13 +344,11 @@
     z-index:2;
   }
   .cell-d-rest{
+    /* Empty until hovered — main.js holds the text and scrambles it in, so there
+       is no width or opacity to animate here. */
     overflow:hidden;
-    max-width:0;
-    opacity:0;
     white-space:nowrap;
-    transition:max-width 0.4s ease, opacity 0.4s ease;
   }
-  .home-blurb:has(.u-ds:hover) ~ .cell-d .cell-d-rest{ max-width:12em; opacity:1; }
   /* letter S -> SOFTWARE DEVELOPMENT on hover, row 1 column 1 (right-aligned) */
   .cell-s{
     position:fixed;
@@ -379,13 +367,11 @@
     z-index:2;
   }
   .cell-s-rest{
+    /* Empty until hovered — main.js holds the text and scrambles it in, so there
+       is no width or opacity to animate here. */
     overflow:hidden;
-    max-width:0;
-    opacity:0;
     white-space:nowrap;
-    transition:max-width 0.4s ease, opacity 0.4s ease;
   }
-  .home-blurb:has(.u-sd:hover) ~ .cell-s .cell-s-rest{ max-width:18em; opacity:1; }
   /* the letter cells are display-only (triggered by hovering the text), so
      their boxes must not intercept hover on the paragraphs beneath them */
   .cell-c, .cell-a, .cell-ai, .cell-j, .cell-d, .cell-s, .cell-u{ pointer-events:none; }
@@ -404,13 +390,11 @@
   }
   .cell-u-line{ display:flex; align-items:center; white-space:nowrap; }
   .cell-u-rest{
+    /* Empty until hovered — main.js holds the text and scrambles it in, so there
+       is no width or opacity to animate here. */
     overflow:hidden;
-    max-width:0;
-    opacity:0;
     white-space:nowrap;
-    transition:max-width 0.4s ease, opacity 0.4s ease;
   }
-  .home-blurb:has(.u-ux:hover) ~ .cell-u .cell-u-rest{ max-width:12em; opacity:1; }
   .home-blurb .ref{
     font-size:0.6em;
     vertical-align:super;

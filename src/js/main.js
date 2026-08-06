@@ -308,6 +308,78 @@
       play();
     })();
 
+    // ===== Blurb hover -> the grid letter spells itself out =====
+    // Each keyword in the blurb owns a letter parked out on the grid, and
+    // hovering the keyword turns that letter into the whole word: J -> JEWELRY
+    // DESIGN. It used to widen and fade in. Now it decodes, the same way the name
+    // link above cycles its three languages — the word arrives as random glyphs
+    // and resolves left to right. Same glyph set and the same 45ms tick, so the
+    // flicker runs at the same rate; only the length differs, cut to 9 steps so a
+    // hover still answers in about the 0.4s the fade took.
+    (function(){
+      // keyword to hover -> the collapsed tail it fills in. Two entries for
+      // .cell-u-rest: UI and UX DESIGN are separate lines off one keyword.
+      const PAIRS = [
+        ['.home-blurb-3 u', '.cell-c-rest'],
+        ['.u-vc',           '.cell-a-rest'],
+        ['.u-ai',           '.cell-ai-rest'],
+        ['.u-jw',           '.cell-j-rest'],
+        ['.u-ds',           '.cell-d-rest'],
+        ['.u-sd',           '.cell-s-rest'],
+        ['.u-ux',           '.cell-u-rest']
+      ];
+      const GLYPHS = '01<>[]{}/\\|=+*-#%&$ｦｧｨｩｪﾊﾋﾌﾍABCDEFGHKMNXZ';
+      const STEPS = 9, TICK = 45;
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // forward resolves the word, backward dissolves it and clears the span.
+      // Spaces are never scrambled — they hold the shape of the phrase steady
+      // while the letters churn, exactly as the brackets do on the name link.
+      const running = new WeakMap();
+      function decode(el, forward){
+        clearInterval(running.get(el));
+        const full = el.dataset.full;
+        if (reduce){ el.textContent = forward ? full : ''; return; }
+        const chars = Array.from(full);
+        let step = 0;
+        running.set(el, setInterval(function(){
+          step++;
+          const p = forward ? step / STEPS : 1 - step / STEPS;
+          const revealed = Math.floor(chars.length * p);
+          let out = '';
+          for (let i = 0; i < chars.length; i++){
+            out += (i < revealed || chars[i] === ' ')
+              ? chars[i]
+              : GLYPHS[(Math.random() * GLYPHS.length) | 0];
+          }
+          el.textContent = out;
+          if (step >= STEPS){
+            clearInterval(running.get(el));
+            el.textContent = forward ? full : '';
+          }
+        }, TICK));
+      }
+
+      PAIRS.forEach(function(pair){
+        const triggers = document.querySelectorAll(pair[0]);
+        const rests = document.querySelectorAll(pair[1]);
+        if (!triggers.length || !rests.length) return;
+        // the markup carries the word; park it and start from the bare letter
+        rests.forEach(function(el){
+          el.dataset.full = el.textContent;
+          el.textContent = '';
+        });
+        triggers.forEach(function(t){
+          t.addEventListener('mouseenter', function(){
+            rests.forEach(function(el){ decode(el, true); });
+          });
+          t.addEventListener('mouseleave', function(){
+            rests.forEach(function(el){ decode(el, false); });
+          });
+        });
+      });
+    })();
+
     (function(){
       const track = document.getElementById('marqueeTrack');
       if (!track) return;
