@@ -64,14 +64,14 @@
   .home-lines.page-lines{ z-index:1; }
 
   /* ui-ux only (keyed off .grid-fill, that page's own element, which sits just
-     before .home-lines): the horizontal rules keep their two margin segments but
-     drop the long run between 33% and 97% — the span the field covers. Painted as
-     a gradient rather than by resizing the element, because the line has to exist
-     on BOTH sides of the gap and one element can only have one left and one right
-     edge. Truncating it left the right-hand segment missing entirely. */
+     before .home-lines): the horizontal rules keep only their two end stubs,
+     outside the verticals, and the whole run between them is dropped. Painted as
+     a gradient rather than by resizing the element, because the line has to
+     exist on BOTH sides of the gap and one element has only one left and one
+     right edge. */
   .grid-fill ~ .home-lines .hlh{
     background:linear-gradient(to right,
-      #dfe2e5 0 33%, transparent 33% 97%, #dfe2e5 97% 100%);
+      #dfe2e5 0 3%, transparent 3% 97%, #dfe2e5 97% 100%);
   }
 
 
@@ -199,10 +199,9 @@
     position:fixed;
     top:0; bottom:0;
     left:33%; right:3%;
-    /* the same paper as the page: the field is no longer a visible block, but the
-       element stays because the horizontal rules are truncated off it (see the
-       .grid-fill ~ .home-lines .hlh rule) and it still marks the columns it
-       covers for anything added later */
+    /* the same paper as the page: the field paints nothing now, and with the
+       horizontal rules gone from that page it no longer shapes anything either.
+       Kept only as a marker for the columns it covers. */
     background:var(--paper);
     z-index:0;
     pointer-events:none;
