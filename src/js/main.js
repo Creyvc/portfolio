@@ -1982,7 +1982,15 @@
     return scale.scrollWidth - scale.clientWidth;
   }
 
+  // Held true for the whole entrance — the sheet's flight and the run from 30 to
+  // 1 — so none of it can be interrupted. Every gesture that would drive the
+  // ruler is swallowed rather than acted on, and the wheel and touchmove ones
+  // are cancelled outright as well: an early return alone would still let the
+  // band scroll itself natively, since it is a real overflow-x scroller.
+  let locked = false;
+
   window.addEventListener('wheel', function(e){
+    if (locked){ e.preventDefault(); return; }
     const max = maxScroll();
     if (max <= 0) return;
     let d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
@@ -1998,11 +2006,13 @@
 
   let startX = 0, startY = 0, startLeft = 0;
   window.addEventListener('touchstart', function(e){
+    if (locked) return;
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     startLeft = scale.scrollLeft;
   }, { passive:true });
   window.addEventListener('touchmove', function(e){
+    if (locked){ e.preventDefault(); return; }
     const dx = e.touches[0].clientX - startX;
     const dy = e.touches[0].clientY - startY;
     const move = Math.abs(dy) > Math.abs(dx) ? dy : dx;
@@ -2040,10 +2050,11 @@
     scale.scrollLeft = max;      // set before the first paint, so 1 is never shown first
     sync();
 
-    let cancelled = false;
-    const stop = function(){ cancelled = true; };
-    window.addEventListener('wheel', stop, { passive:true, once:true });
-    window.addEventListener('touchstart', stop, { passive:true, once:true });
+    // Taken for the whole sequence and given back on the last frame of the run.
+    // The entrance used to hand over the moment the page was touched, which meant
+    // a stray trackpad nudge on the way in left the ruler stranded halfway
+    // through a journey it never finished.
+    locked = true;
 
     // Straight onto the next frame — no wait. The wipe opens from the centre
     // outward, so the middle of the screen, which is exactly where the numbers
@@ -2052,12 +2063,12 @@
     function rewind(){
       let start = null;                          // null, not 0: a 0 timestamp would never latch
       requestAnimationFrame(function step(now){
-        if (cancelled) return;                   // hand over the moment it is touched
         if (start === null) start = now;
         const t = Math.min((now - start) / REWIND, 1);
         scale.scrollLeft = max * (1 - easeOut(t));
         sync();
         if (t < 1) requestAnimationFrame(step);
+        else locked = false;                     // the ruler is the user's again
       });
     }
 
@@ -2142,7 +2153,6 @@
 
     let t0 = null;
     requestAnimationFrame(function open(now){
-      if (cancelled){ done(); return; }
       if (t0 === null) t0 = now;
       const el = now - t0;
       // q is how far through the fold it is, p how much of the full-page state
@@ -2171,7 +2181,7 @@
       lastEl.style.zIndex = '';
       field.style.zIndex = '';
       sync();                    // hands the path back to the normal wave/curl
-      if (!cancelled) rewind();
+      rewind();
     }
   })();
 })();
