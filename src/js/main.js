@@ -942,16 +942,15 @@
         // 3% / 97% and appear to peel off them. Pages with no grid to leave
         // (ai-data-science, full-stack) fall through to the page edges.
         //
-        // .pt-edge opts out of that: the page pushed its lines clean off the
-        // screen on the way in, so that is where they are, and the close has to
-        // pull them back in from the same place. Anchoring them to the grid
-        // would have had them appear inset at 3% / 97% and sweep in from there,
-        // with the page's real end lines blinking out underneath at the same
-        // moment — a jump straight out of nowhere rather than a return.
+        // .pt-edge-out opts out of that: the two lines come in from the page
+        // edges instead, sweeping across the grid and covering the real end
+        // lines on the way rather than peeling off them. Set per page in its own
+        // <html> — see "ARRIVAL" in style.css, which owns the matching choice
+        // for the way in.
         const slow = SLOW_TO.test(link.pathname);
         html.classList.add('pt', 'pt-close');
         if (slow) html.classList.add('pt-slow');
-        if (!html.classList.contains('pt-edge') && document.querySelector('.home-lines'))
+        if (!html.classList.contains('pt-edge-out') && document.querySelector('.home-lines'))
           html.classList.add('pt-grid');
         try { sessionStorage.setItem(KEY, '1'); } catch(_){}   // tells the next page to open
 
@@ -2118,7 +2117,7 @@
     // The sheet covers the whole window, edge to edge and top to bottom — the end
     // verticals included. It arrives as the page itself rather than as something
     // laid on top of it, which is also how the wipe leaves things on this page:
-    // .pt-edge pushes the transition's two lines clean off the screen, so there is
+    // .pt-edge-in pushes the transition's two lines clean off the screen, so there is
     // nothing at 3% / 97% for the sheet to sit politely inside.
     //
     // Re-taken whenever the window changes size, with the transform off so the

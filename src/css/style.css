@@ -866,9 +866,15 @@
 
      TO SWITCH THE DEFAULT: comment out the live block below and uncomment the
      other. Every arrival that does not name an option for itself reads these
-     three. To give one page its own answer instead, put .pt-edge on its <html>
-     and it takes option 2 whatever the default is — that is how jewelry.html
-     gets it while the rest of the site stays on option 1. */
+     three. To give one page its own answer instead, put .pt-edge-in on its
+     <html> and it takes option 2 whatever the default is — that is how
+     jewelry.html gets it while the rest of the site stays on option 1.
+
+     The close is a separate choice, since a page can want one and not the other:
+     .pt-edge-out on the <html> makes the lines pull in from the page edges when
+     you leave. main.js reads it at click time and withholds .pt-grid. jewelry
+     carries both, so its lines live at the edges in both directions; contact
+     carries only -out, so it is arrived at on the grid and left from the edges. */
   html.pt-open{
     /* ---- Option 1: stop on the grid (live default) ---- */
     --pt-travel:94%;            /* how far out the lines go: 94% = 3% / 97% */
@@ -881,13 +887,10 @@
     --pt-rest:#dfe2e5;
     */
   }
-  /* Per-page opt-in to option 2. The class is written into the page's own <html>
+  /* Per-page opt-in to option 2 on arrival. Written into the page's own <html>
      rather than added by script, so it is there on the very first frame — the
-     same reason the arrival class itself is set inline. It covers the page's
-     closing wipe too: main.js reads it at click time and withholds .pt-grid, so
-     the lines pull back in from the edges they were last pushed out to instead
-     of appearing inset on the grid. Both directions, one class. */
-  html.pt-edge.pt-open{
+     same reason the arrival class itself is set inline. */
+  html.pt-edge-in.pt-open{
     --pt-travel:100%;
     --pt-ends:1;
     --pt-rest:#dfe2e5;
