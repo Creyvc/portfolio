@@ -881,12 +881,10 @@
     // plain CSS animation, so this only has to close it and follow the link.
     (function(){
       const KEY = 'pageTransition';
-      // must match the pt-close-* / pt-open-* durations in style.css, which the
-      // jewelry page overrides via .pt-jw — these are only the safety nets that
-      // fire if animationend never does, so they have to track whichever set of
-      // durations this document is actually running
-      const jw = document.documentElement.classList.contains('pt-jw');
-      const CLOSE = jw ? 1120 : 780, OPEN = jw ? 360 : 900;
+      // must match the pt-close-* / pt-open-* durations in style.css — these are
+      // only the safety nets that fire if animationend never does, so they have
+      // to track the durations the stylesheet is actually running
+      const CLOSE = 780, OPEN = 900;
       // The close plays on the page you are LEAVING, so it cannot be set by the
       // destination's own stylesheet the way the open is. Heading for contact,
       // mark <html> at click time and let CSS slow that one wipe; every other
@@ -938,17 +936,15 @@
         e.preventDefault();
         leaving = true;
 
-        // Anchor the closing lines to the grid only on the home page, whose hero
-        // grid is a plain .home-lines. Every other page carries .page-lines — a
-        // copy of the grid drawn over its content — and there the lines pull in
-        // from the page edges instead, which is where the opening wipe left them
-        // on the way in. Matching any .home-lines started them on 3% / 97%, so
-        // leaving one of those pages the lines appeared inset rather than
-        // sweeping in from the ends.
+        // Anchor the closing lines to the grid on any page that draws one — the
+        // home page's hero grid and the .page-lines copy the work pages carry
+        // both match .home-lines. There the lines start on .hl-1 / .hl-4 at
+        // 3% / 97% and appear to peel off them. Pages with no grid to leave
+        // (ai-data-science, full-stack) fall through to the page edges.
         const slow = SLOW_TO.test(link.pathname);
         html.classList.add('pt', 'pt-close');
         if (slow) html.classList.add('pt-slow');
-        if (!jw && document.querySelector('.home-lines')) html.classList.add('pt-grid');
+        if (document.querySelector('.home-lines')) html.classList.add('pt-grid');
         try { sessionStorage.setItem(KEY, '1'); } catch(_){}   // tells the next page to open
 
         let gone = false;
