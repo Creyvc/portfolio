@@ -883,9 +883,10 @@
   }
   /* Per-page opt-in to option 2. The class is written into the page's own <html>
      rather than added by script, so it is there on the very first frame — the
-     same reason the arrival class itself is set inline. Scoped to .pt-open, so
-     it says nothing about that page's closing wipe, which stays on the shared
-     .pt-grid answer like everywhere else. */
+     same reason the arrival class itself is set inline. It covers the page's
+     closing wipe too: main.js reads it at click time and withholds .pt-grid, so
+     the lines pull back in from the edges they were last pushed out to instead
+     of appearing inset on the grid. Both directions, one class. */
   html.pt-edge.pt-open{
     --pt-travel:100%;
     --pt-ends:1;

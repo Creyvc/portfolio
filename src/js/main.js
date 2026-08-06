@@ -941,10 +941,18 @@
         // both match .home-lines. There the lines start on .hl-1 / .hl-4 at
         // 3% / 97% and appear to peel off them. Pages with no grid to leave
         // (ai-data-science, full-stack) fall through to the page edges.
+        //
+        // .pt-edge opts out of that: the page pushed its lines clean off the
+        // screen on the way in, so that is where they are, and the close has to
+        // pull them back in from the same place. Anchoring them to the grid
+        // would have had them appear inset at 3% / 97% and sweep in from there,
+        // with the page's real end lines blinking out underneath at the same
+        // moment — a jump straight out of nowhere rather than a return.
         const slow = SLOW_TO.test(link.pathname);
         html.classList.add('pt', 'pt-close');
         if (slow) html.classList.add('pt-slow');
-        if (document.querySelector('.home-lines')) html.classList.add('pt-grid');
+        if (!html.classList.contains('pt-edge') && document.querySelector('.home-lines'))
+          html.classList.add('pt-grid');
         try { sessionStorage.setItem(KEY, '1'); } catch(_){}   // tells the next page to open
 
         let gone = false;
