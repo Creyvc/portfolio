@@ -42,9 +42,9 @@
     sessionStorage.removeItem('pageTransition');
   } catch(e){ return; }
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  /* .pt-grid: this page has a grid too now, so its lines come to rest on
-     .hl-1 / .hl-4 at 3% / 97% and hand straight over to them. */
-  document.documentElement.className += ' pt pt-open pt-grid';
+  /* How far the lines push back out, and what they do when they get there, is
+     the arrival option block in style.css — see "ARRIVAL: TWO OPTIONS". */
+  document.documentElement.className += ' pt pt-open';
 })();
 </script>
 </head>

@@ -2126,9 +2126,16 @@
     measure();
     window.addEventListener('resize', measure);
 
-    // hold everything else back so the sheet arrives alone
-    for (let i = 0; i < boxEls.length - 1; i++) boxEls[i].style.opacity = '0';
-    scale.style.opacity = '0';
+    // Nothing is held back: the page is fully laid out from the first frame and
+    // the sheet simply flies home over the top of it. While it is page-sized it
+    // covers the lot, and the fold is what uncovers the page — nothing fades in.
+    //
+    // Both lifts are needed to put it on top. .scale-field and .scale are each
+    // z-index 2 and the field comes first in the markup, so the ruler paints over
+    // it on document order alone; and because the field is a stacking context,
+    // raising the sheet inside it can never reach past the field's own level.
+    // So the field goes above the ruler and the sheet above its siblings.
+    field.style.zIndex = '4';
     lastEl.style.zIndex = '3';
 
     const easeInOut = x => x < 0.5 ? 4*x*x*x : 1 - Math.pow(-2*x + 2, 3) / 2;
@@ -2152,11 +2159,7 @@
         ' scale(' + (1 + (SX - 1) * p).toFixed(4) + ',' + (1 + (SY - 1) * p).toFixed(4) + ')';
       lastPath.setAttribute('d', tissue(el / RIPPLE, amp));
 
-      // Nothing else is touched on the way down. Ramping the rest of the page
-      // back up with the fold meant the boxes behind it spent the whole flight
-      // half there, which read as a fade over the top of the travelling sheet
-      // rather than as a page arriving. They stay out until it lands and are
-      // handed back at full strength in done().
+      // Nothing else is touched on the way down — the page is already there.
 
       if (el < HOLD + FLY) requestAnimationFrame(open);
       else done();
@@ -2166,8 +2169,7 @@
       window.removeEventListener('resize', measure);
       lastEl.style.transform = '';
       lastEl.style.zIndex = '';
-      for (let i = 0; i < boxEls.length; i++) boxEls[i].style.opacity = '';
-      scale.style.opacity = '';
+      field.style.zIndex = '';
       sync();                    // hands the path back to the normal wave/curl
       if (!cancelled) rewind();
     }

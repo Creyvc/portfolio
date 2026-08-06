@@ -781,11 +781,10 @@
   html.pt{
     /* How far the panels sit off-centre at rest, as a share of their own width.
        100% parks each leading edge exactly on a page edge — the default, for any
-       page with no grid to rest on. .pt-grid narrows it to 94%, which parks them
-       on 3% / 97% instead: the home grid's .hl-1 / .hl-4. Each page picks its own
-       (main.js on the way out, the inline head script on the way in), so leaving
-       home the lines start on its grid and the page you land on carries them out
-       to its edges — and the trip home runs that in reverse. */
+       page with no grid to rest on. 94% parks them on 3% / 97% instead: the home
+       grid's .hl-1 / .hl-4. The close picks its own via .pt-grid, which main.js
+       sets at click time on any page that draws a grid; the open is set by the
+       option block further down. */
     --pt-travel:100%;
   }
   html.pt-grid{ --pt-travel:94%; }
@@ -829,11 +828,10 @@
   html.pt::before{ left:0;  border-right:1px solid #dfe2e5; }
   html.pt::after { right:0; border-left:1px solid #dfe2e5; }
 
-  /* Only when the lines are anchored to the grid: the real end lines step aside
-     while the moving ones are out, so you see one line travelling rather than a
-     copy detaching from a stationary original. On the edge variant the moving
-     lines never sit on .hl-1 / .hl-4, so those stay put and are simply uncovered
-     as the panels sweep past them. */
+  /* Leaving a page that draws a grid: the real end lines step aside while the
+     moving ones are out, so you see one line travelling rather than a copy
+     detaching from a stationary original. The arrival has its own version of
+     this, further down, because the two options want opposite answers. */
   html.pt-grid .home-lines .hl-1,
   html.pt-grid .home-lines .hl-4{ opacity:0; }
 
@@ -850,10 +848,62 @@
      first and then rush the last stretch into the middle */
   html.pt-close::before{ animation:pt-close-l 780ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
   html.pt-close::after { animation:pt-close-r 780ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
+  /* ===== ARRIVAL: TWO OPTIONS, PICK ONE =====
+     The pull inward is the same either way. This is only about how far the two
+     lines push back out once you land, and what happens to them there.
+
+     Option 1 — they stop on the grid. The lines travel to 3% / 97% and come to
+       rest exactly on .hl-1 / .hl-4, so the moving line BECOMES the page's end
+       line. The real ones are held out of sight underneath for the trip and the
+       moving rule fades over the last 30% of it, which is what makes the handover
+       invisible — without the fade the line blinks off when the class is dropped.
+
+     Option 2 — they run off the page. The lines carry on past the grid, out to
+       the far left and right edges, and leave. There is nothing to hand over to,
+       so the real end lines stay visible the whole time and are simply uncovered
+       as the panels sweep past them, and the moving rule keeps its colour right
+       up to the moment it goes over the edge.
+
+     TO SWITCH THE DEFAULT: comment out the live block below and uncomment the
+     other. Every arrival that does not name an option for itself reads these
+     three. To give one page its own answer instead, put .pt-edge on its <html>
+     and it takes option 2 whatever the default is — that is how jewelry.html
+     gets it while the rest of the site stays on option 1. */
+  html.pt-open{
+    /* ---- Option 1: stop on the grid (live default) ---- */
+    --pt-travel:94%;            /* how far out the lines go: 94% = 3% / 97% */
+    --pt-ends:0;                /* the real .hl-1 / .hl-4 while the wipe is out */
+    --pt-rest:transparent;      /* what the moving rule ends up as */
+
+    /* ---- Option 2: run off the page ----
+    --pt-travel:100%;
+    --pt-ends:1;
+    --pt-rest:#dfe2e5;
+    */
+  }
+  /* Per-page opt-in to option 2. The class is written into the page's own <html>
+     rather than added by script, so it is there on the very first frame — the
+     same reason the arrival class itself is set inline. Scoped to .pt-open, so
+     it says nothing about that page's closing wipe, which stays on the shared
+     .pt-grid answer like everywhere else. */
+  html.pt-edge.pt-open{
+    --pt-travel:100%;
+    --pt-ends:1;
+    --pt-rest:#dfe2e5;
+  }
+  html.pt-open .home-lines .hl-1,
+  html.pt-open .home-lines .hl-4{ opacity:var(--pt-ends); }
+
   /* arriving: they start met in the middle and push back out — easeOutQuart, the
-     exact mirror: they break away fast and coast to their rest position */
-  html.pt-open::before{ animation:pt-open-l 900ms cubic-bezier(0.25, 1, 0.5, 1) forwards; }
-  html.pt-open::after { animation:pt-open-r 900ms cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+     exact mirror of the close: they break away fast and coast to their rest
+     position. The fade is a second animation rather than a 70% stop inside
+     pt-open-*, so the eased transform stays one uninterrupted 0->100% interval
+     with no stutter mid-flight. On option 2 it resolves to the colour the rule
+     already is, so it is there but does nothing. */
+  html.pt-open::before{ animation:pt-open-l 900ms cubic-bezier(0.25, 1, 0.5, 1) forwards,
+                                  pt-fade-l 900ms linear forwards; }
+  html.pt-open::after { animation:pt-open-r 900ms cubic-bezier(0.25, 1, 0.5, 1) forwards,
+                                  pt-fade-r 900ms linear forwards; }
 
   /* Percentages all the way, never vw — this way the travel resolves against the
      same containing block .home-lines uses and can't drift by the scrollbar
@@ -864,18 +914,8 @@
   @keyframes pt-open-l { from{ transform:translateX(0); } to{ transform:translateX(calc(var(--pt-travel) * -1)); } }
   @keyframes pt-open-r { from{ transform:translateX(0); } to{ transform:translateX(var(--pt-travel)); } }
 
-  /* Grid variant only: the rule fades over the last stretch of the way out,
-     because it is handing off to the real .hl-1 / .hl-4 underneath and would
-     otherwise blink off when the class is dropped. The edge variant needs no
-     fade — the line leaves the page under its own steam. Kept as its own
-     animation rather than a 70% stop inside pt-open-*, so the eased transform
-     stays a single uninterrupted 0->100% interval with no stutter mid-flight. */
-  html.pt-grid.pt-open::before{ animation:pt-open-l 900ms cubic-bezier(0.25, 1, 0.5, 1) forwards,
-                                          pt-fade-l 900ms linear forwards; }
-  html.pt-grid.pt-open::after { animation:pt-open-r 900ms cubic-bezier(0.25, 1, 0.5, 1) forwards,
-                                          pt-fade-r 900ms linear forwards; }
-  @keyframes pt-fade-l{ 0%, 70%{ border-right-color:#dfe2e5; } 100%{ border-right-color:transparent; } }
-  @keyframes pt-fade-r{ 0%, 70%{ border-left-color:#dfe2e5;  } 100%{ border-left-color:transparent;  } }
+  @keyframes pt-fade-l{ 0%, 70%{ border-right-color:#dfe2e5; } 100%{ border-right-color:var(--pt-rest); } }
+  @keyframes pt-fade-r{ 0%, 70%{ border-left-color:#dfe2e5;  } 100%{ border-left-color:var(--pt-rest);  } }
 
   /* Set by main.js at click time when the link points at the contact page, so
      only that one closing wipe is slowed. It has to be a class on the page being

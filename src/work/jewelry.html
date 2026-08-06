@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<!-- .pt-edge: arriving here runs option 2 of the transition — the two lines
+     carry on past the grid and off the page. See "ARRIVAL" in style.css. -->
+<html lang="en" class="pt-edge">
 <head>
 <meta charset="UTF-8">
 <script>
@@ -42,9 +44,9 @@
     sessionStorage.removeItem('pageTransition');
   } catch(e){ return; }
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  /* .pt-grid: this page has a grid now, so its lines come to rest on
-     .hl-1 / .hl-4 at 3% / 97% and hand straight over to them. */
-  document.documentElement.className += ' pt pt-open pt-grid';
+  /* How far the lines push back out, and what they do when they get there, is
+     the arrival option block in style.css — see "ARRIVAL: TWO OPTIONS". */
+  document.documentElement.className += ' pt pt-open';
 })();
 </script>
 </head>
