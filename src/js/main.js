@@ -407,137 +407,75 @@
       requestAnimationFrame(animate);
     })();
 
-    (function(){
-      const scroller = document.querySelector('.contact-boxes');
-      if (!scroller) return;
+    // ===== Contact boxes: one driver for every scroll-linked effect =====
+    // Six things move as the boxes are swiped: the shrink class, the progress
+    // ticks, the X glyph, the LinkedIn letters, the EMAIL word, and the info
+    // circle with its letter-by-letter colour flip. Each of those used to attach
+    // its own scroll listener and its own rAF throttle, so a single scroll event
+    // queued five separate callbacks — and because each one wrote styles before
+    // the next one read geometry, the browser was forced to recompute layout
+    // between them, several times over per frame. On a fast desktop that is
+    // invisible; on a slower machine it is exactly the stutter you feel under
+    // your finger, and it got worse with every effect added.
+    //
+    // They are registered here instead as read/write pairs and run in one pass:
+    // every measurement happens first, then every style change. Layout is
+    // computed once a frame however many effects are attached.
+    const contactScroller = document.querySelector('.contact-boxes');
+    const contactEffects = [];
+    const contactFrame = {};
+    let contactTicking = false;
+    let contactStatic = null;
+    let contactSettleTimer = null;
+    let captureContactSettled = null;
 
-      const threshold = 20;
+    function contactAdd(effect){ contactEffects.push(effect); }
 
-      function updateScale(){
-        scroller.classList.toggle('is-scrolled', scroller.scrollLeft > threshold);
-      }
+    // --box-w and the column gap only move with the viewport or the root font
+    // size, so they are measured once and kept. Three of the effects were
+    // re-deriving them every frame, two getComputedStyle calls at a time.
+    function contactStatics(){
+      if (contactStatic) return contactStatic;
+      const cs = getComputedStyle(contactScroller);
+      contactStatic = {
+        boxW: refBoxWidth(),
+        gap: parseFloat(cs.columnGap || cs.gap) || 24
+      };
+      return contactStatic;
+    }
 
-      scroller.addEventListener('scroll', updateScale, { passive:true });
-      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-      scroller.scrollLeft = 0;
-      updateScale();
-    })();
+    function contactRun(){
+      contactTicking = false;
+      if (!contactScroller) return;
+      const f = contactFrame, s = contactStatics();
+      // the handful of measurements every effect shares, taken once
+      f.scrollLeft = contactScroller.scrollLeft;
+      f.clientWidth = contactScroller.clientWidth;
+      f.rect = contactScroller.getBoundingClientRect();
+      f.boxW = s.boxW;
+      f.gap = s.gap;
+      for (let i = 0; i < contactEffects.length; i++) contactEffects[i].read(f);
+      for (let i = 0; i < contactEffects.length; i++) contactEffects[i].write(f);
+    }
 
-    (function(){
-      const scroller = document.querySelector('.contact-boxes');
-      const progress = document.getElementById('contactProgress');
-      const boxes = document.querySelectorAll('.contact-box');
-      if (!scroller || !progress || !boxes.length) return;
+    function contactRequest(){
+      if (contactTicking || !contactScroller) return;
+      contactTicking = true;
+      requestAnimationFrame(contactRun);
+    }
 
-      boxes.forEach(() => {
-        const tick = document.createElement('span');
-        tick.className = 'tick';
-        progress.appendChild(tick);
-      });
-      const ticks = progress.querySelectorAll('.tick');
-
-      let ticking = false;
-      function updateActive(){
-        const center = scroller.scrollLeft + scroller.clientWidth / 2;
-        let closest = 0;
-        let closestDist = Infinity;
-        boxes.forEach((box, i) => {
-          const boxCenter = box.offsetLeft + box.offsetWidth / 2;
-          const dist = Math.abs(boxCenter - center);
-          if (dist < closestDist){
-            closestDist = dist;
-            closest = i;
-          }
-        });
-        ticks.forEach((tick, i) => tick.classList.toggle('active', i === closest));
-        ticking = false;
-      }
-
-      scroller.addEventListener('scroll', () => {
-        if (!ticking){ requestAnimationFrame(updateActive); ticking = true; }
-      }, { passive:true });
-      window.addEventListener('resize', updateActive);
-      updateActive();
-    })();
-
-    (function(){
-      const scroller = document.querySelector('.contact-boxes');
-      const xBox = document.querySelector('.contact-box[data-label="X"]');
-      const glyph = document.querySelector('.x-glyph');
-      if (!scroller || !xBox || !glyph) return;
-
-      const originalSize = 9;
-      // 15rem, not 22: the glyph no longer stretches the box, so at 22 its ink
-      // ran the full height of the shrunken box and touched both edges. This
-      // leaves it breathing room at the top of the scale.
-      const bigSize = 15;
-
-      function update(){
-        const viewCenter = scroller.scrollLeft + scroller.clientWidth / 2;
-        const boxCenter = xBox.offsetLeft + xBox.offsetWidth / 2;
-        const windowDist = xBox.offsetWidth + 24;
-        const progress = Math.min(Math.abs(boxCenter - viewCenter) / windowDist, 1);
-        const size = originalSize + progress * (bigSize - originalSize);
-        glyph.style.fontSize = size.toFixed(2) + 'rem';
-      }
-
-      let ticking = false;
-      scroller.addEventListener('scroll', () => {
-        if (!ticking){ requestAnimationFrame(() => { update(); ticking = false; }); ticking = true; }
-      }, { passive:true });
-      trackBoxResize(scroller, update);
-      window.addEventListener('resize', update);
-      update();
-    })();
-
-    (function(){
-      const scroller = document.querySelector('.contact-boxes');
-      const liBox = document.querySelector('.contact-box[data-label="LinkedIn"]');
-      const letterI = document.querySelector('.li-i');
-      const letterN = document.querySelector('.li-n');
-      if (!scroller || !liBox || !letterI || !letterN) return;
-
-      function update(){
-        const viewCenter = scroller.scrollLeft + scroller.clientWidth / 2;
-        const boxCenter = liBox.offsetLeft + liBox.offsetWidth / 2;
-        const windowDist = liBox.offsetWidth + 24;
-        const progress = Math.min(Math.abs(boxCenter - viewCenter) / windowDist, 1);
-
-        // Travel is the room each letter actually has before its outer edge meets
-        // the box edge, taken from layout positions so the current transform does
-        // not feed back into it. The old half-the-box formula ignored that the
-        // pair starts side by side rather than both at the centre, so each letter
-        // overshot by ~140px and spent most of the scroll clipped out of sight.
-        const roomLeft  = letterI.offsetLeft;
-        const roomRight = liBox.clientWidth - (letterN.offsetLeft + letterN.offsetWidth);
-        const maxOffset = Math.max(0, Math.min(roomLeft, roomRight));
-        const offset = progress * maxOffset;
-        letterI.style.transform = `translateX(${(-offset).toFixed(2)}px)`;
-        letterN.style.transform = `translateX(${offset.toFixed(2)}px)`;
-      }
-
-      let ticking = false;
-      scroller.addEventListener('scroll', () => {
-        if (!ticking){ requestAnimationFrame(() => { update(); ticking = false; }); ticking = true; }
-      }, { passive:true });
-      trackBoxResize(scroller, update);
-      window.addEventListener('resize', update);
-      update();
-    })();
-
-    // Runs fn every frame while the boxes are mid-resize. They grow or shrink over
-    // 0.4s when .is-scrolled flips, but the scroll-driven effects only fire on
-    // scroll — so if the swipe has already stopped (which is exactly what happens
+    // the boxes shrink over 0.4s when .is-scrolled flips, and the effects are
+    // scroll-driven — so if the swipe has already stopped (exactly what happens
     // when you come to rest back on the info box) nothing recomputed until the
-    // transition ended, and the artwork snapped into place instead of following.
-    function trackBoxResize(scroller, fn){
+    // transition ended and the artwork snapped into place instead of following
+    function contactTrackResize(){
       let until = 0, running = false;
       function loop(now){
-        fn();
+        contactRun();
         if (now < until) requestAnimationFrame(loop);
         else running = false;
       }
-      scroller.addEventListener('transitionstart', function(e){
+      contactScroller.addEventListener('transitionstart', function(e){
         if (e.propertyName !== 'width') return;
         until = performance.now() + 500;      // a little past the 0.4s transition
         if (!running){ running = true; requestAnimationFrame(loop); }
@@ -556,54 +494,147 @@
       return n * parseFloat(getComputedStyle(document.documentElement).fontSize);
     }
 
+    // ---- shrink the boxes once the swipe is under way ----
     (function(){
-      const scroller = document.querySelector('.contact-boxes');
-      const emailBox = document.querySelector('.contact-box[data-label="Email"]');
-      const glyph = document.querySelector('.email-glyph');
-      if (!scroller || !emailBox || !glyph) return;
-
-      function update(){
-        // Measured from viewport rects, not offsetLeft: .contact-boxes is not
-        // positioned, so a box's offsetLeft resolves against .contact and does
-        // not share an origin with scrollLeft. Mixing the two put the zero point
-        // outside the box's travel, so progress sat clamped and the word never
-        // swept through centre.
-        const boxRect = emailBox.getBoundingClientRect();
-        const scRect = scroller.getBoundingClientRect();
-        const signedDist = (boxRect.left + boxRect.width / 2) - (scRect.left + scRect.width / 2);
-        // Denominator is the box's full-size width, not its live one. The boxes
-        // shrink over 0.4s the moment scrolling starts, and dividing by a width
-        // that is mid-transition made progress lurch through that window — the
-        // jump you see in the word while the info circle is resizing.
-        const windowDist = refBoxWidth() + 24;
-        const progress = Math.max(-1, Math.min(1, signedDist / windowDist));
-
-        // The word slides right out of the box, .email-clip trimming it at the
-        // edges, so only VISIBLE_CHARS of it remain at either extreme: IL when
-        // the box is still to the right, EM once it has passed to the left.
-        const TOTAL_CHARS = 5, VISIBLE_CHARS = 2;
-        const glyphWidth = glyph.offsetWidth;
-        const hideWidth = glyphWidth * (1 - VISIBLE_CHARS / TOTAL_CHARS);
-        const sideGap = (emailBox.clientWidth - glyphWidth) / 2;
-
-        const translateX = -progress * (hideWidth + sideGap);
-        glyph.style.transform = `translateX(${translateX.toFixed(2)}px)`;
-      }
-
-      let ticking = false;
-      scroller.addEventListener('scroll', () => {
-        if (!ticking){ requestAnimationFrame(() => { update(); ticking = false; }); ticking = true; }
-      }, { passive:true });
-      trackBoxResize(scroller, update);
-      window.addEventListener('resize', update);
-      update();
+      if (!contactScroller) return;
+      const threshold = 20;
+      let scrolled = false;
+      contactAdd({
+        read(f){ scrolled = f.scrollLeft > threshold; },
+        write(){ contactScroller.classList.toggle('is-scrolled', scrolled); }
+      });
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      contactScroller.scrollLeft = 0;
     })();
 
+    // ---- progress ticks: mark whichever box is nearest the centre ----
     (function(){
-      const scroller = document.querySelector('.contact-boxes');
+      const progress = document.getElementById('contactProgress');
+      const boxes = document.querySelectorAll('.contact-box');
+      if (!contactScroller || !progress || !boxes.length) return;
+
+      boxes.forEach(() => {
+        const tick = document.createElement('span');
+        tick.className = 'tick';
+        progress.appendChild(tick);
+      });
+      const ticks = progress.querySelectorAll('.tick');
+
+      let closest = 0;
+      contactAdd({
+        read(f){
+          const center = f.scrollLeft + f.clientWidth / 2;
+          let closestDist = Infinity;
+          for (let i = 0; i < boxes.length; i++){
+            const dist = Math.abs(boxes[i].offsetLeft + boxes[i].offsetWidth / 2 - center);
+            if (dist < closestDist){ closestDist = dist; closest = i; }
+          }
+        },
+        write(){
+          for (let i = 0; i < ticks.length; i++) ticks[i].classList.toggle('active', i === closest);
+        }
+      });
+    })();
+
+    // ---- the X grows as its box leaves the centre ----
+    (function(){
+      const xBox = document.querySelector('.contact-box[data-label="X"]');
+      const glyph = document.querySelector('.x-glyph');
+      if (!contactScroller || !xBox || !glyph) return;
+
+      const originalSize = 9;
+      // 15rem, not 22: the glyph no longer stretches the box, so at 22 its ink
+      // ran the full height of the shrunken box and touched both edges. This
+      // leaves it breathing room at the top of the scale.
+      const bigSize = 15;
+      let size = originalSize;
+
+      contactAdd({
+        read(f){
+          const viewCenter = f.scrollLeft + f.clientWidth / 2;
+          const boxCenter = xBox.offsetLeft + xBox.offsetWidth / 2;
+          const windowDist = xBox.offsetWidth + 24;
+          const progress = Math.min(Math.abs(boxCenter - viewCenter) / windowDist, 1);
+          size = originalSize + progress * (bigSize - originalSize);
+        },
+        write(){ glyph.style.fontSize = size.toFixed(2) + 'rem'; }
+      });
+    })();
+
+    // ---- LinkedIn's I and N part company ----
+    (function(){
+      const liBox = document.querySelector('.contact-box[data-label="LinkedIn"]');
+      const letterI = document.querySelector('.li-i');
+      const letterN = document.querySelector('.li-n');
+      if (!contactScroller || !liBox || !letterI || !letterN) return;
+
+      let offset = 0;
+      contactAdd({
+        read(f){
+          const viewCenter = f.scrollLeft + f.clientWidth / 2;
+          const boxCenter = liBox.offsetLeft + liBox.offsetWidth / 2;
+          const windowDist = liBox.offsetWidth + 24;
+          const progress = Math.min(Math.abs(boxCenter - viewCenter) / windowDist, 1);
+
+          // Travel is the room each letter actually has before its outer edge meets
+          // the box edge, taken from layout positions so the current transform does
+          // not feed back into it. The old half-the-box formula ignored that the
+          // pair starts side by side rather than both at the centre, so each letter
+          // overshot by ~140px and spent most of the scroll clipped out of sight.
+          const roomLeft  = letterI.offsetLeft;
+          const roomRight = liBox.clientWidth - (letterN.offsetLeft + letterN.offsetWidth);
+          const maxOffset = Math.max(0, Math.min(roomLeft, roomRight));
+          offset = progress * maxOffset;
+        },
+        write(){
+          letterI.style.transform = `translateX(${(-offset).toFixed(2)}px)`;
+          letterN.style.transform = `translateX(${offset.toFixed(2)}px)`;
+        }
+      });
+    })();
+
+    // ---- EMAIL sweeps through its box ----
+    (function(){
+      const emailBox = document.querySelector('.contact-box[data-label="Email"]');
+      const glyph = document.querySelector('.email-glyph');
+      if (!contactScroller || !emailBox || !glyph) return;
+
+      let translateX = 0;
+      contactAdd({
+        read(f){
+          // Measured from viewport rects, not offsetLeft: .contact-boxes is not
+          // positioned, so a box's offsetLeft resolves against .contact and does
+          // not share an origin with scrollLeft. Mixing the two put the zero point
+          // outside the box's travel, so progress sat clamped and the word never
+          // swept through centre.
+          const boxRect = emailBox.getBoundingClientRect();
+          const signedDist = (boxRect.left + boxRect.width / 2) - (f.rect.left + f.rect.width / 2);
+          // Denominator is the box's full-size width, not its live one. The boxes
+          // shrink over 0.4s the moment scrolling starts, and dividing by a width
+          // that is mid-transition made progress lurch through that window — the
+          // jump you see in the word while the info circle is resizing.
+          const windowDist = f.boxW + 24;
+          const progress = Math.max(-1, Math.min(1, signedDist / windowDist));
+
+          // The word slides right out of the box, .email-clip trimming it at the
+          // edges, so only VISIBLE_CHARS of it remain at either extreme: IL when
+          // the box is still to the right, EM once it has passed to the left.
+          const TOTAL_CHARS = 5, VISIBLE_CHARS = 2;
+          const glyphWidth = glyph.offsetWidth;
+          const hideWidth = glyphWidth * (1 - VISIBLE_CHARS / TOTAL_CHARS);
+          const sideGap = (emailBox.clientWidth - glyphWidth) / 2;
+
+          translateX = -progress * (hideWidth + sideGap);
+        },
+        write(){ glyph.style.transform = `translateX(${translateX.toFixed(2)}px)`; }
+      });
+    })();
+
+    // ---- the info circle, and the letters it turns white ----
+    (function(){
       const infoBox = document.querySelector('.contact-info');
       const circle = document.querySelector('.info-circle');
-      if (!scroller || !infoBox || !circle) return;
+      if (!contactScroller || !infoBox || !circle) return;
 
       const maxDiameter = 480;
       const minDiameter = 160;
@@ -625,84 +656,100 @@
         }
       });
 
+      // The circle's `left` is relative to the info box's padding box, so these
+      // are what turn it into a viewport coordinate. Read once — a border width
+      // does not change.
+      const cs = getComputedStyle(infoBox);
+      const borderL = parseFloat(cs.borderLeftWidth) || 0;
+      const borderT = parseFloat(cs.borderTopWidth) || 0;
+      const borderB = parseFloat(cs.borderBottomWidth) || 0;
+
       // Which characters sit on the circle once the page has settled, captured
       // below before the intro ever transforms anything.
       let settled = null;
+      let holding = false;
+      let diameter = maxDiameter, left = -maxDiameter / 2;
+      const flags = [];
 
-      function update(){
-        // Through the intro, hold the settled answer rather than re-deriving it.
-        // Hit-testing each character against live rects mid-intro asks about a
-        // box that is being scaled and moved every frame, and the answer came
-        // out as letters flicking between black and white all through the
-        // reveal. The colours the row will end up with are already known, so
-        // show those from the start and let nothing change until it is over.
-        if (settled && scroller.classList.contains('is-intro')){
-          for (let i = 0; i < chars.length; i++) chars[i].classList.toggle('on-circle', settled[i]);
-          return;
+      contactAdd({
+        read(f){
+          // Through the intro, hold the settled answer rather than re-deriving it.
+          // Hit-testing each character against live rects mid-intro asks about a
+          // box that is being scaled and moved every frame, and the answer came
+          // out as letters flicking between black and white all through the
+          // reveal. The colours the row will end up with are already known, so
+          // show those from the start and let nothing change until it is over.
+          holding = !!(settled && contactScroller.classList.contains('is-intro'));
+          if (holding){
+            for (let i = 0; i < chars.length; i++) flags[i] = settled[i];
+            return;
+          }
+
+          const boxRect = infoBox.getBoundingClientRect();
+          const boxWidth = infoBox.offsetWidth;
+          // full-size width, not the live one — see the note in the email effect:
+          // a denominator that shrinks mid-swipe makes the circle jump
+          const maxDist = f.boxW + f.gap;
+          const progress = Math.min(Math.max(f.scrollLeft / maxDist, 0), 1);
+
+          diameter = maxDiameter - progress * (maxDiameter - minDiameter);
+          const radius = diameter / 2;
+          const startLeft = -radius;
+          const endLeft = boxWidth - diameter;
+          left = startLeft + progress * (endLeft - startLeft);
+
+          // The circle's centre is worked out, not measured. Reading it back
+          // would mean writing the new size and then asking for its rect in the
+          // same frame, which forces layout all over again — and the answer is
+          // already implied by the two numbers just computed. `top:50%` plus
+          // translateY(-50%) keeps the centre on the padding box's midline
+          // whatever the diameter, so only the box's own rect is needed.
+          const cx = boxRect.left + borderL + left + radius;
+          const cy = boxRect.top + borderT + (boxRect.height - borderT - borderB) / 2;
+          for (let i = 0; i < chars.length; i++){
+            const r = chars[i].getBoundingClientRect();
+            const px = r.left + r.width / 2;
+            const py = r.top + r.height / 2;
+            flags[i] = Math.hypot(px - cx, py - cy) <= radius;
+          }
+        },
+        write(){
+          if (!holding){
+            circle.style.width = diameter + 'px';
+            circle.style.height = diameter + 'px';
+            circle.style.left = left + 'px';
+          }
+          for (let i = 0; i < chars.length; i++) chars[i].classList.toggle('on-circle', flags[i]);
         }
+      });
 
-        const boxWidth = infoBox.offsetWidth;
-        const gapPx = parseFloat(getComputedStyle(scroller).columnGap || getComputedStyle(scroller).gap) || 24;
-        // full-size width, not the live one — see the note in the email effect:
-        // a denominator that shrinks mid-swipe makes the circle jump
-        const maxDist = refBoxWidth() + gapPx;
-        const progress = Math.min(Math.max(scroller.scrollLeft / maxDist, 0), 1);
-
-        const diameter = maxDiameter - progress * (maxDiameter - minDiameter);
-        const radius = diameter / 2;
-        const startLeft = -radius;
-        const endLeft = boxWidth - diameter;
-        const left = startLeft + progress * (endLeft - startLeft);
-        circle.style.width = diameter + 'px';
-        circle.style.height = diameter + 'px';
-        circle.style.left = left + 'px';
-
-        const circleRect = circle.getBoundingClientRect();
-        const cx = circleRect.left + circleRect.width / 2;
-        const cy = circleRect.top + circleRect.height / 2;
-        const rad = circleRect.width / 2;
-        chars.forEach(span => {
-          const r = span.getBoundingClientRect();
-          const px = r.left + r.width / 2;
-          const py = r.top + r.height / 2;
-          const inside = Math.hypot(px - cx, py - cy) <= rad;
-          span.classList.toggle('on-circle', inside);
-        });
-      }
-
-      // only recompute when the boxes actually move (was a perpetual rAF that
-      // read layout on every character every frame — very costly on Windows)
-      let ticking = false;
-      function requestUpdate(){
-        if (!ticking){
-          ticking = true;
-          // try/finally so a throw can never leave `ticking` stuck (which would
-          // freeze the letter-reveal mid-sweep, leaving stale white letters)
-          requestAnimationFrame(function(){ try { update(); } finally { ticking = false; } });
-        }
-      }
-      // when scrolling fully settles, force one authoritative pass so the final
-      // resting state is always correct (no letters left white after swiping back)
-      let settleTimer;
-      function onScroll(){
-        requestUpdate();
-        clearTimeout(settleTimer);
-        settleTimer = setTimeout(update, 120); // fallback for browsers without scrollend
-      }
-      scroller.addEventListener('scroll', onScroll, { passive:true });
-      scroller.addEventListener('scrollend', update);
-      window.addEventListener('resize', requestUpdate);
-      // the circle is positioned against the info box's live width, so it has to
-      // keep up while that box resizes — otherwise it holds still through the
-      // 0.4s grow-back and then jumps
-      trackBoxResize(scroller, update);
-      // Synchronous, not deferred: this IIFE runs before the intro's, so the
-      // boxes are still at their natural size here and this is the one chance to
-      // read the resting layout. A rAF-deferred first pass would have measured
-      // the boxes already collapsed to the intro's dot.
-      update();
-      settled = chars.map(span => span.classList.contains('on-circle'));
+      // Called once the first pass has run, while the boxes are still at their
+      // natural size — the one chance to record the resting answer before the
+      // intro collapses everything into its dot.
+      captureContactSettled = function(){
+        settled = chars.map(span => span.classList.contains('on-circle'));
+      };
     })();
+
+    // ---- wire the driver up, once, for all of the above ----
+    if (contactScroller){
+      contactScroller.addEventListener('scroll', function(){
+        contactRequest();
+        // when scrolling fully settles, force one authoritative pass so the final
+        // resting state is always correct (no letters left white after swiping back)
+        clearTimeout(contactSettleTimer);
+        contactSettleTimer = setTimeout(contactRun, 120);  // for browsers without scrollend
+      }, { passive:true });
+      contactScroller.addEventListener('scrollend', contactRun);
+      window.addEventListener('resize', function(){ contactStatic = null; contactRun(); });
+      contactTrackResize();
+      // Synchronous, not deferred: this runs before the intro's IIFE, so the
+      // boxes are still at their natural size and this is the one chance to read
+      // the resting layout. A rAF-deferred first pass would have measured the
+      // boxes already collapsed to the intro's dot.
+      contactRun();
+      if (captureContactSettled) captureContactSettled();
+    }
 
     // ===== Contact boxes intro =====
     // A hairline is struck from left to right, ink floods down it until it has
