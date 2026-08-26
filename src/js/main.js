@@ -1969,19 +1969,32 @@
     // about a fiftieth of a pixel, and it only approaches a pixel or two right
     // at the window's edges where the curl is steepest and the box is half out
     // of view anyway.
+    // How far past the box the picture is drawn, in viewBox units. The path
+    // bulges above and below 0..100 — AMPLITUDE for the wave, CURL for the sweep
+    // at the window's edges — and without the overhang the crest would be
+    // clipped against nothing and eat a bite out of the picture.
+    const OVERHANG = 16;
+
     // How much each photograph is scaled down inside its box, by box number.
-    // 1 shows the whole picture, filling the box edge to edge; less than that
-    // pulls it in so the piece has room around it.
+    // Anything not listed is left at 1 and fills its box as shot.
     //
-    // The numbers are not guesses. Each was measured from the picture itself:
-    // how far the piece reaches from the middle of the frame, then the scale
-    // that leaves an eighth of the box clear all round. Pieces shot tight, and
-    // wide ones like the necklaces, need the most; anything already sitting
-    // comfortably is left out and stays at 1. Any one can be retuned on its own.
+    // Most of these sit at 0.78 — one step out, enough to give the piece some
+    // room. Six needed more than that, because the piece was still running off
+    // the edge of the box: each of those was measured from the picture itself —
+    // how far the piece reaches from the middle of the frame — and given the
+    // scale that leaves about an eighth of the box clear all round. The wide
+    // necklaces need the most, since their width is what has to fit.
     const PHOTO_ZOOM = {
-      3: 0.84,  4: 0.84, 10: 0.97, 11: 0.84, 12: 0.89, 13: 0.84,
-      17: 0.72, 18: 0.97, 20: 0.94, 21: 0.62, 23: 0.84, 24: 0.84, 25: 0.84
+       1: 0.60,  3: 0.78,  6: 0.78,  9: 0.78, 10: 0.78, 12: 0.78,
+      13: 0.78, 16: 0.78, 17: 0.50, 18: 0.68, 20: 0.66, 21: 0.44,
+      22: 0.78, 23: 0.78, 24: 0.59, 25: 0.78
     };
+
+    // Boxes that carry no photograph. The box itself is still built and still
+    // behaves like the others — white card, border, and the same wave and curl —
+    // there is simply nothing printed on it. Take a number out of this list to
+    // give that box its picture back.
+    const NO_PHOTO = [1];
 
     const STRIPS = 32;
     // Slices overlap slightly. Two antialiased clip edges meeting on the same
@@ -2066,20 +2079,23 @@
 
       const imgId = 'jw-img-' + k;
       const zoom = PHOTO_ZOOM[k + 1] || 1;
+      const blank = NO_PHOTO.indexOf(k + 1) !== -1;
       const img = document.createElementNS(SVGNS, 'image');
       img.setAttribute('id', imgId);
-      img.setAttribute('href', '../../assets/images/jewelry/J' + (k + 1) + '.jpg');
-      // Drawn to the box itself, so the box shows the picture's full height.
-      // This rect used to be a third taller, to give the wave's crest something
-      // to land on — but 'slice' scales a picture to cover whatever rect it is
-      // handed, so the taller rect quietly enlarged every photograph by a third
-      // and the box only ever showed the middle 76% of it. That is what was
-      // cutting the pieces off. The white card behind gives the crest its ground
-      // instead, which costs nothing: every one of these is shot on white.
+      // ?v= for the same reason the stylesheet and this script carry one: a
+      // browser that has the picture cached will not refetch it on its own.
+      // Bump it if a photograph is ever re-exported under the same name.
+      img.setAttribute('href', '../../assets/images/jewelry/J' + (k + 1) + '.jpg?v=15');
+      // The rect is a third taller than the box so the wave's crest has picture
+      // to land on rather than nothing. Note what that does to the framing:
+      // 'slice' scales a picture to cover whatever rect it is handed, so the
+      // taller rect enlarges it by the same third and the box shows the middle
+      // 76% of it. Every one of the zooms below is set against that framing —
+      // change this rect and they all have to be redone.
       img.setAttribute('x', '0');
-      img.setAttribute('y', '0');
+      img.setAttribute('y', String(-OVERHANG));
       img.setAttribute('width', '100');
-      img.setAttribute('height', '100');
+      img.setAttribute('height', String(100 + OVERHANG * 2));
       img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
       // Scaled about the middle of the box, so the centre of the photograph
       // stays on the centre of the box however far out it is zoomed. It sits on
@@ -2089,7 +2105,7 @@
         img.setAttribute('transform',
           'matrix(' + zoom + ',0,0,' + zoom + ',' + (50 - 50 * zoom) + ',' + (50 - 50 * zoom) + ')');
       }
-      defs.appendChild(img);
+      if (!blank) defs.appendChild(img);
 
       // The picture, in slices, under the smooth outline. Each slice is the same
       // photograph seen through its own vertical band; only the vertical part of
@@ -2111,12 +2127,14 @@
       card.setAttribute('fill', '#fff');
       g.appendChild(card);
       const strips = [];
-      for (let i = 0; i < STRIPS; i++){
-        const slice = document.createElementNS(SVGNS, 'use');
-        slice.setAttribute('href', '#' + imgId);
-        slice.setAttribute('clip-path', 'url(#jw-band-' + i + ')');
-        g.appendChild(slice);
-        strips.push(slice);
+      if (!blank){
+        for (let i = 0; i < STRIPS; i++){
+          const slice = document.createElementNS(SVGNS, 'use');
+          slice.setAttribute('href', '#' + imgId);
+          slice.setAttribute('clip-path', 'url(#jw-band-' + i + ')');
+          g.appendChild(slice);
+          strips.push(slice);
+        }
       }
       svg.appendChild(g);
 
