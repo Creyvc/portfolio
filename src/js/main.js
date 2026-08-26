@@ -1893,12 +1893,18 @@
   const nameEl = document.getElementById('scaleName');
 
   // The name decodes into place rather than appearing, the same way the name
-  // link and the blurb keywords do on the home page — same glyph set, same 45ms
-  // tick, so the flicker runs at one rate across the site. Spaces are never
-  // scrambled, which holds the shape of the phrase steady while the letters
-  // churn. The band is monospace and the glyph count never changes, so the line
-  // does not jitter as it resolves.
-  const NAME_GLYPHS = '01<>[]{}/\\|=+*-#%&$ｦｧｨｩｪﾊﾋﾌﾍABCDEFGHKMNXZ';
+  // link and the blurb keywords do on the home page — same 45ms tick, so the
+  // flicker runs at one rate across the site. Spaces are never scrambled, which
+  // holds the shape of the phrase steady while the letters churn.
+  //
+  // ASCII only, unlike the home page's set. This line is centred across the full
+  // width, so its own width has to stay put or the whole thing slides about as
+  // it resolves. The half-width katakana the other decoders use are not in the
+  // monospace stack, so the browser falls back to a different font for them —
+  // and a fallback face brings its own advance width, which broke the one thing
+  // a monospace band guarantees. Every character here is in the face itself, so
+  // the line is exactly as wide scrambled as it is resolved.
+  const NAME_GLYPHS = '01<>[]{}/\\|=+*-#%&$ABCDEFGHKMNXZ';
   const NAME_STEPS = 9, NAME_TICK = 45;
   const nameStill = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let nameTimer = null;
