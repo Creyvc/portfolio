@@ -17,7 +17,9 @@
     will-change:transform;
   }
   .cursor-guide-v{ top:0; left:0; bottom:0; width:1px; transform:translateX(-100vw); }
-  .cursor-guide-h{ left:0; top:0; right:0; height:1px; transform:translateY(-100vh); }
+  /* stops at .hl-1 / .hl-4 (3% / 97%) rather than running edge to edge, so it
+     never crosses the grid's outer verticals */
+  .cursor-guide-h{ left:3%; top:0; right:3%; height:1px; transform:translateY(-100vh); }
 
   /* 4 long vertical lines across the home hero */
   .home-lines{ position:fixed; top:0; left:0; right:0; bottom:0; z-index:1; pointer-events:none; }
@@ -263,6 +265,53 @@
     z-index:0;
     pointer-events:none;
   }
+
+  /* Work list on ui-ux.html — name on the left, tags/year on the right, in the
+     same 33%-97% field as .grid-fill. Rows sit dim until hovered, the same
+     emphasis-on-contact language as the rest of the site. */
+  .work-list{
+    position:fixed;
+    left:33%; right:3%;
+    top:50%;
+    transform:translateY(-50%);
+    z-index:2;
+    padding:0 1.6rem;
+    box-sizing:border-box;
+  }
+  .work-row{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:1.5rem;
+    padding:0.9rem 0;
+    border-top:1px solid #e4e6e9;
+  }
+  .work-row + .work-row{ border-top:1px solid #e4e6e9; }
+  .work-list::after{
+    content:'';
+    display:block;
+    border-top:1px solid #e4e6e9;
+  }
+  .work-name{
+    font-family:var(--sans);
+    font-weight:400;
+    font-size:1rem;
+    color:rgba(23,24,28,0.4);
+    white-space:nowrap;
+    transition:color 0.2s ease;
+  }
+  .work-meta{
+    font-family:var(--sans);
+    font-weight:300;
+    font-size:0.78rem;
+    letter-spacing:0.01em;
+    color:rgba(23,24,28,0.4);
+    text-align:right;
+    white-space:nowrap;
+    transition:color 0.2s ease;
+  }
+  .work-row:hover .work-name,
+  .work-row:hover .work-meta{ color:var(--ink); }
 
   /* ===== Intro grid-build (loader -> home) =====
      The grid lines draw out from center while the plus marks fly out from
