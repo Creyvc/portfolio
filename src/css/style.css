@@ -186,6 +186,16 @@
     stroke:rgba(23,24,28,0.15);
     stroke-width:1;
   }
+  /* The corner marks. A shade firmer than the box's own edge so they read as
+     marks rather than as part of the frame, and held at 1 device pixel by
+     vector-effect (set in main.js) so they stay hairlines whatever the box does.
+     They sit outside the box, which .scale-svg's overflow:visible permits. */
+  .scale-mark{
+    fill:none;
+    stroke:rgba(23,24,28,0.32);
+    stroke-width:1.5;
+    stroke-linecap:square;
+  }
   /* The name of the piece the centre line is standing over, set under the
      arrow. Same calc as .mid-arrow's top, carried a little further down, so the
      three of them — ruler, arrow, name — stay stacked if the band is ever moved.

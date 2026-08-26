@@ -1987,6 +1987,7 @@
   const boxPaths = [];     // the path that cuts each box out and draws its border
   const boxEls = [];       // and the box each one belongs to
   const boxStrips = [];    // the vertical slices the picture inside it is built from
+  const boxMarks = [];     // and the four registration marks standing off its corners
   const SVGNS = 'http://www.w3.org/2000/svg';
   const FLAT = 'M0,0 L100,0 L100,100 L0,100 Z';   // the box at rest
   // The wave has to read as one surface breathing, not as a row of louvres, so
@@ -2252,6 +2253,32 @@
       outline.setAttribute('class', 'scale-outline');
       svg.appendChild(outline);
 
+      // Registration marks at the four corners, standing off the box rather than
+      // touching it — the corner of a crop mark points at where the corner of the
+      // picture is, it does not sit on it. Drawn outside 0..100, which the SVG's
+      // overflow:visible allows, and each is one path of two arms so a corner is
+      // a single stroke with a real join rather than two lines meeting.
+      // MARK_GAP/MARK_LEN are in viewBox units: on a 28vh box, roughly 14px of
+      // clearance and a 20px arm.
+      const MARK_GAP = 6, MARK_LEN = 6;
+      const marks = [];
+      [[0, 0, 1, 1], [100, 0, -1, 1], [100, 100, -1, -1], [0, 100, 1, -1]].forEach(function(c){
+        const x = c[0], y = c[1], sx = c[2], sy = c[3];
+        const mx = x - sx * MARK_GAP, my = y - sy * MARK_GAP;
+        const mark = document.createElementNS(SVGNS, 'path');
+        mark.setAttribute('class', 'scale-mark');
+        mark.setAttribute('vector-effect', 'non-scaling-stroke');
+        mark.setAttribute('d', 'M' + (mx + sx * MARK_LEN) + ',' + my +
+                               ' L' + mx + ',' + my +
+                               ' L' + mx + ',' + (my + sy * MARK_LEN));
+        svg.appendChild(mark);
+        // where the mark's corner stands across the box, so the wave can be read
+        // at that column. Outside 0..1, since the marks stand off the box — the
+        // curve is defined for any column, so it simply carries on past the edge.
+        marks.push({ el: mark, u: mx / 100 });
+      });
+      boxMarks.push(marks);
+
       box.appendChild(svg);
       boxPaths.push(path);
       boxStrips.push(strips);
@@ -2314,8 +2341,7 @@
   // why the band clipping each slice can be left alone — a vertical scale about
   // any point maps a full-height vertical band onto itself.
   function shapeStrips(k, edges){
-    const strips = boxStrips[k];
-    if (!strips) return;
+    const strips = boxStrips[k] || [];
     const n = strips.length;
     for (let i = 0; i < n; i++){
       const e = edges((i + 0.5) / n);     // sampled at the middle of the slice
@@ -2323,11 +2349,25 @@
       strips[i].setAttribute('transform',
         'matrix(1,0,0,' + kk.toFixed(5) + ',0,' + e[0].toFixed(3) + ')');
     }
+    // The corner marks ride the same curve, read at their own column. They stand
+    // off the box, so their column falls outside 0..1 and the curve is simply
+    // carried on past the edge — which is what keeps a mark in step with the
+    // corner it points at rather than drifting away from it as the box bends.
+    const marks = boxMarks[k];
+    if (marks){
+      for (let i = 0; i < marks.length; i++){
+        const m = edges(marks[i].u);
+        const mk = (m[1] - m[0]) / 100;
+        marks[i].el.setAttribute('transform',
+          'matrix(1,0,0,' + mk.toFixed(5) + ',0,' + m[0].toFixed(3) + ')');
+      }
+    }
   }
   function flattenStrips(k){
     const strips = boxStrips[k];
-    if (!strips) return;
-    for (let i = 0; i < strips.length; i++) strips[i].removeAttribute('transform');
+    if (strips) for (let i = 0; i < strips.length; i++) strips[i].removeAttribute('transform');
+    const marks = boxMarks[k];
+    if (marks) for (let i = 0; i < marks.length; i++) marks[i].el.removeAttribute('transform');
   }
 
   function syncWave(){
