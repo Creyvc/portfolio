@@ -1950,7 +1950,20 @@
     const SPOTS = ['is-r1b', 'is-r2t', 'is-r2b'];
     let prev = -1;
 
-    for (let k = 0; k < MAJORS - 1; k++){
+    // One photograph per box, in order: J1 in the first, J2 in the second, and so
+    // on. There are fewer pictures than gaps in the ruler, so the run of boxes
+    // simply stops where the pictures do — the numbers carry on past it and the
+    // gaps beyond the last picture hold nothing at all.
+    const PHOTOS = 25;
+    // How far past the box the picture is drawn, in viewBox units. The path
+    // bulges above and below 0..100 — AMPLITUDE for the wave, CURL for the sweep
+    // at the window's edges — and without the overhang the crest would be
+    // clipped against nothing and eat a bite out of the picture. It is symmetric
+    // about the box, so the drawn rect is still centred on 50,50 and
+    // xMidYMid slice keeps the middle of the photograph on the middle of the box.
+    const OVERHANG = 16;
+
+    for (let k = 0; k < Math.min(MAJORS - 1, PHOTOS); k++){
       let s = Math.floor(rnd() * SPOTS.length);
       if (s === prev) s = (s + 1 + Math.floor(rnd() * (SPOTS.length - 1))) % SPOTS.length;
       prev = s;
@@ -1965,9 +1978,53 @@
       svg.setAttribute('class', 'scale-svg');
       svg.setAttribute('viewBox', '0 0 100 100');
       svg.setAttribute('preserveAspectRatio', 'none');   // stretch to the box
+      // The path no longer draws the box, it cuts it out: the same curve that
+      // was the ink is now a clip, so the wave and the curl bend the photograph
+      // itself rather than a black rectangle sitting behind it.
+      //
+      // It is then used a second time, drawn rather than clipped, as the box's
+      // border. Both are <use> references to one path in <defs>, so there is
+      // still a single `d` to rewrite per frame and the border can never drift
+      // out of step with the edge of the picture it is drawn around — the wave
+      // and the curl carry the two together by construction.
+      const defs = document.createElementNS(SVGNS, 'defs');
+      const pathId = 'jw-path-' + k;
+      const clipId = 'jw-clip-' + k;
       const path = document.createElementNS(SVGNS, 'path');
+      path.setAttribute('id', pathId);
       path.setAttribute('d', FLAT);
-      svg.appendChild(path);
+      // On the path itself, not the <use>: vector-effect is not an inherited
+      // property, so it has to travel with the shape into the shadow clone.
+      // Without it the border would thicken with the box — most of all on the
+      // opening sheet, which is scaled to the whole window.
+      path.setAttribute('vector-effect', 'non-scaling-stroke');
+      defs.appendChild(path);
+
+      const clip = document.createElementNS(SVGNS, 'clipPath');
+      clip.setAttribute('id', clipId);
+      clip.setAttribute('clipPathUnits', 'userSpaceOnUse');
+      const clipUse = document.createElementNS(SVGNS, 'use');
+      clipUse.setAttribute('href', '#' + pathId);
+      clip.appendChild(clipUse);
+      defs.appendChild(clip);
+      svg.appendChild(defs);
+
+      const img = document.createElementNS(SVGNS, 'image');
+      img.setAttribute('href', '../../assets/images/jewelry/J' + (k + 1) + '.jpg');
+      img.setAttribute('x', '0');
+      img.setAttribute('y', String(-OVERHANG));
+      img.setAttribute('width', '100');
+      img.setAttribute('height', String(100 + OVERHANG * 2));
+      img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+      img.setAttribute('clip-path', 'url(#' + clipId + ')');
+      svg.appendChild(img);
+
+      // drawn after the picture, so the border sits on top of its own edge
+      const outline = document.createElementNS(SVGNS, 'use');
+      outline.setAttribute('href', '#' + pathId);
+      outline.setAttribute('class', 'scale-outline');
+      svg.appendChild(outline);
+
       box.appendChild(svg);
       boxPaths.push(path);
       boxEls.push(box);
@@ -2150,11 +2207,11 @@
   }, { passive:false });
 
   // ===== Entrance =====
-  // The ruler arrives already run out to 30 and rewinds to 1, fast at first and
-  // easing right down as it arrives, so it settles onto the number instead of
-  // stopping dead. Everything else — the brackets, the arc, the wave, the boxes
-  // — is driven off scrollLeft, so it all plays through on its own as the run
-  // goes by; this only has to move the scroll position.
+  // The ruler arrives already run out to the last picture and rewinds to 1, fast
+  // at first and easing right down as it arrives, so it settles onto the number
+  // instead of stopping dead. Everything else — the brackets, the arc, the wave,
+  // the boxes — is driven off scrollLeft, so it all plays through on its own as
+  // the run goes by; this only has to move the scroll position.
   (function(){
     const REWIND = 4200;   // ms end to end
     // Exponential ease-out, so the two halves of the run read as clearly
@@ -2169,7 +2226,14 @@
     const DECAY = 8, SPAN1 = 1 - Math.pow(2, -DECAY);
     const easeOut = x => x >= 1 ? 1 : (1 - Math.pow(2, -DECAY * x)) / SPAN1;
 
-    const max = maxScroll();
+    // The run starts on the last box, not at the far end of the ruler. There are
+    // fewer pictures than numbers, so the numbers carry on well past the final
+    // box — starting at maxScroll() would hang the sheet over a bare stretch of
+    // ruler and then land it about a screen's width off to the left, out of
+    // sight. Clamped both ways, so it still behaves if the boxes ever run right
+    // to the end again.
+    const lastCentre = boxCx.length ? boxCx[boxCx.length - 1] * (window.innerWidth / 100) : 0;
+    const max = Math.min(maxScroll(), Math.max(0, lastCentre - window.innerWidth / 2));
     if (max <= 0) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 

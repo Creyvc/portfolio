@@ -162,18 +162,30 @@
     width:28vh; height:28vh;
     margin-left:-14vh;               /* left is the box's centre, not its edge */
   }
-  /* The ink is one filled path, not a row of slices. Slices could only ever
-     approximate the wave as a staircase — each one has a flat top, so sixty of
-     them give sixty little steps, visible however small the motion gets. A path
-     bends continuously, so the edge is a true curve at any amplitude.
-     overflow:visible lets the crest swell past the box's own bounds. */
+  /* The box is one photograph cut out by a single path, not a row of slices.
+     Slices could only ever approximate the wave as a staircase — each one has a
+     flat top, so sixty of them give sixty little steps, visible however small
+     the motion gets. A path bends continuously, so the edge is a true curve at
+     any amplitude. overflow:visible lets the crest swell past the box's own
+     bounds; main.js draws the picture past those bounds to meet it. */
   .scale-svg{
     position:absolute; inset:0;
     display:block;
     width:100%; height:100%;
     overflow:visible;
   }
-  .scale-svg path{ fill:var(--ink); }
+  /* The box's border. Same curve as the picture inside it — main.js points both
+     at one path — so it rides the wave and the curl rather than staying a
+     straight rectangle around a bending photograph. Matches the 1px edge every
+     other box on the site carries. stroke and fill are inherited properties, so
+     setting them on the <use> reaches the shape it clones.
+     Width is held at 1 device pixel by vector-effect (set in main.js), so the
+     opening sheet does not arrive with a border scaled up six times over. */
+  .scale-outline{
+    fill:none;
+    stroke:rgba(23,24,28,0.15);
+    stroke-width:1;
+  }
   /* Free horizontally, but only ever resting on one of three lines: the foot of
      row 1, the head of row 2, the foot of row 2.
      The +1px on the two bottom-anchored spots is a fill-rule correction, not a
