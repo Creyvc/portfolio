@@ -1796,7 +1796,11 @@
   const scale = document.getElementById('scale');
   if (!scale) return;
 
-  const MAJORS = 30;   // numbered ticks
+  // Numbered ticks. One more than there are photographs, because a box sits in
+  // the gap BETWEEN two numbers — the 25th sits between 25 and 26, so 26 is what
+  // closes it. The ruler used to run to 30 and the last four numbers had nothing
+  // under them; it now stops where the pictures do.
+  const MAJORS = 26;
   const STEP = 45;     // ticks per number, so every 45th one is long and labelled
   // One number to the next spans a single grid column. The columns are not equal
   // — 30% / 34% / 30% — and this takes the wider middle one, 33% -> 67%, so 34vw.
@@ -1969,32 +1973,52 @@
     // about a fiftieth of a pixel, and it only approaches a pixel or two right
     // at the window's edges where the curl is steepest and the box is half out
     // of view anyway.
-    // How far past the box the picture is drawn, in viewBox units. The path
-    // bulges above and below 0..100 — AMPLITUDE for the wave, CURL for the sweep
-    // at the window's edges — and without the overhang the crest would be
-    // clipped against nothing and eat a bite out of the picture.
-    const OVERHANG = 16;
-
-    // How much each photograph is scaled down inside its box, by box number.
-    // Anything not listed is left at 1 and fills its box as shot.
+    // How large each piece is drawn inside its box, by box number.
     //
-    // Most of these sit at 0.78 — one step out, enough to give the piece some
-    // room. Six needed more than that, because the piece was still running off
-    // the edge of the box: each of those was measured from the picture itself —
-    // how far the piece reaches from the middle of the frame — and given the
-    // scale that leaves about an eighth of the box clear all round. The wide
-    // necklaces need the most, since their width is what has to fit.
+    // The picture is fitted whole into the box (see the 'meet' below), so at 1
+    // the entire 16:9 photograph is visible and the piece sits small in the
+    // middle of it. These numbers scale it up to fill the frame properly. Each
+    // is measured from its own photograph — how far the piece reaches from the
+    // middle — and set so it stops a tenth of the box short of the border. The
+    // wide necklaces need the least, since their width is what has to fit.
+    //
+    // Do not confuse this with cropping: enlarging past these values will start
+    // pushing the piece off the edge of the box, which is exactly the fault
+    // these replaced.
+    //
+    // Several are set by hand rather than by the measurement, because what the
+    // measurement finds is not the piece. 3 and 4 are pendants on a chain running
+    // to the top of the photograph, so the reach found is the chain's; 11, 13,
+    // 23, 24 and 25 are rings and a bangle whose shadow falls to the bottom of
+    // the frame, so it is the shadow's. Fitting either left the piece itself
+    // small with empty space taking up the room. These are sized on the piece,
+    // and the chain or the shadow simply runs off the card — which is how they
+    // were shot. 17 and 21 are the two widest pieces, a pearl strand and a mesh
+    // necklace, and are sized on their width because that is what has to fit.
+    // It is also why the numbers do not match each other: what is matched is how
+    // large the piece looks, not the multiplier.
+    // Sideways (and vertical) shift for a picture inside its box, in the same
+    // 0..100 units the box is drawn in — positive x moves it right. Only for
+    // pieces that are not centred in their own photograph, or where zooming in
+    // has to trim one side and it is better to lose more of one than the other.
+    // Anything not listed sits centred.
+    const PHOTO_PAN = {
+      21: [6, 0]
+    };
+
     const PHOTO_ZOOM = {
-       1: 0.60,  3: 0.78,  6: 0.78,  9: 0.78, 10: 0.78, 12: 0.78,
-      13: 0.78, 16: 0.78, 17: 0.50, 18: 0.68, 20: 0.66, 21: 0.44,
-      22: 0.78, 23: 0.78, 24: 0.59, 25: 0.78
+       1: 1.71,  2: 2.15,  3: 2.03,  4: 1.83,  5: 2.10,  6: 1.82,
+       7: 1.96,  8: 1.99,  9: 1.71, 10: 1.65, 11: 2.00, 12: 1.51,
+      13: 1.95, 14: 2.06, 15: 1.99, 16: 1.83, 17: 1.77, 18: 1.64,
+      19: 2.04, 20: 1.59, 21: 1.77, 22: 1.73, 23: 2.05, 24: 1.90,
+      25: 1.80
     };
 
     // Boxes that carry no photograph. The box itself is still built and still
     // behaves like the others — white card, border, and the same wave and curl —
-    // there is simply nothing printed on it. Take a number out of this list to
-    // give that box its picture back.
-    const NO_PHOTO = [1];
+    // there is simply nothing printed on it. Empty at the moment: every box has
+    // its picture. Put a box number in here to blank it.
+    const NO_PHOTO = [];
 
     const STRIPS = 32;
     // Slices overlap slightly. Two antialiased clip edges meeting on the same
@@ -2079,6 +2103,7 @@
 
       const imgId = 'jw-img-' + k;
       const zoom = PHOTO_ZOOM[k + 1] || 1;
+      const pan = PHOTO_PAN[k + 1] || [0, 0];
       const blank = NO_PHOTO.indexOf(k + 1) !== -1;
       const img = document.createElementNS(SVGNS, 'image');
       img.setAttribute('id', imgId);
@@ -2086,24 +2111,30 @@
       // browser that has the picture cached will not refetch it on its own.
       // Bump it if a photograph is ever re-exported under the same name.
       img.setAttribute('href', '../../assets/images/jewelry/J' + (k + 1) + '.jpg?v=15');
-      // The rect is a third taller than the box so the wave's crest has picture
-      // to land on rather than nothing. Note what that does to the framing:
-      // 'slice' scales a picture to cover whatever rect it is handed, so the
-      // taller rect enlarges it by the same third and the box shows the middle
-      // 76% of it. Every one of the zooms below is set against that framing —
-      // change this rect and they all have to be redone.
+      // 'meet', not 'slice'. This is the whole reason the pieces were being cut
+      // off at the sides. 'slice' scales a picture to COVER its rect and throws
+      // away what hangs over — and it does that in the image's own coordinate
+      // space, before any transform on the element. So the crop is baked in:
+      // scaling the element afterwards draws the already-cropped square smaller,
+      // it can never bring back what was thrown away. Zooming out looked like it
+      // should fix a cut piece and could not.
+      //
+      // 'meet' fits the whole photograph inside the rect instead, so nothing is
+      // ever discarded. The piece then sits small in the middle of a 16:9 frame,
+      // and PHOTO_ZOOM above scales it up to fill the box properly.
       img.setAttribute('x', '0');
-      img.setAttribute('y', String(-OVERHANG));
+      img.setAttribute('y', '0');
       img.setAttribute('width', '100');
-      img.setAttribute('height', String(100 + OVERHANG * 2));
-      img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+      img.setAttribute('height', '100');
+      img.setAttribute('preserveAspectRatio', 'xMidYMid meet');
       // Scaled about the middle of the box, so the centre of the photograph
-      // stays on the centre of the box however far out it is zoomed. It sits on
-      // the image rather than on the slices that draw it, so one setting covers
-      // all 32 of them and the bands they are clipped by are left alone.
-      if (zoom !== 1){
+      // stays on the centre of the box however far it is scaled. It sits on the
+      // image rather than on the slices that draw it, so one setting covers all
+      // 32 of them and the bands they are clipped by are left alone.
+      if (zoom !== 1 || pan[0] || pan[1]){
         img.setAttribute('transform',
-          'matrix(' + zoom + ',0,0,' + zoom + ',' + (50 - 50 * zoom) + ',' + (50 - 50 * zoom) + ')');
+          'matrix(' + zoom + ',0,0,' + zoom + ','
+            + (50 - 50 * zoom + pan[0]) + ',' + (50 - 50 * zoom + pan[1]) + ')');
       }
       if (!blank) defs.appendChild(img);
 
@@ -2120,9 +2151,12 @@
       // paper show through around the piece. Drawn well past the box; the
       // outline clips it to the right shape, wave and all.
       const card = document.createElementNS(SVGNS, 'rect');
-      card.setAttribute('x', '-20');
+      // Far wider than the box. The opening stretches the card right across the
+      // screen while the picture on it stays put, so the ground has to reach
+      // well past 0..100; the outline clips it back to whatever shape is wanted.
+      card.setAttribute('x', '-400');
       card.setAttribute('y', '-400');
-      card.setAttribute('width', '140');
+      card.setAttribute('width', '900');
       card.setAttribute('height', '900');
       card.setAttribute('fill', '#fff');
       g.appendChild(card);
@@ -2401,6 +2435,11 @@
     // outward, so the middle of the screen, which is exactly where the numbers
     // run, is uncovered almost at once; holding the run back until the
     // transition had finished just read as a stall before anything happened.
+    //
+    // The run is the whole of the arrival now. There used to be a sheet before
+    // it — the last box blown up to the size of the screen, drawn in from the
+    // sides and folded down into place — and this waited for it to land. It is
+    // gone; the ruler simply starts running the moment the page is there.
     function rewind(){
       let start = null;                          // null, not 0: a 0 timestamp would never latch
       requestAnimationFrame(function step(now){
@@ -2413,124 +2452,6 @@
       });
     }
 
-    // ===== Opening: the last box, page-sized, before anything else =====
-    // It fills the whole window and holds there dead still, then folds down into
-    // the
-    // place it actually occupies at the far end of the run — and it is the
-    // travelling that makes it ripple, like a sheet of tissue carried through
-    // the air. Only once it lands does the ruler start its rewind. Everything
-    // else is held back until then, so there is one object on screen and not a
-    // row of them waiting behind it.
-    const HOLD = 750;        // ms hanging full-page, still
-    const FLY  = 1250;       // ms folding down into place, rippling as it goes
-    const AMP  = 2.4;        // ripple depth at its deepest, in viewBox units
-    const RIPPLE = 1400;     // ms for one pass of the ripple
-
-    const lastIndex = boxEls.length - 1;
-    const lastEl = boxEls[lastIndex], lastPath = boxPaths[lastIndex];
-    if (!lastEl || !lastPath){ rewind(); return; }
-
-    // A sheet, not a bar: two sines of different rates running against each
-    // other, and the far edge lagging the near one so the surface twists rather
-    // than moving as one piece.
-    // lifted out of tissue() so the slices of the picture can be shaped from the
-    // very same numbers the outline is drawn through
-    function wob(u, lag, tau){
-      return Math.sin((u * 1.35 - tau + lag) * Math.PI * 2) * 0.62 +
-             Math.sin((u * 2.30 + tau * 0.75) * Math.PI * 2) * 0.38;
-    }
-    function tissue(tau, amp){
-      let d = '';
-      for (let i = 0; i <= SAMPLES; i++){
-        const u = i / SAMPLES;
-        d += (i ? 'L' : 'M') + (u * 100).toFixed(2) + ',' + (-amp * wob(u, 0, tau)).toFixed(2) + ' ';
-      }
-      for (let i = SAMPLES; i >= 0; i--){
-        const u = i / SAMPLES;
-        d += 'L' + (u * 100).toFixed(2) + ',' + (100 + amp * wob(u, 0.18, tau)).toFixed(2) + ' ';
-      }
-      return d + 'Z';
-    }
-
-    // The sheet covers the whole window, edge to edge and top to bottom — the end
-    // verticals included. It arrives as the page itself rather than as something
-    // laid on top of it, which is also how the wipe leaves things on this page:
-    // .pt-edge-in pushes the transition's two lines clean off the screen, so there is
-    // nothing at 3% / 97% for the sheet to sit politely inside.
-    //
-    // Re-taken whenever the window changes size, with the transform off so the
-    // rect describes where the box naturally sits. The box is sized in vh, so a
-    // resize changes what it takes to fill the window and a scale worked out for
-    // the old size would leave the sheet over- or undershooting the edges.
-    // sync() is bound to resize further up, so the track has already been
-    // repositioned by the time this reads the rect.
-    let SX, SY, DX, DY;
-    function measure(){
-      const keep = lastEl.style.transform;
-      lastEl.style.transform = '';
-      const r = lastEl.getBoundingClientRect();
-      const W = window.innerWidth, H = window.innerHeight;
-      // what it takes to make this one box fill the window, from where it sits
-      SX = W / r.width;
-      SY = H / r.height;
-      DX = W / 2 - (r.left + r.width / 2);
-      DY = H / 2 - (r.top + r.height / 2);
-      lastEl.style.transform = keep;
-    }
-    measure();
-    window.addEventListener('resize', measure);
-
-    // Nothing is held back: the page is fully laid out from the first frame and
-    // the sheet simply flies home over the top of it. While it is page-sized it
-    // covers the lot, and the fold is what uncovers the page — nothing fades in.
-    //
-    // Both lifts are needed to put it on top. .scale-field and .scale are each
-    // z-index 2 and the field comes first in the markup, so the ruler paints over
-    // it on document order alone; and because the field is a stacking context,
-    // raising the sheet inside it can never reach past the field's own level.
-    // So the field goes above the ruler and the sheet above its siblings.
-    field.style.zIndex = '4';
-    lastEl.style.zIndex = '3';
-
-    const easeInOut = x => x < 0.5 ? 4*x*x*x : 1 - Math.pow(-2*x + 2, 3) / 2;
-
-    let t0 = null;
-    requestAnimationFrame(function open(now){
-      if (t0 === null) t0 = now;
-      const el = now - t0;
-      // q is how far through the fold it is, p how much of the full-page state
-      // is left — so p is 1 for the whole hold and eases to 0 on the way down
-      const q = el < HOLD ? 0 : Math.min((el - HOLD) / FLY, 1);
-      const p = 1 - easeInOut(q);
-      // The ripple belongs to the journey, not the wait: nothing moves while it
-      // hangs, it builds as the fold gets under way, and it is flat again by the
-      // time it settles. sin() gives exactly that arc with no seam at either end.
-      const amp = AMP * Math.sin(Math.PI * q);
-
-      lastEl.style.transform =
-        'translate(' + (DX * p).toFixed(2) + 'px,' + (DY * p).toFixed(2) + 'px)' +
-        ' scale(' + (1 + (SX - 1) * p).toFixed(4) + ',' + (1 + (SY - 1) * p).toFixed(4) + ')';
-      lastPath.setAttribute('d', tissue(el / RIPPLE, amp));
-      // and the photograph itself rides it, slice by slice, off the same two
-      // edges the path is drawn through
-      const tau = el / RIPPLE;
-      shapeStrips(lastIndex, function(u){
-        return [-amp * wob(u, 0, tau), 100 + amp * wob(u, 0.18, tau)];
-      });
-
-      // Nothing else is touched on the way down — the page is already there.
-
-      if (el < HOLD + FLY) requestAnimationFrame(open);
-      else done();
-    });
-
-    function done(){
-      window.removeEventListener('resize', measure);
-      lastEl.style.transform = '';
-      lastEl.style.zIndex = '';
-      field.style.zIndex = '';
-      sync();                    // hands the path back to the normal wave/curl
-      rewind();
-    }
+    rewind();
   })();
 })();
