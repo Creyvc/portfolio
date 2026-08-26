@@ -2570,6 +2570,19 @@
   })();
 })();
 
+/* Work list previews (ui-ux.html only): hovering a row shows that piece's
+   logo, centred on the page, via the matching data-preview / data-name pair. */
+(function(){
+  const rows = document.querySelectorAll('.work-row[data-preview]');
+  if (!rows.length) return;
+  rows.forEach(function(row){
+    const img = document.querySelector('.work-preview-img[data-name="' + row.getAttribute('data-preview') + '"]');
+    if (!img) return;
+    row.addEventListener('mouseenter', function(){ img.classList.add('is-active'); });
+    row.addEventListener('mouseleave', function(){ img.classList.remove('is-active'); });
+  });
+})();
+
 /* Pointer-following guide lines (ui-ux.html only). The cursor itself is left
    alone — these are two long rules that ride along it: the vertical one only
    ever moves left/right (tracks the pointer's x), the horizontal one only

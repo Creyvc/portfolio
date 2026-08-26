@@ -271,7 +271,7 @@
      emphasis-on-contact language as the rest of the site. */
   .work-list{
     position:fixed;
-    left:33%; right:3%;
+    left:3%; right:3%;
     top:50%;
     transform:translateY(-50%);
     z-index:2;
@@ -284,13 +284,8 @@
     justify-content:space-between;
     gap:1.5rem;
     padding:0.9rem 0;
-    border-top:1px solid #e4e6e9;
-  }
-  .work-row + .work-row{ border-top:1px solid #e4e6e9; }
-  .work-list::after{
-    content:'';
-    display:block;
-    border-top:1px solid #e4e6e9;
+    cursor:default;
+    user-select:none;
   }
   .work-name{
     font-family:var(--sans);
@@ -312,6 +307,27 @@
   }
   .work-row:hover .work-name,
   .work-row:hover .work-meta{ color:var(--ink); }
+
+  /* centre-of-page logo shown while a work row is hovered — see .work-row's
+     data-preview / .work-preview-img's data-name pairing in main.js */
+  .work-preview{
+    position:fixed;
+    top:50%; left:50%;
+    transform:translate(-50%, -50%);
+    z-index:6;
+    pointer-events:none;
+  }
+  .work-preview-img{
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%, -50%);
+    max-width:220px;
+    max-height:220px;
+    width:auto; height:auto;
+    opacity:0;
+    transition:opacity 0.25s ease;
+  }
+  .work-preview-img.is-active{ opacity:1; }
 
   /* ===== Intro grid-build (loader -> home) =====
      The grid lines draw out from center while the plus marks fly out from
