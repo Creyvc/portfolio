@@ -186,6 +186,28 @@
     stroke:rgba(23,24,28,0.15);
     stroke-width:1;
   }
+  /* The name of the piece the centre line is standing over, set under the
+     arrow. Same calc as .mid-arrow's top, carried a little further down, so the
+     three of them — ruler, arrow, name — stay stacked if the band is ever moved.
+     Its own line across the full width and centred, rather than sized to the
+     text, so a long name and a short one are both centred on the line without
+     the box itself moving. */
+  .scale-name{
+    position:fixed;
+    left:0; right:0;
+    top:calc(83.5% + 2.1rem + 2.5rem);
+    z-index:2;
+    text-align:center;
+    font-family:var(--sans);
+    font-weight:400;
+    font-size:0.72rem;
+    letter-spacing:0.09em;
+    text-transform:uppercase;
+    color:var(--ink);
+    white-space:nowrap;
+    pointer-events:none;
+    user-select:none;
+  }
   /* Free horizontally, but only ever resting on one of three lines: the foot of
      row 1, the head of row 2, the foot of row 2.
      The +1px on the two bottom-anchored spots is a fill-rule correction, not a

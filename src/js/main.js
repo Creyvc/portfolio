@@ -1860,6 +1860,71 @@
   // carries them. The epsilon keeps the last number from falling to 29.999... on
   // a float and bracketing 29 at the very end of the run.
   let current = -1;
+  // What each box holds, in order — the piece whose photograph is printed on it.
+  // The centre line standing between number n and n+1 is standing over box n, so
+  // the same index that brackets the number names the piece.
+  const PIECES = [
+    'Clover Blossom Diamond Studs',
+    'Trio Pearl Vine Earrings',
+    'Spiral Teardrop Diamond Pendant',
+    'Emerald-Cut Halo Pearl Pendant',
+    'Golden Wing Diamond Earrings',
+    'Cushion Diamond Channel Ring',
+    'Diamond Starburst Drop Earrings',
+    'Pearl Cabochon Signet Ring',
+    'Floral Swirl Diamond Drops',
+    'Cascading Pearl Diamond Chandeliers',
+    'Gold Coil Wrap Bangle',
+    'Diamond Fringe Statement Necklace',
+    'Round Brilliant Pavé Solitaire Ring',
+    'Aquamarine Cascade Necklace',
+    'Pear Diamond Halo Drops',
+    'Domed Pearl Diamond Halo Ring',
+    'Diamond Ribbon Pearl Pendant',
+    'Twin Pearl Diamond Leaf Earrings',
+    'Pavé Rose Pearl Ring',
+    'Sunset Fire Diamond Halo Necklace',
+    'Golden Rose Pearl Collar Necklace',
+    'Two-Tone Lariat Diamond Necklace',
+    'Octagon Halo Pavé Signet Ring',
+    'Emerald Duo Wrap Ring',
+    'Sunburst Solitaire Pavé Ring'
+  ];
+  const nameEl = document.getElementById('scaleName');
+
+  // The name decodes into place rather than appearing, the same way the name
+  // link and the blurb keywords do on the home page — same glyph set, same 45ms
+  // tick, so the flicker runs at one rate across the site. Spaces are never
+  // scrambled, which holds the shape of the phrase steady while the letters
+  // churn. The band is monospace and the glyph count never changes, so the line
+  // does not jitter as it resolves.
+  const NAME_GLYPHS = '01<>[]{}/\\|=+*-#%&$ｦｧｨｩｪﾊﾋﾌﾍABCDEFGHKMNXZ';
+  const NAME_STEPS = 9, NAME_TICK = 45;
+  const nameStill = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let nameTimer = null;
+  function decodeName(text){
+    if (!nameEl) return;
+    clearInterval(nameTimer);
+    if (!text || nameStill){ nameEl.textContent = text || ''; return; }
+    const chars = Array.from(text);
+    let step = 0;
+    nameTimer = setInterval(function(){
+      step++;
+      const revealed = Math.floor(chars.length * step / NAME_STEPS);
+      let out = '';
+      for (let i = 0; i < chars.length; i++){
+        out += (i < revealed || chars[i] === ' ')
+          ? chars[i]
+          : NAME_GLYPHS[(Math.random() * NAME_GLYPHS.length) | 0];
+      }
+      nameEl.textContent = out;
+      if (step >= NAME_STEPS){
+        clearInterval(nameTimer);
+        nameEl.textContent = text;
+      }
+    }, NAME_TICK);
+  }
+
   function syncCurrent(){
     const vw = window.innerWidth / 100;
     const k = Math.max(0, Math.min(majors.length - 1,
@@ -1868,6 +1933,9 @@
     if (current >= 0) majors[current].classList.remove('is-current');
     majors[k].classList.add('is-current');
     current = k;
+    // Past the last box the run has nothing under it, so the name goes blank
+    // rather than holding the one before.
+    decodeName(PIECES[k] || '');
   }
 
   // Ticks stand tallest on the centre line and ease back down to their base
