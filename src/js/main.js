@@ -2260,7 +2260,7 @@
       // a single stroke with a real join rather than two lines meeting.
       // MARK_GAP/MARK_LEN are in viewBox units: on a 28vh box, roughly 14px of
       // clearance and a 20px arm.
-      const MARK_GAP = 6, MARK_LEN = 6;
+      const MARK_GAP = 4, MARK_LEN = 4.5;
       const marks = [];
       [[0, 0, 1, 1], [100, 0, -1, 1], [100, 100, -1, -1], [0, 100, 1, -1]].forEach(function(c){
         const x = c[0], y = c[1], sx = c[2], sy = c[3];
