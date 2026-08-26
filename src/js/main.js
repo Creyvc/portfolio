@@ -1906,8 +1906,9 @@
   // the page does not reshuffle itself when you navigate back to it.
   const field = document.getElementById('scaleField');
   const boxCx = [];        // each box's centre, in vw of track space
-  const boxPaths = [];     // the filled path that draws each box
+  const boxPaths = [];     // the path that cuts each box out and draws its border
   const boxEls = [];       // and the box each one belongs to
+  const boxStrips = [];    // the vertical slices the picture inside it is built from
   const SVGNS = 'http://www.w3.org/2000/svg';
   const FLAT = 'M0,0 L100,0 L100,100 L0,100 Z';   // the box at rest
   // The wave has to read as one surface breathing, not as a row of louvres, so
@@ -1955,13 +1956,67 @@
     // simply stops where the pictures do — the numbers carry on past it and the
     // gaps beyond the last picture hold nothing at all.
     const PHOTOS = 25;
-    // How far past the box the picture is drawn, in viewBox units. The path
-    // bulges above and below 0..100 — AMPLITUDE for the wave, CURL for the sweep
-    // at the window's edges — and without the overhang the crest would be
-    // clipped against nothing and eat a bite out of the picture. It is symmetric
-    // about the box, so the drawn rect is still centred on 50,50 and
-    // xMidYMid slice keeps the middle of the photograph on the middle of the box.
-    const OVERHANG = 16;
+
+    // Clipping the picture only ever changed WHICH part of it you could see —
+    // the photograph itself sat dead still while its edge rolled. To make the
+    // picture move with the wave it has to be built out of vertical slices, each
+    // one squashed or stretched to reach exactly the top and bottom the curve
+    // asks for at that column. The smooth path still clips the lot, so the
+    // staircase the slices would otherwise leave along the edge never shows.
+    //
+    // 32 is where the seams stop being visible. The error left between two
+    // neighbouring slices is second order in their width: for the wave it is
+    // about a fiftieth of a pixel, and it only approaches a pixel or two right
+    // at the window's edges where the curl is steepest and the box is half out
+    // of view anyway.
+    // How much each photograph is scaled down inside its box, by box number.
+    // 1 shows the whole picture, filling the box edge to edge; less than that
+    // pulls it in so the piece has room around it.
+    //
+    // The numbers are not guesses. Each was measured from the picture itself:
+    // how far the piece reaches from the middle of the frame, then the scale
+    // that leaves an eighth of the box clear all round. Pieces shot tight, and
+    // wide ones like the necklaces, need the most; anything already sitting
+    // comfortably is left out and stays at 1. Any one can be retuned on its own.
+    const PHOTO_ZOOM = {
+      3: 0.84,  4: 0.84, 10: 0.97, 11: 0.84, 12: 0.89, 13: 0.84,
+      17: 0.72, 18: 0.97, 20: 0.94, 21: 0.62, 23: 0.84, 24: 0.84, 25: 0.84
+    };
+
+    const STRIPS = 32;
+    // Slices overlap slightly. Two antialiased clip edges meeting on the same
+    // coordinate do not add up to full coverage, and that leaves a hairline of
+    // paper showing between every pair — the overlap puts each slice a little
+    // under its neighbour so there is nothing to show through.
+    const OVERLAP = 0.6;
+
+    // One set of vertical bands, shared by all 25 boxes: clipPathUnits is
+    // userSpaceOnUse, which resolves in the user space of whatever references
+    // it, and every box has the same 0..100 viewBox. The bands run far past the
+    // box top and bottom because a slice is scaled about the box's middle, and
+    // a band has to keep containing its slice after that.
+    const bandHost = document.createElementNS(SVGNS, 'svg');
+    bandHost.setAttribute('width', '0');
+    bandHost.setAttribute('height', '0');
+    bandHost.setAttribute('aria-hidden', 'true');
+    bandHost.style.position = 'absolute';
+    const bandDefs = document.createElementNS(SVGNS, 'defs');
+    for (let i = 0; i < STRIPS; i++){
+      const cp = document.createElementNS(SVGNS, 'clipPath');
+      cp.setAttribute('id', 'jw-band-' + i);
+      cp.setAttribute('clipPathUnits', 'userSpaceOnUse');
+      const r = document.createElementNS(SVGNS, 'rect');
+      const x0 = i * (100 / STRIPS) - (i ? OVERLAP : 0);
+      const x1 = (i + 1) * (100 / STRIPS) + (i < STRIPS - 1 ? OVERLAP : 0);
+      r.setAttribute('x', String(x0));
+      r.setAttribute('y', '-400');
+      r.setAttribute('width', String(x1 - x0));
+      r.setAttribute('height', '900');
+      cp.appendChild(r);
+      bandDefs.appendChild(cp);
+    }
+    bandHost.appendChild(bandDefs);
+    field.appendChild(bandHost);
 
     for (let k = 0; k < Math.min(MAJORS - 1, PHOTOS); k++){
       let s = Math.floor(rnd() * SPOTS.length);
@@ -2009,15 +2064,61 @@
       defs.appendChild(clip);
       svg.appendChild(defs);
 
+      const imgId = 'jw-img-' + k;
+      const zoom = PHOTO_ZOOM[k + 1] || 1;
       const img = document.createElementNS(SVGNS, 'image');
+      img.setAttribute('id', imgId);
       img.setAttribute('href', '../../assets/images/jewelry/J' + (k + 1) + '.jpg');
+      // Drawn to the box itself, so the box shows the picture's full height.
+      // This rect used to be a third taller, to give the wave's crest something
+      // to land on — but 'slice' scales a picture to cover whatever rect it is
+      // handed, so the taller rect quietly enlarged every photograph by a third
+      // and the box only ever showed the middle 76% of it. That is what was
+      // cutting the pieces off. The white card behind gives the crest its ground
+      // instead, which costs nothing: every one of these is shot on white.
       img.setAttribute('x', '0');
-      img.setAttribute('y', String(-OVERHANG));
+      img.setAttribute('y', '0');
       img.setAttribute('width', '100');
-      img.setAttribute('height', String(100 + OVERHANG * 2));
+      img.setAttribute('height', '100');
       img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
-      img.setAttribute('clip-path', 'url(#' + clipId + ')');
-      svg.appendChild(img);
+      // Scaled about the middle of the box, so the centre of the photograph
+      // stays on the centre of the box however far out it is zoomed. It sits on
+      // the image rather than on the slices that draw it, so one setting covers
+      // all 32 of them and the bands they are clipped by are left alone.
+      if (zoom !== 1){
+        img.setAttribute('transform',
+          'matrix(' + zoom + ',0,0,' + zoom + ',' + (50 - 50 * zoom) + ',' + (50 - 50 * zoom) + ')');
+      }
+      defs.appendChild(img);
+
+      // The picture, in slices, under the smooth outline. Each slice is the same
+      // photograph seen through its own vertical band; only the vertical part of
+      // its transform ever changes, and a band is unaffected by that, so the band
+      // can sit on the slice itself with no wrapper to hold it still.
+      const g = document.createElementNS(SVGNS, 'g');
+      g.setAttribute('clip-path', 'url(#' + clipId + ')');
+      // The card the picture is printed on. Every one of these photographs is
+      // shot on pure white, so a white ground behind them is invisible where the
+      // picture reaches the edge — and where it does not, because the box is
+      // zoomed out, it is what keeps the box a solid card instead of letting the
+      // paper show through around the piece. Drawn well past the box; the
+      // outline clips it to the right shape, wave and all.
+      const card = document.createElementNS(SVGNS, 'rect');
+      card.setAttribute('x', '-20');
+      card.setAttribute('y', '-400');
+      card.setAttribute('width', '140');
+      card.setAttribute('height', '900');
+      card.setAttribute('fill', '#fff');
+      g.appendChild(card);
+      const strips = [];
+      for (let i = 0; i < STRIPS; i++){
+        const slice = document.createElementNS(SVGNS, 'use');
+        slice.setAttribute('href', '#' + imgId);
+        slice.setAttribute('clip-path', 'url(#jw-band-' + i + ')');
+        g.appendChild(slice);
+        strips.push(slice);
+      }
+      svg.appendChild(g);
 
       // drawn after the picture, so the border sits on top of its own edge
       const outline = document.createElementNS(SVGNS, 'use');
@@ -2027,6 +2128,7 @@
 
       box.appendChild(svg);
       boxPaths.push(path);
+      boxStrips.push(strips);
       boxEls.push(box);
 
       ftrack.appendChild(box);
@@ -2079,6 +2181,29 @@
     }
     return d + 'Z';
   }
+  // Squash each slice of the picture into the gap between the two edges the
+  // curve gives at that column: edges(u) hands back [top, bottom] for a column
+  // u across the box, and a slice showing 0..100 is mapped onto it by
+  // y' = top + y * (bottom - top) / 100. The transform touches y only, which is
+  // why the band clipping each slice can be left alone — a vertical scale about
+  // any point maps a full-height vertical band onto itself.
+  function shapeStrips(k, edges){
+    const strips = boxStrips[k];
+    if (!strips) return;
+    const n = strips.length;
+    for (let i = 0; i < n; i++){
+      const e = edges((i + 0.5) / n);     // sampled at the middle of the slice
+      const kk = (e[1] - e[0]) / 100;
+      strips[i].setAttribute('transform',
+        'matrix(1,0,0,' + kk.toFixed(5) + ',0,' + e[0].toFixed(3) + ')');
+    }
+  }
+  function flattenStrips(k){
+    const strips = boxStrips[k];
+    if (!strips) return;
+    for (let i = 0; i < strips.length; i++) strips[i].removeAttribute('transform');
+  }
+
   function syncWave(){
     if (!boxPaths.length) return;
     const vw = window.innerWidth / 100;
@@ -2104,11 +2229,19 @@
         env = Math.sin(Math.PI * t);
       }
       boxPaths[k].setAttribute('d', boxD(left, width, t, env));
+      shapeStrips(k, function(u){
+        const sw = Math.sin(((u - t) / WAVELENGTH) * Math.PI * 2) * env;
+        const c = curlAt(left + u * width);
+        return [-AMPLITUDE * sw - c, 100 + AMPLITUDE * sw + c];
+      });
       next.push(k);
     }
 
     for (let i = 0; i < shaped.length; i++){
-      if (next.indexOf(shaped[i]) === -1) boxPaths[shaped[i]].setAttribute('d', FLAT);
+      if (next.indexOf(shaped[i]) === -1){
+        boxPaths[shaped[i]].setAttribute('d', FLAT);
+        flattenStrips(shaped[i]);
+      }
     }
     shaped = next;
   }
@@ -2275,24 +2408,28 @@
     const AMP  = 2.4;        // ripple depth at its deepest, in viewBox units
     const RIPPLE = 1400;     // ms for one pass of the ripple
 
-    const lastEl = boxEls[boxEls.length - 1], lastPath = boxPaths[boxPaths.length - 1];
+    const lastIndex = boxEls.length - 1;
+    const lastEl = boxEls[lastIndex], lastPath = boxPaths[lastIndex];
     if (!lastEl || !lastPath){ rewind(); return; }
 
     // A sheet, not a bar: two sines of different rates running against each
     // other, and the far edge lagging the near one so the surface twists rather
     // than moving as one piece.
+    // lifted out of tissue() so the slices of the picture can be shaped from the
+    // very same numbers the outline is drawn through
+    function wob(u, lag, tau){
+      return Math.sin((u * 1.35 - tau + lag) * Math.PI * 2) * 0.62 +
+             Math.sin((u * 2.30 + tau * 0.75) * Math.PI * 2) * 0.38;
+    }
     function tissue(tau, amp){
       let d = '';
-      const wob = (u, lag) =>
-        Math.sin((u * 1.35 - tau + lag) * Math.PI * 2) * 0.62 +
-        Math.sin((u * 2.30 + tau * 0.75) * Math.PI * 2) * 0.38;
       for (let i = 0; i <= SAMPLES; i++){
         const u = i / SAMPLES;
-        d += (i ? 'L' : 'M') + (u * 100).toFixed(2) + ',' + (-amp * wob(u, 0)).toFixed(2) + ' ';
+        d += (i ? 'L' : 'M') + (u * 100).toFixed(2) + ',' + (-amp * wob(u, 0, tau)).toFixed(2) + ' ';
       }
       for (let i = SAMPLES; i >= 0; i--){
         const u = i / SAMPLES;
-        d += 'L' + (u * 100).toFixed(2) + ',' + (100 + amp * wob(u, 0.18)).toFixed(2) + ' ';
+        d += 'L' + (u * 100).toFixed(2) + ',' + (100 + amp * wob(u, 0.18, tau)).toFixed(2) + ' ';
       }
       return d + 'Z';
     }
@@ -2356,6 +2493,12 @@
         'translate(' + (DX * p).toFixed(2) + 'px,' + (DY * p).toFixed(2) + 'px)' +
         ' scale(' + (1 + (SX - 1) * p).toFixed(4) + ',' + (1 + (SY - 1) * p).toFixed(4) + ')';
       lastPath.setAttribute('d', tissue(el / RIPPLE, amp));
+      // and the photograph itself rides it, slice by slice, off the same two
+      // edges the path is drawn through
+      const tau = el / RIPPLE;
+      shapeStrips(lastIndex, function(u){
+        return [-amp * wob(u, 0, tau), 100 + amp * wob(u, 0.18, tau)];
+      });
 
       // Nothing else is touched on the way down — the page is already there.
 
