@@ -2583,6 +2583,67 @@
   });
 })();
 
+/* Work list scramble (ui-ux.html only) — same glyph set/steps/tick as the home
+   page's blurb-link decode. Bound to the whole row (not just the name span)
+   so the hit area matches the row's own hover highlight, and runs on BOTH the
+   name (left) and the tags/year (right) so hovering either side of the row
+   shows the effect, not just the name text specifically. Spaces, the middle
+   dot and its NBSP padding are left alone so the "  ·  " separator never
+   scrambles into noise. */
+(function(){
+  const rows = document.querySelectorAll('.work-row');
+  if (!rows.length) return;
+  const GLYPHS = '01<>[]{}/\\|=+*-#%&$ABCDEFGHKMNXZ';
+  const STEPS = 14;
+  const TICK_MS = 40;
+
+  function scramble(el){
+    if (!el || el._animating) return;   // don't restart mid-animation (prevents glitch)
+    const original = el.textContent;
+    el._animating = true;
+    const chars = Array.from(original);
+    const total = chars.length;
+    let step = 0;
+    clearInterval(el._scr);
+    el._scr = setInterval(function(){
+      step++;
+      const revealed = Math.floor(total * step / STEPS);
+      let out = '';
+      for (let i = 0; i < total; i++){
+        const c = chars[i];
+        out += (i < revealed || c === ' ' || c === ' ' || c === '·') ? c : GLYPHS[(Math.random() * GLYPHS.length) | 0];
+      }
+      el.textContent = out;
+      if (step >= STEPS){
+        clearInterval(el._scr);
+        el.textContent = original;
+        el._animating = false;
+      }
+    }, TICK_MS);
+  }
+
+  rows.forEach(function(row){
+    const name = row.querySelector('.work-name');
+    const meta = row.querySelector('.work-meta');
+    row.addEventListener('mouseenter', function(){
+      scramble(name);
+      scramble(meta);
+    });
+  });
+
+  // Also decode in on arrival — every row scrambles once as soon as the page
+  // opens, each one starting a beat after the last rather than all at once.
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduceMotion){
+    rows.forEach(function(row, i){
+      setTimeout(function(){
+        scramble(row.querySelector('.work-name'));
+        scramble(row.querySelector('.work-meta'));
+      }, i * 150);
+    });
+  }
+})();
+
 /* Pointer-following guide lines (ui-ux.html only). The cursor itself is left
    alone — these are two long rules that ride along it: the vertical one only
    ever moves left/right (tracks the pointer's x), the horizontal one only

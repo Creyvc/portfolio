@@ -289,8 +289,8 @@
   }
   .work-name{
     font-family:var(--sans);
-    font-weight:400;
-    font-size:1rem;
+    font-weight:300;
+    font-size:0.9rem;
     color:rgba(23,24,28,0.4);
     white-space:nowrap;
     transition:color 0.2s ease;
@@ -298,7 +298,7 @@
   .work-meta{
     font-family:var(--sans);
     font-weight:300;
-    font-size:0.78rem;
+    font-size:0.82rem;
     letter-spacing:0.01em;
     color:rgba(23,24,28,0.4);
     text-align:right;
@@ -326,6 +326,13 @@
     width:auto; height:auto;
     opacity:0;
     transition:opacity 0.25s ease;
+  }
+  /* solid, edge-to-edge mark vs. GAir's line-art wordmark with room around it —
+     same bounding box read as noticeably heavier, so it's scaled down to match
+     visual weight rather than pixel dimensions */
+  .work-preview-img[data-name="solevault"]{
+    max-width:170px;
+    max-height:170px;
   }
   .work-preview-img.is-active{ opacity:1; }
 
