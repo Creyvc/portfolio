@@ -6,6 +6,19 @@
   *{ box-sizing:border-box; }
   html,body{ margin:0; scroll-behavior:smooth; overflow-x:hidden; overscroll-behavior:none; }
 
+  /* pointer-following guide lines (ui-ux.html only) — full-length, 1px, same
+     grey as the .hl grid rules. main.js only ever writes a transform to these,
+     so their rest position (off-screen) never actually shows. */
+  .cursor-guide-v, .cursor-guide-h{
+    position:fixed;
+    z-index:5;
+    background:#dfe2e5;
+    pointer-events:none;
+    will-change:transform;
+  }
+  .cursor-guide-v{ top:0; left:0; bottom:0; width:1px; transform:translateX(-100vw); }
+  .cursor-guide-h{ left:0; top:0; right:0; height:1px; transform:translateY(-100vh); }
+
   /* 4 long vertical lines across the home hero */
   .home-lines{ position:fixed; top:0; left:0; right:0; bottom:0; z-index:1; pointer-events:none; }
   .home-lines .hl{

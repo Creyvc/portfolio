@@ -2569,3 +2569,17 @@
     rewind();
   })();
 })();
+
+/* Pointer-following guide lines (ui-ux.html only). The cursor itself is left
+   alone — these are two long rules that ride along it: the vertical one only
+   ever moves left/right (tracks the pointer's x), the horizontal one only
+   ever moves up/down (tracks its y). */
+(function(){
+  const v = document.getElementById('cursorGuideV');
+  const h = document.getElementById('cursorGuideH');
+  if (!v || !h) return;
+  document.addEventListener('mousemove', function(e){
+    v.style.transform = 'translateX(' + e.clientX + 'px)';
+    h.style.transform = 'translateY(' + e.clientY + 'px)';
+  });
+})();
