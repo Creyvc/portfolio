@@ -38,7 +38,7 @@ extreme, the LinkedIn letters separate, the X glyph scales, and the info circle 
 arrive through a page transition so in-session navigation stays seamless.
 
 **Details** — click-to-copy email, live Bangkok time badge, cursor position and frame-rate
-HUD, custom macOS-style cursors, and mobile visitors redirected to a desktop-only notice
+HUD, and mobile visitors redirected to a desktop-only notice
 (with search-engine and link-preview crawlers explicitly exempted so the site still indexes).
 
 **Reduced motion** — every animated system checks `prefers-reduced-motion` and falls back to
@@ -51,7 +51,6 @@ the settled state.
 | **Markup** | HTML5 |
 | **Styling** | CSS3 — custom properties, flexbox, transforms, keyframe animation. No preprocessor. |
 | **Behaviour** | Vanilla JavaScript, organised as independent IIFEs that each guard on the elements they need |
-| **Physics** | [Matter.js](https://brm.io/matter-js/) 0.19 via CDN, for the physics-driven sections |
 | **Type** | Google Fonts — Space Grotesk, Press Start 2P, Silkscreen, VT323, Jersey 10, Boogaloo, Noto Sans Khmer / Thai |
 | **Hosting** | GitHub Pages with a custom domain |
 | **Tooling** | None — no build, no dependencies, no package installs |
@@ -60,19 +59,21 @@ the settled state.
 
 ```
 portfolio/
+├── index.html               home: moving background, lockup, Who is
+├── journey.html             Journey
+├── lab.html                 Lab: academic and self-initiated projects
+├── contact.html             contact
+├── about.html               about (fallback for Who is)
+├── desktop-only.html        shown to mobile visitors
 ├── src/
 │   ├── css/style.css        all styling for the site
-│   ├── js/main.js           all behaviour — loader, transitions, contact page
-│   ├── work/                individual work pages
-│   └── sections/            sections lifted out of index.html, kept for later reuse
+│   └── js/
+│       ├── main.js          all behaviour, one self-contained block per feature
+│       └── grainient.js     the home page's animated gradient (WebGL2)
 ├── assets/
-│   ├── icons/               favicons, logos, custom cursors
-│   ├── images/              photography and project imagery
-│   └── videos/              background and project video
+│   ├── icons/               favicons and logos
+│   └── images/lab/          project logos for the Lab page
 ├── docs/                    working notes and screenshots
-├── index.html               home
-├── contact.html             contact
-├── desktop-only.html        shown to mobile visitors
 ├── CNAME                    custom domain for GitHub Pages
 ├── robots.txt
 ├── sitemap.xml

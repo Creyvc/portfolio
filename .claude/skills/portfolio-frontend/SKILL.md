@@ -11,8 +11,8 @@ description: How the vuthycheam.com portfolio frontend is built — stack, page 
   bundler, preprocessor, TypeScript or npm packages. `package.json` has no dependencies
   and its only scripts run `python3 -m http.server`.
 - **No new dependencies without asking.** That includes CDN scripts and new Google
-  Fonts. The only third-party code today is Matter.js 0.19.0 from jsDelivr, loaded on
-  `index.html` and `contact.html`. (A three.js glass logo was tried and removed.) `docs/animation-libraries.md` is a reference list,
+  Fonts. There is no third-party code today: Matter.js was dropped on 2026-11-04 with the
+  features that used it, and a three.js glass logo was tried and removed. `docs/animation-libraries.md` is a reference list,
   not permission to add anything from it.
 - **Desktop only.** Every page except `desktop-only.html` starts with an inline script
   that sends phones and tablets to `desktop-only.html` and lets crawlers through. Don't
@@ -29,27 +29,30 @@ description: How the vuthycheam.com portfolio frontend is built — stack, page 
 ```
 index.html            home: grainient background, header line (name, X/FPS/Y HUD, time),
                       bottom-centre lockup with its intro
-about.html            about ([CLOSE] only so far)
-work.html             Journey (the lockup's JOURNEY): only [CLOSE] and "COMING SOON", dead centre
-lab.html              Lab: academic + self-initiated projects (the lockup's LAB); no title, just
-                      the ui-ux work list (.work-row, hover logo preview)
-contact.html          contact boxes rail (uses Matter.js)
+about.html            about ([CLOSE] only); fallback for WHO IS on a modified click / no JS
+journey.html          Journey (the lockup's JOURNEY): only [CLOSE] and "COMING SOON", dead centre
+lab.html              Lab: academic + self-initiated projects (the lockup's WORK/LAB); no title,
+                      just the work list (.work-row, hover logo preview), centred
+contact.html          contact boxes rail
 desktop-only.html     mobile notice; self-contained inline <style>, loads nothing
-src/css/style.css     ALL styling (~2000 lines)
+src/css/style.css     ALL styling (~880 lines)
 src/js/main.js        ALL behaviour (independent IIFEs)
 src/js/grainient.js   the owner's plain-JS port of React Bits' <Grainient /> (copied from
                       ~/tokenz/frontend) plus one local, opt-in `wander` option (meandering
                       scroll heading and a roaming gradient angle, so colours go anywhere);
                       re-copying the original would drop it
-src/work/*.html       one page per discipline: ai-ml, data-science, software-development,
-                      ui-ux (work list)
-src/work/ai-data-science.html, full-stack.html   older pages with their own inline
-                      <style>; not linked from any live page
-src/sections/*.html   sections lifted out of index.html "for later reuse"; not loaded
-assets/icons/         logo.svg, favicon.png, logo(-white).png, apple-touch-icon.png, cursors
-assets/images/, assets/videos/   page imagery, one folder per page (e.g. images/ui-ux/)
+assets/icons/         logo.svg, favicon.png, logo(-white).png, apple-touch-icon.png
+assets/images/lab/    the Lab rows' hover logos, trimmed to the mark
 docs/                 notes and README screenshots
 ```
+
+All pages sit at the repo root, one level only (2026-11-04 cleanup: src/work/, src/sections/,
+assets/videos/ and the unused images were deleted; they're in git history if needed). Keep it
+that way: a new page goes at the root, its media in assets/images/<page>/. The same day, dead code went too:
+the JS blocks and CSS rules for the old menu, custom cursor, project grid, marquee, black
+divider/dot grid, tag cloud and cartoon eyes (main.js 1895 → 1355 lines, style.css 1660 →
+880). A before/after computed-style diff of every page showed no change. Don't revive them
+from git without asking.
 
 Every live page loads, in this order in `<head>`:
 1. The inline mobile-redirect script (it must stay the first thing after `<meta charset>`).
@@ -60,12 +63,12 @@ Every live page loads, in this order in `<head>`:
 5. The inline "arrived from inside the site" script, which reads
    `sessionStorage.pageTransition` and adds `pt pt-open` to `<html>`.
 
-At the end of `<body>`: `main.js?v=21`, deferred on every page except `index.html`.
-Matter.js goes before it on the pages that use it.
+At the end of `<body>`: `main.js`, deferred on every page except `index.html`, with
+`grainient.js` before it on the pages that use it (home, contact).
 
 `?v=N` is a manual cache-buster, and every page uses the same number. Bump it on every
 page at once when a change has to reach visitors who have the old file cached. Paths
-are relative: `src/work/*` pages use `../css/`, `../js/` and `../../assets/`.
+are relative from the root: `src/css/`, `src/js/`, `assets/`.
 
 ## 3. Shared pieces and adding a page
 
@@ -91,12 +94,11 @@ markup, so a shared change has to be made in every file.
   (a system font, so no web font; the site's mono was tried and rejected), 2.25rem, line-height
   .92, and the logo is 2 lines tall.
   Words are letter-tinted and the logo is white/ink as a whole. Links: WHO IS opens the #whois panel in place
-  (about.html only for a modified click / no JS), contact, work.html (JOURNEY), lab.html (WORK/LAB). **Intro (the preload animation):** the logo rises
+  (about.html only for a modified click / no JS), contact, journey.html (JOURNEY), lab.html (WORK/LAB). **Intro (the preload animation):** the logo rises
   from below the bottom edge into place (1.3s, after 0.25s), then the stacks clip-reveal outward (0.9s, ease-in-out).
   A head script on index.html sets `html.lockup-intro` (hidden, with a 3s CSS failsafe) and
   `html.bg-pending` (dark page-bg until mount) before first paint, and main.js clears them.
-  It's skipped on `pt-open` arrivals and with reduced motion. Matter.js is `defer` on
-  index.html (unused there) so it doesn't hold up the intro.
+  It's skipped on `pt-open` arrivals and with reduced motion.
 - **HUD** (X / FPS / Y): on the header line (`top:1rem`, baseline level with the time,
   measured), between 33% and 67% of the width.
   Other palettes the owner likes are listed in the main.js comment.
@@ -128,8 +130,8 @@ markup, so a shared change has to be made in every file.
   head script turns it into `html.pt-open` (`.reveal` won't re-fade). It's harmless now
   that there's no preloader; keep the head script consistent across pages.
 
-**Adding a page:** copy the closest existing page at the same depth (`about.html` at the
-root, `src/work/ai-ml.html` under work) and keep its head as it is.
+**Adding a page:** copy the closest existing page (`about.html`, `journey.html` or
+`lab.html`, all at the root) and keep its head as it is.
 Change the title, description, canonical and `og:url`; fix relative paths if the depth
 changed; keep the header and deferred `main.js`; then ask the user how it should be linked (home has no menu
 right now). Page-specific JS goes in a new IIFE at the
@@ -152,10 +154,9 @@ Use these words with the user, and confirm a name before relying on one marked (
 | contact boxes / rail | `.contact-boxes`, `.contact-box` | horizontally scrolling boxes on contact. Sticky, after cathydolle.com: the wheel glides (GLIDE 0.12s), and 160ms after input stops the nearest box glides to the page's middle (measured on screen; offsetLeft reads 32px off) and holds through the 0.4s resize. Touch follows the finger, and release momentum picks the box. Position is kept as a fraction (`pos`) because scrollLeft rounds. Locked during the opening intro (`.is-intro`): JS swallows wheel and touch, and CSS sets overflow:hidden and touch-action:none. The intro waits for an arriving page transition to land: a head script on contact.html catches `pagereveal` into `window.ptSettled` (main.js is deferred and can miss the event), and the intro holds its blank first frame until that resolves (capped at 2.5s) |
 | Instagram gradient | `.contact-box[data-label="Instagram"]` | 7th contact box: its own Grainient (Instagram colours, wander, speed 16, flow 2.4) mounted by main.js; contact.html loads grainient.js; the CSS `insta-flow` is the fallback (off under `.is-lit`) |
 | Threads line | `.threads-mark` / `.threads-line` | 6th contact box: the Threads logo as one traced SVG line (pathLength 1), drawn on toward centre and off past it via stroke-dashoffset; run is 1.6 box-widths, and the line trails the scroll (TRAIL 0.45s) |
-| work list / work rows | `.work-list`, `.work-row` | project rows on ui-ux and lab.html; `.work-preview` shows the logo on hover, on the hovered row's line (main.js sets its top) in the page's middle. On lab.html each name is followed by its kind of work in brackets (`.work-kind`, e.g. [UI/UX], [AI/ML]) inside a `.work-lead` wrapper. It's a sibling, not a child, of `.work-name` because the scramble rewrites textContent. Every logo is 3rem tall: logo files are trimmed to the mark with no transparent margin, so a new logo must be trimmed too |
-| Work / Lab pages | `work.html`, `lab.html`, `.work-page`, `.is-centred` | two separate pages: work.html is the Journey page, just "COMING SOON" in the window's dead centre; Lab has no title, only the list, also centred (`.is-centred`). Add only entries the owner supplies; don't invent any |
+| work list / work rows | `.work-list`, `.work-row` | project rows on lab.html; `.work-preview` shows the logo on hover, on the hovered row's line (main.js sets its top) in the page's middle. On lab.html each name is followed by its kind of work in brackets (`.work-kind`, e.g. [UI/UX], [AI/ML]) inside a `.work-lead` wrapper. It's a sibling, not a child, of `.work-name` because the scramble rewrites textContent. Every logo is 3rem tall: logo files are trimmed to the mark with no transparent margin, so a new logo must be trimmed too |
+| Journey / Lab pages | `journey.html`, `lab.html`, `.work-page`, `.is-centred` | two separate pages: journey.html is the Journey page, just "COMING SOON" in the window's dead centre; Lab has no title, only the list, also centred (`.is-centred`). Add only entries the owner supplies; don't invent any |
 | Who is | `#whois`, `.whois-text`, `[data-whois]`, `html.whois-open` | home only, after cathydolle.com's about: WHO IS opens a frosted layer over the WHOLE page (z 9998, above the header): blur 3px under a 50% paper tint, so the background, header, HUD and lockup show through soft. A small sharp text block pops up (rise + scale, overshoot), centred in the window and centre-aligned, with just the bio and availability; the owner removed the role line and the links. A click anywhere or Esc closes it. The 50% tint keeps ink text at AA over the darkest gradient, so don't thin it without checking. The content comes from the site; don't add claims the owner hasn't given, and there are no pronouns in the bio |
-| grid fill | `.grid-fill` | ui-ux merged field covering columns 2–3 |
 
 ## 5. Styles and scripts
 
@@ -221,8 +222,6 @@ playwright-cli close; pkill -f "http.server 8765"
   a sub-pixel offset, a handoff that has to match.
 - Things that are coupled; change one and you must change the other:
   - the grid percentages ↔ the faint lines in the `::view-transition` backdrop gradients
-- Leave `src/sections/`, `ai-data-science.html` and `full-stack.html` untouched unless
-  told otherwise.
 - Don't change the copy (menu labels, contact details) without being asked.
 
 ## 8. Working with the user
