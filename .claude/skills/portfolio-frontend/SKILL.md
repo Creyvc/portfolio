@@ -27,14 +27,17 @@ description: How the vuthycheam.com portfolio frontend is built — stack, page 
 ## 2. How the site is built today
 
 ```
-index.html            home: grainient background, header line (name, X/FPS/Y HUD, time); no preloader
+index.html            home: grainient background, header line (name, X/FPS/Y HUD, time),
+                      bottom-centre lockup with its intro
 about.html            about ([CLOSE] only so far)
 contact.html          contact boxes rail (uses Matter.js)
 desktop-only.html     mobile notice; self-contained inline <style>, loads nothing
 src/css/style.css     ALL styling (~2000 lines)
 src/js/main.js        ALL behaviour (independent IIFEs)
-src/js/grainient.js   the owner's plain-JS port of React Bits' <Grainient /> (copied
-                      unchanged from ~/tokenz/frontend; don't edit, re-copy instead)
+src/js/grainient.js   the owner's plain-JS port of React Bits' <Grainient /> (copied from
+                      ~/tokenz/frontend) plus one local, opt-in `wander` option (meandering
+                      scroll heading and a roaming gradient angle, so colours go anywhere);
+                      re-copying the original would drop it
 src/work/*.html       one page per discipline: ai-ml, data-science, software-development,
                       ui-ux (work list)
 src/work/ai-data-science.html, full-stack.html   older pages with their own inline
@@ -71,8 +74,8 @@ markup, so a shared change has to be made in every file.
   survives only as layout percentages (e.g. the HUD's 33% column) and as the faint
   lines on the page-transition backdrop.
 - **Page background** (home only): `<div class="page-bg">` is the first child of body
-  (`body.home`). main.js mounts `Grainient(.page-bg, {dark→grey→white #0e0f12…#f4f5f7, angle 75, speed 6, flow 1.1,
-  silk .35, grain .08, intro})` right away (body starts `.loaded`; the 1.6s bloom is its own intro),
+  (`body.home`). main.js mounts `Grainient(.page-bg, {dark→grey→white #0e0f12…#f4f5f7, angle 75 (roams with wander), speed 6, flow 1.5,
+  silk .35, grain .08, intro, wander})` right away (body starts `.loaded`; the 1.6s bloom is its own intro),
   and adds `html.is-lit` on success. `.page-bg` is fixed at z -1, with a CSS
   gradient fallback and an SVG-noise grain `::after` (overlay). `body.home` and `.hero`
   are transparent. The text has no boxes (the user rejected them). It's coloured letter by
@@ -80,6 +83,16 @@ markup, so a shared change has to be made in every file.
   times a second (gl.readPixels in a rAF scheduled after the engine's), decides white or ink
   per letter (5% switching margin), and paints the unchanged text through a hard-stop stripe
   per letter (`.letter-tinted` = background-clip:text). The time's dot is decided on its own.
+- **Lockup** (home, `#lockup`, bottom-centre, fixed): `WHO IS / WORK` · VC logo · `LAB / CONTACT`,
+  after a "WHO IS / TALENTS · DENISE · PRODUCTION / CREATION" lockup the owner sent. Impact
+  (a system font, so no web font), 2.25rem, line-height .92, and the logo is 2 lines tall.
+  Words are letter-tinted and the logo is white/ink as a whole. Links: about, ui-ux (WORK, professional;
+  placeholder target), software-development (LAB, academic + self-initiated; placeholder), contact. **Intro (the preload animation):** the logo rises
+  from below the bottom edge into place (1.3s, after 0.25s), then the stacks clip-reveal outward.
+  A head script on index.html sets `html.lockup-intro` (hidden, with a 3s CSS failsafe) and
+  `html.bg-pending` (dark page-bg until mount) before first paint, and main.js clears them.
+  It's skipped on `pt-open` arrivals and with reduced motion. Matter.js is `defer` on
+  index.html (unused there) so it doesn't hold up the intro.
 - **HUD** (X / FPS / Y): on the header line (`top:1rem`, baseline level with the time,
   measured), between 33% and 67% of the width.
   Other palettes the owner likes are listed in the main.js comment.
@@ -93,7 +106,8 @@ markup, so a shared change has to be made in every file.
   logo was removed (home currently shows no logo). Every other page has only `.close-btn`
   (`[CLOSE]`), which links back to home.
 - **Body class**: every page, home included, starts as `loaded`, which shows its
-  `.reveal` elements immediately. The user removed the preloader; don't re-add one unless asked.
+  `.reveal` elements immediately. The old white progress-bar preloader is gone; the home
+  page's only intro is the lockup's.
 - **Page transition**: pure CSS, cross-document View Transitions (`@view-transition`
   in the `===== Page transition =====` block of style.css). The old page sinks (scale
   0.91, `brightness(0.6)`, **sharp square corners**) while the new page rises from

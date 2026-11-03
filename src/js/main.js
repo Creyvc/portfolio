@@ -1494,7 +1494,8 @@
      ember      ["#120f17","#2a0f0a","#9a3412","#f97316","#fed7aa"], angle 55 */
 (function(){
   const host = document.querySelector('.page-bg');
-  if (!host || typeof Grainient === 'undefined') return;
+  if (!host) return;
+  if (typeof Grainient === 'undefined'){ document.documentElement.classList.remove('bg-pending'); return; }
 
   function mount(){
     const bg = Grainient(host, {
@@ -1502,11 +1503,13 @@
       // (was violet: '#2a1f8f', '#5B4FD6', '#8B7FF2', '#b4aaff', '#f1edff')
       angle:75,
       speed:6,
-      flow:1.1,
+      flow:1.5,                                // looser, more fluid shapes (was 1.1)
       silk:0.35,
       grainAmount:0.08,
-      intro:true
+      intro:true,
+      wander:true                              // drift and turn freely in every direction (grainient.js)
     });
+    document.documentElement.classList.remove('bg-pending');   // no WebGL2: the CSS gradient shows
     if (!bg) return;
     document.documentElement.classList.add('is-lit');
     followText(host.querySelector('.grainient-canvas'));
@@ -1528,11 +1531,14 @@
     if (!gl) return;
     const WHITE = '#ffffff', INK = '#17181c', INK_L = 0.0092;   // INK_L: relative luminance of --ink
     const pieces = Array.prototype.slice.call(
-      document.querySelectorAll('#home-link, #bkk-time, .hud > span')).map(function(el){
+      document.querySelectorAll('#home-link, #bkk-time, .hud > span, .lockup-word')).map(function(el){
         return { el:el, light:[] };
       });
-    const dot = document.querySelector('.time-badge .dot');
-    const dotState = { light:[] };
+    // decided whole, not per letter: the time's dot and the lockup logo
+    const wholes = Array.prototype.slice.call(
+      document.querySelectorAll('.time-badge .dot, .lockup-logo')).map(function(el){
+        return { el:el, light:[], prop:el.classList.contains('dot') ? 'backgroundColor' : 'color' };
+      });
     const range = document.createRange();
     function channel(v){ v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
 
@@ -1598,10 +1604,10 @@
         p.el.style.backgroundImage = 'linear-gradient(90deg, ' + stops.join(', ') + ')';
         p.el.classList.add('letter-tinted');
       });
-      if (dot){
-        const r = dot.getBoundingClientRect(), g = grab(r, ratio);
-        if (g) dot.style.backgroundColor = decide(dotState.light, 0, lum(g, r, ratio)) ? INK : WHITE;
-      }
+      wholes.forEach(function(w){
+        const r = w.el.getBoundingClientRect(), g = grab(r, ratio);
+        if (g) w.el.style[w.prop] = decide(w.light, 0, lum(g, r, ratio)) ? INK : WHITE;
+      });
     }
     read();
 
@@ -1620,4 +1626,46 @@
     mount();
   });
   watch.observe(document.body, { attributes:true, attributeFilter:['class'] });
+})();
+
+/* ===== Lockup intro (home) =====
+   The preload animation: on a first visit the logo rises up from below the
+   bottom edge of the page into its place in the lockup while the background
+   blooms, and then the words slide out from behind it on either side. It's all
+   transform, opacity and clip-path on the lockup's own pieces, laid out in
+   their final places from the start, so if this never runs the lockup is
+   simply there. Skipped when arriving from another page of the site
+   (html.pt-open) and for reduced motion — the head script only sets
+   .lockup-intro when it should play. */
+(function(){
+  const lockup = document.getElementById('lockup');
+  if (!lockup || !document.documentElement.classList.contains('lockup-intro')) return;
+  const logo = lockup.querySelector('.lockup-logo');
+  const left = lockup.querySelector('.lockup-left');
+  const right = lockup.querySelector('.lockup-right');
+
+  // start just below the bottom edge of the window, then rise into place
+  const r = logo.getBoundingClientRect();
+  const below = window.innerHeight - r.top + 24;
+  const OUT = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
+  logo.animate([
+    { transform:'translateY(' + below + 'px)', opacity:0 },
+    { opacity:1, offset:0.25 },
+    { transform:'translateY(0px)', opacity:1 }
+  ], { duration:1300, delay:250, easing:OUT, fill:'both' });
+
+  // the stacks open out from the logo's side once it has landed
+  const WORDS = { duration:750, delay:1150, easing:OUT, fill:'both' };
+  left.animate([
+    { clipPath:'inset(0 0 0 100%)', transform:'translateX(1.5rem)' },
+    { clipPath:'inset(0 0 0 0)', transform:'translateX(0)' }
+  ], WORDS);
+  right.animate([
+    { clipPath:'inset(0 100% 0 0)', transform:'translateX(-1.5rem)' },
+    { clipPath:'inset(0 0 0 0)', transform:'translateX(0)' }
+  ], WORDS);
+  // the animations now hold everything in its starting state; drop the
+  // pre-paint hiding (and its 3s failsafe) underneath them
+  document.documentElement.classList.remove('lockup-intro');
 })();

@@ -7,6 +7,13 @@
 //   bg.set({ ...any option }) changes options later; bg.destroy() takes it out again.
 //   bg.hold(true) pauses it while it's hidden behind something; bg.hold(false) carries on.
 // Options are the component's props. Without WebGL2 it returns null and leaves the element as it was.
+//
+// Local addition (not in the React Bits component or the ~/tokenz original): the `wander` option.
+// A linear gradient normally scrolls along one fixed line, across its angle. With wander: true the
+// scroll heading meanders round the whole circle instead and the distance travelled is summed along
+// that path (uScroll), so the colours drift freely in every direction at the same gentle speed; and
+// the gradient's own angle roams too (the scroll no longer hangs off it, so it can turn safely), so
+// the dark and light ends travel round the screen rather than staying on one side.
 (function () {
   var MAX_COLORS = 8;
   var MAX_STIRS = 24;
@@ -22,7 +29,7 @@
     colors: DEFAULT_COLORS, type: "linear", angle: 55, bands: 1, speed: 1, flow: 0.8, scale: 1,
     softness: 1, silk: 0.35, grainAmount: 0.08, grainSize: 1.2, grainAnimated: true, contrast: 1,
     saturation: 1, variation: 0, interactive: true, stir: 1, clickSwirl: true, intro: true,
-    lightMode: false, dpr: undefined
+    lightMode: false, dpr: undefined, wander: false
   };
 
   // ---- Shaders, unchanged from the component
@@ -58,6 +65,8 @@ uniform float uContrast;
 uniform float uSaturation;
 uniform float uSettle;
 uniform float uReveal;
+uniform vec2 uScroll;
+uniform int uWander;
 in vec2 vUv;
 out vec4 outColor;
 
@@ -96,7 +105,7 @@ vec2 warp(vec2 p) {
     float turn = uTime * 0.35;
     q = mat2(cos(turn), sin(turn), -sin(turn), cos(turn)) * q;
   } else {
-    q += vec2(-uDir.y, uDir.x) * uTime * 0.45;
+    q += uWander == 1 ? uScroll : vec2(-uDir.y, uDir.x) * uTime * 0.45;
   }
   return p + drift(q + uSeed, uTime) * uFlow * uScale * uSettle;
 }
@@ -290,6 +299,7 @@ void main() {
       clickSwirl: p.clickSwirl,
       intro: p.intro,
       lightMode: p.lightMode,
+      wander: !!p.wander,
       dpr: p.dpr
     };
   }
@@ -360,6 +370,11 @@ void main() {
     var raf = 0;
     var last = 0;
     var visible = true;
+    // wander: where the scroll has got to, the way it is heading, and a clock for the heading's drift
+    var scroll = [0, 0];
+    var heading = Math.random() * Math.PI * 2;
+    var wanderClock = Math.random() * 100;
+    var turn = Math.random() * 360;          // degrees added to the angle while wandering
 
     function syncPalette() {
       var s = settings;
@@ -392,7 +407,7 @@ void main() {
       gl.uniform1f(fu.uTime, time);
       gl.uniform3fv(fu.uRamp, ramp);
       gl.uniform1i(fu.uCount, s.colors.length);
-      var radians = (s.angle * Math.PI) / 180;
+      var radians = ((s.angle + (s.wander ? turn : 0)) * Math.PI) / 180;
       gl.uniform1i(fu.uType, s.type);
       gl.uniform2f(fu.uDir, Math.sin(radians), Math.cos(radians));
       gl.uniform1f(fu.uExtent, aspect * Math.abs(Math.sin(radians)) + Math.abs(Math.cos(radians)));
@@ -409,6 +424,8 @@ void main() {
       gl.uniform1f(fu.uSaturation, s.saturation);
       gl.uniform1f(fu.uSettle, introClock * introClock * (3 - 2 * introClock));
       gl.uniform1f(fu.uReveal, introClock);
+      gl.uniform2f(fu.uScroll, scroll[0], scroll[1]);
+      gl.uniform1i(fu.uWander, s.wander ? 1 : 0);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       gl.viewport(0, 0, canvas.width, canvas.height);
@@ -510,6 +527,17 @@ void main() {
       var dt = last ? clamp((now - last) / 1000, 0.001, 0.05) : 1 / 60;
       last = now;
       if (!reduce) time += dt * s.speed * 0.16;
+      if (!reduce && s.wander) {
+        // the heading turns at a rate that itself drifts (two slow, unrelated waves), so the path
+        // curves one way, straightens, and curls back the other, and over time covers every direction
+        wanderClock += dt;
+        heading += (Math.sin(wanderClock * 0.23) * 0.6 + Math.sin(wanderClock * 0.087 + 1.7) * 0.5) * dt;
+        var step = dt * s.speed * 0.16 * 0.45;
+        scroll[0] += Math.cos(heading) * step;
+        scroll[1] += Math.sin(heading) * step;
+        // the angle roams the same way, slower: up to ~12°/s, its direction of turn drifting too
+        turn += (Math.sin(wanderClock * 0.071 + 0.4) * 7 + Math.sin(wanderClock * 0.029 + 2.1) * 5) * dt;
+      }
       if (introClock < 1) introClock = Math.min(1, introClock + dt / INTRO_SECONDS);
       grainClock += dt;
       if (s.grainAnimated && !reduce && grainClock > 1 / 24) {
