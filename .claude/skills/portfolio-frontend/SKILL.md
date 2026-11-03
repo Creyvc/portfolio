@@ -27,12 +27,14 @@ description: How the vuthycheam.com portfolio frontend is built — stack, page 
 ## 2. How the site is built today
 
 ```
-index.html            home: loader bar → header (name + time) and X/FPS/Y HUD
+index.html            home: grainient background, header line (name, X/FPS/Y HUD, time); no preloader
 about.html            about ([CLOSE] only so far)
 contact.html          contact boxes rail (uses Matter.js)
 desktop-only.html     mobile notice; self-contained inline <style>, loads nothing
 src/css/style.css     ALL styling (~2000 lines)
-src/js/main.js        ALL behaviour (~2600 lines of independent IIFEs)
+src/js/main.js        ALL behaviour (independent IIFEs)
+src/js/grainient.js   the owner's plain-JS port of React Bits' <Grainient /> (copied
+                      unchanged from ~/tokenz/frontend; don't edit, re-copy instead)
 src/work/*.html       one page per discipline: ai-ml, data-science, software-development,
                       ui-ux (work list)
 src/work/ai-data-science.html, full-stack.html   older pages with their own inline
@@ -68,6 +70,19 @@ markup, so a shared change has to be made in every file.
   from every page, home included, so don't add them back unless asked. The grid
   survives only as layout percentages (e.g. the HUD's 33% column) and as the faint
   lines on the page-transition backdrop.
+- **Page background** (home only): `<div class="page-bg">` is the first child of body
+  (`body.home`). main.js mounts `Grainient(.page-bg, {dark→grey→white #0e0f12…#f4f5f7, angle 75, speed 6, flow 1.1,
+  silk .35, grain .08, intro})` right away (body starts `.loaded`; the 1.6s bloom is its own intro),
+  and adds `html.is-lit` on success. `.page-bg` is fixed at z -1, with a CSS
+  gradient fallback and an SVG-noise grain `::after` (overlay). `body.home` and `.hero`
+  are transparent. The text has no boxes (the user rejected them). It's coloured letter by
+  letter: `followText()` in main.js reads the grainient canvas under each piece about ten
+  times a second (gl.readPixels in a rAF scheduled after the engine's), decides white or ink
+  per letter (5% switching margin), and paints the unchanged text through a hard-stop stripe
+  per letter (`.letter-tinted` = background-clip:text). The time's dot is decided on its own.
+- **HUD** (X / FPS / Y): on the header line (`top:1rem`, baseline level with the time,
+  measured), between 33% and 67% of the width.
+  Other palettes the owner likes are listed in the main.js comment.
 - **No hero mark**: a big 3D glass VC (after guglieri.com's "nu") was built and
   then removed at the user's request. Don't bring it back unless asked.
 - **No menu on home** (yet): the user removed the orage.studio-style menu again, so
@@ -77,8 +92,8 @@ markup, so a shared change has to be made in every file.
   with its visible glyphs 16px from the top and 16px from its side. The small header
   logo was removed (home currently shows no logo). Every other page has only `.close-btn`
   (`[CLOSE]`), which links back to home.
-- **Body class**: `index.html` starts as `is-loading`. Every other page uses `loaded`,
-  which shows its `.reveal` elements immediately.
+- **Body class**: every page, home included, starts as `loaded`, which shows its
+  `.reveal` elements immediately. The user removed the preloader; don't re-add one unless asked.
 - **Page transition**: pure CSS, cross-document View Transitions (`@view-transition`
   in the `===== Page transition =====` block of style.css). The old page sinks (scale
   0.91, `brightness(0.6)`, **sharp square corners**) while the new page rises from
@@ -92,8 +107,8 @@ markup, so a shared change has to be made in every file.
   and it only runs over http(s), not file://.
 - **In-site flag**: the `===== Arriving from inside the site =====` module in main.js
   sets `sessionStorage.pageTransition` on internal link clicks, and the next page's
-  head script turns it into `html.pt-open`. That's how home skips its loader and
-  intro for visitors already on the site, so keep the head script on every page.
+  head script turns it into `html.pt-open` (`.reveal` won't re-fade). It's harmless now
+  that there's no preloader; keep the head script consistent across pages.
 
 **Adding a page:** copy the closest existing page at the same depth (`about.html` at the
 root, `src/work/ai-ml.html` under work) and keep its head as it is.
@@ -110,7 +125,6 @@ Use these words with the user, and confirm a name before relying on one marked (
 | Say | Code | What it is |
 |---|---|---|
 | cells, "row 2 column 3" | — | the 3×3 grid of percentages code comments still position things by |
-| loading page / loader | `.loader`, `.loader-line` | white screen with a progress bar (no number) |
 | logo | `assets/icons/*` | the VC mark (not shown on home right now) |
 | tab icon | `logo.svg`, `favicon.png`, `logo-white.png` | the browser-tab icon |
 | name link (?) | `#home-link`, `.home-link` | `[VUTHY CHEAM]`, cycles through Khmer and Thai |
@@ -131,8 +145,8 @@ Use these words with the user, and confirm a name before relying on one marked (
 - Hand-formatted in the existing style: two-space indent inside the file, compact
   `prop:value;` with no space after the colon, several short declarations on one line.
 - Class names are short, hyphenated, and scoped by page or feature (`.cell-ai-rest`,
-  `.work-row`, `.loader-line-fill`); state classes go on `body`/`html`
-  (`is-loading`, `loaded`, `menu-open`, `pt-*`).
+  `.work-row`, `.letter-tinted`); state classes go on `body`/`html`
+  (`loaded`, `is-lit`, `menu-open`, `pt-*`).
 - Major blocks start with a `/* ===== Name ===== */` header. Comments explain *why*
   (the stacking context, the handoff that has to match), and that density is the norm.
 - Position things against the grid in percentages (3/33/67/97 horizontally, 33/67
@@ -161,7 +175,7 @@ python3 -m http.server 8765 >/dev/null 2>&1 &     # from the repo root (npm run 
 cd "$SCRATCH"                                      # playwright-cli writes .playwright-cli/ into the cwd; keep it out of the repo
 playwright-cli open http://localhost:8765/
 playwright-cli resize 1440 900
-playwright-cli eval "() => new Promise(r => setTimeout(r, 3000))"   # home: wait out the loader (~2.6s)
+playwright-cli eval "() => new Promise(r => setTimeout(r, 2500))"   # home: let the grainient bloom finish (~1.6s)
 playwright-cli screenshot --filename="$SCRATCH/home.png"
 playwright-cli console          # should report 0 errors
 playwright-cli close; pkill -f "http.server 8765"
@@ -176,8 +190,6 @@ playwright-cli close; pkill -f "http.server 8765"
   `currentTime`, then measure with `getBoundingClientRect()` or screenshot. Static
   frames can look right when live playback isn't (main-thread stalls), so for motion
   bugs also record real frames (`video-start`) or block the main thread on purpose.
-- Clear `sessionStorage` (or open a fresh session) to see the first-load path. With
-  `pageTransition=1` set, the loader is skipped.
 - Look at every screenshot before reporting, and show it to the user.
 
 ## 7. Leave what's built alone

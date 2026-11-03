@@ -16,55 +16,6 @@
     })();
 
     (function(){
-      const loader = document.getElementById('loader');
-      const fillEl = document.getElementById('loaderFill');
-      if (!loader) return;
-
-      // Came in from another page of the site (back button, logo, any internal
-      // link) — skip the preloader entirely and hand the page over already
-      // settled.
-      if (document.documentElement.classList.contains('pt-open')){
-        loader.style.display = 'none';
-        document.body.classList.remove('is-loading');
-        document.body.classList.add('loaded');
-        return;
-      }
-
-      const fillDuration = 1900;     // loader bar run time
-      const PreloaderDelay = fillDuration + 700;   // total ms scroll stays locked until the text reveal finishes
-      const start = performance.now();
-      const ease = t => 1 - Math.pow(1 - t, 3);
-
-      function frame(now){
-        const t = Math.min((now - start) / fillDuration, 1);
-        const p = ease(t);
-        if (fillEl) fillEl.style.width = (p * 100) + '%';
-        if (t < 1){
-          requestAnimationFrame(frame);
-        } else {
-          showHome();
-        }
-      }
-
-      // the bar is full: drop the loader and the home page is simply there, its
-      // grid already at rest
-      function showHome(){
-        loader.style.display = 'none';
-        document.body.classList.add('loaded');       // reveal the header / HUD
-      }
-      requestAnimationFrame(frame);
-
-      const scrollY = window.scrollY || 0;
-      function lockScroll(){ window.scrollTo(0, scrollY); }
-      window.addEventListener('scroll', lockScroll, { passive:true });
-      setTimeout(function(){
-        window.removeEventListener('scroll', lockScroll);
-        document.body.classList.remove('is-loading');
-        loader.style.display = 'none';
-      }, PreloaderDelay);
-    })();
-
-    (function(){
       document.querySelectorAll('.project-box').forEach(box => {
         ['tl', 'tr', 'bl', 'br'].forEach(corner => {
           const dot = document.createElement('span');
@@ -798,8 +749,8 @@
     // ===== Arriving from inside the site =====
     // Following a link to another page of the site leaves a flag in
     // sessionStorage. That page's inline head script reads it and marks <html>
-    // with .pt-open before the body renders, which is how the home page knows
-    // to skip its preloader for someone who is already on the site. (The flag
+    // with .pt-open before the body renders, so its .reveal elements don't fade
+    // in again for someone who is already on the site. (The flag
     // and class are named for an earlier page transition; today's transition
     // is CSS only — see "Page transition" in style.css.)
     (function(){
@@ -1529,4 +1480,144 @@
       }, i * 150);
     });
   }
+})();
+
+/* ===== Page background (home) =====
+   Mounts the animated "grainient" (src/js/grainient.js, a plain-JS port of
+   React Bits' <Grainient />) into .page-bg as soon as the page is .loaded
+   (it starts that way now there is no preloader), and its 1.6s colour bloom
+   from the middle plays straight away. Without
+   WebGL2 Grainient returns null and the still CSS gradient on .page-bg stays.
+   Other palettes the owner likes, for bg.set({ colors, angle }):
+     steel grey ["#1d232c","#34404d","#5d6c7c","#a9b8c8","#dfe8f1"], angle 128
+     deep teal  ["#071b1c","#0f3a3b","#1f5f5b","#4fa596","#c8eadf"], angle 35
+     ember      ["#120f17","#2a0f0a","#9a3412","#f97316","#fed7aa"], angle 55 */
+(function(){
+  const host = document.querySelector('.page-bg');
+  if (!host || typeof Grainient === 'undefined') return;
+
+  function mount(){
+    const bg = Grainient(host, {
+      colors:['#0e0f12', '#2a2c31', '#6b6e75', '#b9bcc2', '#f4f5f7'],  // dark to grey to white
+      // (was violet: '#2a1f8f', '#5B4FD6', '#8B7FF2', '#b4aaff', '#f1edff')
+      angle:75,
+      speed:6,
+      flow:1.1,
+      silk:0.35,
+      grainAmount:0.08,
+      intro:true
+    });
+    if (!bg) return;
+    document.documentElement.classList.add('is-lit');
+    followText(host.querySelector('.grainient-canvas'));
+  }
+
+  // The text on the gradient is coloured letter by letter: each letter takes
+  // white or ink, whichever stands out more from the colours under that
+  // letter right now. The text itself is left alone (the name, the clock and
+  // the readings all rewrite theirs constantly); instead each piece is painted
+  // through a hard-edged stripe per letter, clipped to the text
+  // (background-clip: text, .letter-tinted). The canvas is read straight after
+  // grainient.js has drawn into it: getContext hands back its own WebGL2
+  // context, and a frame scheduled after its own runs after it in each
+  // animation frame, before the drawing is handed to the screen and cleared.
+  // It also draws once synchronously while mounting, so the first read is
+  // taken right away; that one also covers reduced motion, where it stops.
+  function followText(canvas){
+    const gl = canvas && canvas.getContext('webgl2');
+    if (!gl) return;
+    const WHITE = '#ffffff', INK = '#17181c', INK_L = 0.0092;   // INK_L: relative luminance of --ink
+    const pieces = Array.prototype.slice.call(
+      document.querySelectorAll('#home-link, #bkk-time, .hud > span')).map(function(el){
+        return { el:el, light:[] };
+      });
+    const dot = document.querySelector('.time-badge .dot');
+    const dotState = { light:[] };
+    const range = document.createRange();
+    function channel(v){ v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+
+    // grab the canvas under a page rect: { px, x0, y0, w, h } in canvas pixels
+    function grab(r, ratio){
+      const x0 = Math.max(0, Math.floor(r.left * ratio));
+      const y0 = Math.max(0, Math.floor((canvas.clientHeight - r.bottom) * ratio));
+      const w = Math.min(canvas.width - x0, Math.max(1, Math.ceil(r.width * ratio)));
+      const h = Math.min(canvas.height - y0, Math.max(1, Math.ceil(r.height * ratio)));
+      if (w < 1 || h < 1) return null;
+      const px = new Uint8Array(w * h * 4);
+      gl.readPixels(x0, y0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
+      for (let i = 0; i < px.length; i += 4) if (px[i] || px[i + 1] || px[i + 2]) return { px:px, x0:x0, y0:y0, w:w, h:h };
+      return null;                              // read after the frame was cleared: skip this round
+    }
+    // mean luminance of the grabbed pixels inside a smaller page rect
+    function lum(g, r, ratio){
+      const ax = Math.max(0, Math.floor(r.left * ratio) - g.x0), bx = Math.min(g.w, Math.ceil(r.right * ratio) - g.x0);
+      const ay = Math.max(0, Math.floor((canvas.clientHeight - r.bottom) * ratio) - g.y0);
+      const by = Math.min(g.h, Math.ceil((canvas.clientHeight - r.top) * ratio) - g.y0);
+      let sum = 0, n = 0;
+      for (let y = ay; y < by; y++){
+        for (let x = ax; x < bx; x++){
+          const i = (y * g.w + x) * 4;
+          sum += 0.2126 * channel(g.px[i]) + 0.7152 * channel(g.px[i + 1]) + 0.0722 * channel(g.px[i + 2]);
+          n++;
+        }
+      }
+      return n ? sum / n : -1;
+    }
+    // white or ink for one letter, with a 5% margin so letters near the middle don't flicker
+    function decide(state, i, L){
+      if (L < 0) return state[i];
+      const onWhite = 1.05 / (L + 0.05), onInk = (L + 0.05) / (INK_L + 0.05);
+      if (state[i] === undefined) state[i] = onInk > onWhite;
+      else if (!state[i] && onInk > onWhite * 1.05) state[i] = true;
+      else if (state[i] && onWhite > onInk * 1.05) state[i] = false;
+      return state[i];
+    }
+
+    function read(){
+      const ratio = canvas.width / Math.max(1, canvas.clientWidth);
+      pieces.forEach(function(p){
+        const node = p.el.firstChild;
+        if (!node || node.nodeType !== 3 || !node.length) return;
+        range.selectNodeContents(p.el);
+        const box = range.getBoundingClientRect();
+        const g = grab(box, ratio);
+        if (!g) return;
+        if (p.light.length !== node.length) p.light = [];   // the text changed length: start over
+        const left = p.el.getBoundingClientRect().left;
+        const stops = [];
+        for (let i = 0; i < node.length; i++){
+          range.setStart(node, i);
+          range.setEnd(node, i + 1);
+          const r = range.getBoundingClientRect();
+          if (!r.width) continue;
+          const c = decide(p.light, i, lum(g, r, ratio)) ? INK : WHITE;
+          const a = (r.left - left).toFixed(1), b = (r.right - left).toFixed(1);
+          stops.push(c + ' ' + a + 'px', c + ' ' + b + 'px');
+        }
+        if (!stops.length) return;
+        p.el.style.backgroundImage = 'linear-gradient(90deg, ' + stops.join(', ') + ')';
+        p.el.classList.add('letter-tinted');
+      });
+      if (dot){
+        const r = dot.getBoundingClientRect(), g = grab(r, ratio);
+        if (g) dot.style.backgroundColor = decide(dotState.light, 0, lum(g, r, ratio)) ? INK : WHITE;
+      }
+    }
+    read();
+
+    let tick = 0;
+    (function loop(){
+      requestAnimationFrame(loop);
+      if (document.hidden || ++tick % 6) return;   // about ten reads a second
+      read();
+    })();
+  }
+
+  if (document.body.classList.contains('loaded')){ mount(); return; }
+  const watch = new MutationObserver(function(){
+    if (!document.body.classList.contains('loaded')) return;
+    watch.disconnect();
+    mount();
+  });
+  watch.observe(document.body, { attributes:true, attributeFilter:['class'] });
 })();
