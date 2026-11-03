@@ -85,10 +85,11 @@ markup, so a shared change has to be made in every file.
   per letter (`.letter-tinted` = background-clip:text). The time's dot is decided on its own.
 - **Lockup** (home, `#lockup`, bottom-centre, fixed): `WHO IS / WORK` · VC logo · `LAB / CONTACT`,
   after a "WHO IS / TALENTS · DENISE · PRODUCTION / CREATION" lockup the owner sent. Impact
-  (a system font, so no web font), 2.25rem, line-height .92, and the logo is 2 lines tall.
+  (a system font, so no web font; the site's mono was tried and rejected), 2.25rem, line-height
+  .92, and the logo is 2 lines tall.
   Words are letter-tinted and the logo is white/ink as a whole. Links: about, ui-ux (WORK, professional;
   placeholder target), software-development (LAB, academic + self-initiated; placeholder), contact. **Intro (the preload animation):** the logo rises
-  from below the bottom edge into place (1.3s, after 0.25s), then the stacks clip-reveal outward.
+  from below the bottom edge into place (1.3s, after 0.25s), then the stacks clip-reveal outward (0.9s, ease-in-out).
   A head script on index.html sets `html.lockup-intro` (hidden, with a 3s CSS failsafe) and
   `html.bg-pending` (dark page-bg until mount) before first paint, and main.js clears them.
   It's skipped on `pt-open` arrivals and with reduced motion. Matter.js is `defer` on
@@ -145,7 +146,9 @@ Use these words with the user, and confirm a name before relying on one marked (
 | time badge | `.time-badge`, `#bkk-time` | `BKK[TH] 1:20:31 PM` plus a dot |
 | HUD (?) | `.hud`, `#hudX/#hudFps/#hudY` | X / FPS / Y readout under the logo |
 | close button | `.close-btn` | `[CLOSE]` top-left on inner pages |
-| contact boxes / rail | `.contact-boxes`, `.contact-box` | horizontally scrolling boxes on contact |
+| contact boxes / rail | `.contact-boxes`, `.contact-box` | horizontally scrolling boxes on contact. Sticky, after cathydolle.com: the wheel glides (GLIDE 0.12s), and 160ms after input stops the nearest box glides to the page's middle (measured on screen; offsetLeft reads 32px off) and holds through the 0.4s resize. Touch follows the finger, and release momentum picks the box. Position is kept as a fraction (`pos`) because scrollLeft rounds. Locked during the opening intro (`.is-intro`): JS swallows wheel and touch, and CSS sets overflow:hidden and touch-action:none |
+| Instagram gradient | `.contact-box[data-label="Instagram"]` | 7th contact box: its own Grainient (Instagram colours, wander, speed 16, flow 2.4) mounted by main.js; contact.html loads grainient.js; the CSS `insta-flow` is the fallback (off under `.is-lit`) |
+| Threads line | `.threads-mark` / `.threads-line` | 6th contact box: the Threads logo as one traced SVG line (pathLength 1), drawn on toward centre and off past it via stroke-dashoffset; run is 1.6 box-widths, and the line trails the scroll (TRAIL 0.45s) |
 | work list / work rows | `.work-list`, `.work-row` | ui-ux project rows; `.work-preview` shows the logo on hover |
 | grid fill | `.grid-fill` | ui-ux merged field covering columns 2–3 |
 

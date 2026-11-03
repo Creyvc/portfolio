@@ -324,6 +324,70 @@
       });
     })();
 
+    // ---- the Threads line draws itself on ----
+    // The mark is one traced line (see contact.html). The closer its box is to
+    // the middle of the page the more of it is drawn, from the start of the
+    // line to the end; dead centre is the whole logo, and as the box moves on
+    // the line is taken back off the same way. Slowed two ways: the run starts
+    // 1.6 box-widths from centre rather than one, and the line trails the
+    // scroll, easing towards where it should be (time constant TRAIL), so even
+    // a quick swipe draws it at an unhurried pace.
+    (function(){
+      const box = document.querySelector('.contact-box[data-label="Threads"]');
+      const line = document.querySelector('.threads-line');
+      if (!contactScroller || !box || !line) return;
+      const RANGE = 1.6, TRAIL = 0.45;          // box-widths of run; seconds to catch up ~63%
+      let target = 0, drawn = 0, raf = 0, last = 0;
+
+      function follow(now){
+        const dt = last ? Math.min((now - last) / 1000, 0.05) : 1 / 60;
+        last = now;
+        drawn += (target - drawn) * (1 - Math.exp(-dt / TRAIL));
+        if (Math.abs(target - drawn) < 0.0005) drawn = target;
+        line.style.strokeDashoffset = (1 - drawn).toFixed(4);
+        if (drawn !== target) raf = requestAnimationFrame(follow);
+        else { raf = 0; last = 0; }
+      }
+
+      contactAdd({
+        read(f){
+          // measured on screen against the page's middle, where the rail now
+          // snaps a box to; offsetLeft is taken from the page wrapper and reads
+          // 32px off, which left the line a sliver short of whole when centred
+          const r = box.getBoundingClientRect();
+          const off = (r.left + r.width / 2) - document.documentElement.clientWidth / 2;
+          const windowDist = (box.offsetWidth + 24) * RANGE;
+          const near = 1 - Math.min(Math.abs(off) / windowDist, 1);
+          target = near * near * (3 - 2 * near);     // eased, so it settles into the full logo
+        },
+        write(){ if (!raf) raf = requestAnimationFrame(follow); }
+      });
+    })();
+
+    // ---- the Instagram box's gradient roams freely ----
+    // A Grainient of its own in Instagram's colours (the same engine as the
+    // home background), turned up: wandering in every direction and turning,
+    // fast, with a deep warp, so the colours sweep about the box dramatically.
+    // The cursor drags them and a click swirls them while over the box. The
+    // CSS gradient flow stays underneath as the fallback without WebGL2.
+    (function(){
+      const box = document.querySelector('.contact-box[data-label="Instagram"]');
+      if (!box || typeof Grainient === 'undefined') return;
+      const bg = Grainient(box, {
+        colors:['#405DE6', '#5851DB', '#833AB4', '#C13584', '#E1306C', '#FD1D1D', '#F56040', '#FCAF45'],
+        angle:45,
+        speed:16,
+        flow:2.4,
+        scale:0.8,
+        silk:0.3,
+        grainAmount:0.05,
+        stir:1.6,
+        intro:false,
+        wander:true
+      });
+      if (bg) box.classList.add('is-lit');
+    })();
+
     // ---- LinkedIn's I and N part company ----
     (function(){
       const liBox = document.querySelector('.contact-box[data-label="LinkedIn"]');
@@ -698,52 +762,139 @@
       setTimeout(finish, TOTAL + 900);
     })();
 
-    // let users swipe the contact boxes in ANY direction (up/down or left/right)
+    // let users swipe the contact boxes in ANY direction (up/down or left/right),
+    // with a sticky, magnetic feel after cathydolle.com: the wheel glides the
+    // row towards where it is heading instead of jumping, and once input stops
+    // the box nearest the middle glides into dead centre and holds there. A
+    // touch drag follows the finger exactly, and on release the swipe's speed
+    // carries on to decide which box it settles on. Any new input takes over
+    // from a glide at once, so it never fights the hand.
     (function(){
       const scroller = document.querySelector('.contact-boxes');
       if (!scroller) return;
+      const boxes = Array.prototype.slice.call(scroller.querySelectorAll('.contact-box'));
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const GLIDE = 0.12;                        // seconds for the glide to cover ~63% of the way
+      const SETTLE_AFTER = 160;                  // ms of quiet before the nearest box is pulled in
 
-      function maxScroll(){
-        return scroller.scrollWidth - scroller.clientWidth;
+      function maxScroll(){ return scroller.scrollWidth - scroller.clientWidth; }
+      function clampLeft(v){ return Math.max(0, Math.min(maxScroll(), v)); }
+      // How far a box's centre is from the middle of the page, measured on
+      // screen: offsetLeft is taken from the page wrapper, not the row, and read
+      // 32px off, and the row's own box isn't quite centred on the page either.
+      // The scrollLeft that centres the box is the current one plus that.
+      function offCentre(box){
+        const r = box.getBoundingClientRect();
+        return (r.left + r.width / 2) - document.documentElement.clientWidth / 2;   // the page's middle
+      }
+      function centreOf(box){ return clampLeft(scroller.scrollLeft + offCentre(box)); }
+      // the box that would be nearest the middle with the row at `left`
+      function nearest(left){
+        const shift = left - scroller.scrollLeft;
+        let best = boxes[0], gap = Infinity;
+        boxes.forEach(function(b){
+          const d = Math.abs(offCentre(b) - shift);
+          if (d < gap){ gap = d; best = b; }
+        });
+        return best;
       }
 
-      // snapping is off (scroll-snap-type:none) so the boxes rest exactly where
-      // the user stops — no yanking to the nearest box after a swipe.
+      let target = scroller.scrollLeft, holdBox = null, holdUntil = 0, raf = 0, last = 0, quiet = 0;
+
+      // eases the row towards target; while settling on a box, target follows
+      // that box, since the boxes change width as the row scrolls. The position
+      // is kept here as a fraction (pos): scrollLeft rounds to whole pixels, so
+      // reading it back each frame swallowed the last sub-pixel steps and left
+      // the glide stalled a few pixels short, running forever.
+      let pos = scroller.scrollLeft;
+      function glide(now){
+        raf = 0;
+        if (Math.abs(scroller.scrollLeft - pos) > 1) pos = scroller.scrollLeft;   // moved by something else
+        if (holdBox) target = centreOf(holdBox) + (pos - scroller.scrollLeft);
+        const dt = last ? Math.min((now - last) / 1000, 0.05) : 1 / 60;
+        last = now;
+        pos = reduce ? target : pos + (target - pos) * (1 - Math.exp(-dt / GLIDE));
+        if (Math.abs(target - pos) < 0.5) pos = target;
+        scroller.scrollLeft = pos;
+        if (pos !== target){ raf = requestAnimationFrame(glide); return; }
+        // arrived. Keep holding on the box through the boxes' 0.4s resize, which
+        // still moves it after the glide itself has arrived, and until it is
+        // within a pixel of the middle (scrollLeft moves in whole pixels, so
+        // asking for less only makes it twitch between two); then let go.
+        if (holdBox && (now < holdUntil || (Math.abs(offCentre(holdBox)) > 1 && now < holdUntil + 1500))){
+          raf = requestAnimationFrame(glide);
+          return;
+        }
+        last = 0;
+        // one last, authoritative pass for the scroll effects at the box's final
+        // resting place (the same as the scroll-end pass), so artwork driven by
+        // the scroll, like the Threads line, ends exactly where it should
+        contactRun();
+        requestAnimationFrame(contactRun);
+      }
+      function run(){ if (!raf) raf = requestAnimationFrame(glide); }
+      function settleSoon(){
+        clearTimeout(quiet);
+        quiet = setTimeout(function(){ holdBox = nearest(target); holdUntil = performance.now() + 700; run(); }, SETTLE_AFTER);
+      }
 
       // wheel handler on the whole window so a swipe ANYWHERE on the contact
       // page scrolls the boxes — driven by whichever axis the swipe favours.
+      // nothing moves the row while the opening intro is assembling the boxes
+      function intro(){ return scroller.classList.contains('is-intro'); }
+
       window.addEventListener('wheel', function(e){
+        if (intro()){ e.preventDefault(); return; }
         const max = maxScroll();
         if (max <= 0) return;
         let d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
         if (e.deltaMode === 1) d *= 16;                        // lines -> px
         else if (e.deltaMode === 2) d *= scroller.clientWidth;  // pages -> px
         if (d === 0) return;
-        const atStart = scroller.scrollLeft <= 0;
-        const atEnd = scroller.scrollLeft >= max - 1;
+        if (!raf) target = pos = scroller.scrollLeft;           // pick up from wherever the row is
         // release to the page when there's no more room in that direction
-        if ((d < 0 && atStart) || (d > 0 && atEnd)) return;
-        scroller.scrollLeft += d;
+        if ((d < 0 && target <= 0) || (d > 0 && target >= max - 1)) return;
+        holdBox = null;
+        target = clampLeft(target + d);
+        run();
+        settleSoon();
         e.preventDefault();
       }, { passive:false });
 
       // touch: dominant axis of the swipe drives horizontal scroll (anywhere on the page)
-      let startX = 0, startY = 0, startLeft = 0;
+      let startX = 0, startY = 0, startLeft = 0, lastMove = 0, lastT = 0, speed = 0;
       window.addEventListener('touchstart', function(e){
+        if (intro()) return;
+        clearTimeout(quiet);
+        cancelAnimationFrame(raf); raf = 0; last = 0; holdBox = null;
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
-        startLeft = scroller.scrollLeft;
+        startLeft = target = pos = scroller.scrollLeft;
+        lastMove = 0; lastT = performance.now(); speed = 0;
       }, { passive:true });
       window.addEventListener('touchmove', function(e){
+        if (intro()){ e.preventDefault(); return; }
         const dx = e.touches[0].clientX - startX;
         const dy = e.touches[0].clientY - startY;
         const move = Math.abs(dy) > Math.abs(dx) ? dy : dx;
         const max = maxScroll();
         const clamped = Math.max(0, Math.min(max, startLeft - move));
-        scroller.scrollLeft = clamped;
+        scroller.scrollLeft = target = pos = clamped;
+        const now = performance.now();
+        if (now > lastT) speed = speed * 0.6 + ((lastMove - move) / (now - lastT)) * 0.4;   // px per ms, smoothed
+        lastMove = move; lastT = now;
         // keep the page still only while the boxes still have somewhere to go
         if (clamped > 0 && clamped < max) e.preventDefault();
       }, { passive:false });
+      window.addEventListener('touchend', function(){
+        if (intro()) return;
+        // carry the swipe on for a quarter second's worth of its speed, then
+        // settle on whichever box that lands nearest
+        pos = scroller.scrollLeft;
+        holdBox = nearest(clampLeft(pos + speed * 250));
+        holdUntil = performance.now() + 700;
+        run();
+      }, { passive:true });
     })();
 
     // ===== Arriving from inside the site =====
@@ -1656,7 +1807,9 @@
   ], { duration:1300, delay:250, easing:OUT, fill:'both' });
 
   // the stacks open out from the logo's side once it has landed
-  const WORDS = { duration:750, delay:1150, easing:OUT, fill:'both' };
+  // slowed from 0.75s by request (tried 1.5s and 1.15s, settled on 0.9s); an even
+  // ease-in-out rather than OUT, which front-loads the movement and looks quick
+  const WORDS = { duration:900, delay:1150, easing:'cubic-bezier(0.65, 0, 0.35, 1)', fill:'both' };
   left.animate([
     { clipPath:'inset(0 0 0 100%)', transform:'translateX(1.5rem)' },
     { clipPath:'inset(0 0 0 0)', transform:'translateX(0)' }

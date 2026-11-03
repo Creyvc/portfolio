@@ -101,7 +101,8 @@
      Bottom-centre: two words stacked either side of the logo, the logo as tall
      as both lines, after the "WHO IS / TALENTS · DENISE · PRODUCTION / CREATION"
      lockup the owner sent. Heavy condensed capitals from Impact, which ships
-     with macOS and Windows, so no web font is added. The words are coloured
+     with macOS and Windows, so no web font is added (the site's mono was tried
+     and the owner preferred Impact). The words are coloured
      letter by letter like the header (.letter-tinted), and the logo white or
      ink as a whole, by main.js. White is what shows before that, or without
      WebGL2. */
@@ -1137,6 +1138,10 @@
     opacity:var(--intro-alpha, 1);
     transition:none !important;
   }
+  /* and nothing can scroll the row while it plays: main.js swallows the wheel
+     and touch, and this stops the browser's own scrolling (trackpad, keys).
+     The intro still sets scrollLeft itself, which overflow:hidden allows. */
+  .contact-boxes.is-intro{ overflow:hidden; touch-action:none; }
   /* Every box, the info one included, resolves out of ink — that is what makes
      them read as one dot to begin with. The info box was excluded from this for
      a while because its labels and values appeared to change colour as the ink
@@ -1191,7 +1196,7 @@
     padding-right:max(0px, calc((100vw - var(--box-w)) / 2));
     overflow-x:auto;
     scrollbar-width:none;
-    scroll-snap-type:none;
+    scroll-snap-type:none;        /* main.js does the snapping, as an eased glide */
     /* padding rides along with the shrink so the end padding stays in step with
        the box width instead of snapping to its new value in one frame */
     transition:transform 0.4s ease-out, padding 0.4s ease-out;
@@ -1297,25 +1302,41 @@
      divide — drop it rather than leave a line hanging under City */
   .info-row:last-child{ border-bottom:none; }
   .info-label{ color:var(--ink); opacity:1; }
+  /* the scrolled state sets every box's text to 1.61rem; the info box's rows
+     keep their 1.1rem through scrolling and swiping, so the text never grows or
+     shrinks — only the box around it narrows */
+  .contact-boxes.is-scrolled .contact-info{ font-size:1.1rem; padding-left:1.6rem; padding-right:1.6rem; }
+  /* …which, at that size in the narrower box, needs a little less side padding
+     and gap to keep "Remote / Hybrid / On-site" on one line */
+  .contact-boxes.is-scrolled .contact-info .info-row{ gap:1rem; }
   a.contact-box:hover{ background:var(--ink); color:var(--paper); }
   /* just-copied confirmation — listed after :hover, and repeated with :hover, so it
      still shows green while the cursor is still sitting on the box after the click */
   a.contact-box.is-copied,
   a.contact-box.is-copied:hover{ background:#00B34A; color:var(--paper); }
+  /* background-clip:padding-box keeps the gradient inside the border, so the
+     border is the same light grey line over paper as every other box's,
+     rather than the translucent border tinted by the gradient underneath */
   .contact-box[data-label="Instagram"]{
     background:linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D, #F56040, #F77737, #FCAF45, #FFDC80, #405DE6);
     background-size:400% 400%;
+    background-clip:padding-box;
     animation:insta-flow 2.8s ease infinite;
   }
   a.contact-box[data-label="Instagram"]:hover{
     background:linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D, #F56040, #F77737, #FCAF45, #FFDC80, #405DE6);
     background-size:400% 400%;
+    background-clip:padding-box;
   }
   @keyframes insta-flow{
     0%{ background-position:0% 50%; }
     50%{ background-position:100% 50%; }
     100%{ background-position:0% 50%; }
   }
+  /* With WebGL2 the box carries its own live gradient (main.js mounts a
+     Grainient into it, roaming freely); the CSS flow above is the fallback and
+     stops once that is running. */
+  .contact-box[data-label="Instagram"].is-lit{ animation:none; }
   .contact-box[data-label="LinkedIn"]{
     text-transform:none;
     justify-content:center;
@@ -1357,7 +1378,7 @@
   /* The marks are sized in rem but the boxes are sized to the grid rows in vh,
      so on a shorter window the artwork was taller than its row and pushed the
      box past the 33% / 67% lines. Capping them keeps every box on the grid. */
-  .github-icon, .threads-icon{
+  .github-icon{
     max-width:100%;
     max-height:100%;
     object-fit:contain;
@@ -1397,10 +1418,23 @@
   a.contact-box[data-label="Threads"]:hover{
     background:#D3D3D3;
   }
-  .threads-icon{
-    width:22rem;
+  /* The Threads mark as one traced line (see contact.html). It's drawn on and
+     off by main.js through stroke-dashoffset, against pathLength 1: 0 is the
+     whole line, 1 none of it. The offset here is the undrawn state it starts in,
+     since the box starts off-screen. */
+  .threads-mark{
     height:12.5rem;
-    border-radius:20%;
+    max-height:100%;
+    width:auto;
+    overflow:visible;
+  }
+  .threads-line{
+    fill:none;
+    stroke:#000;
+    stroke-width:46;
+    stroke-linejoin:round;
+    stroke-dasharray:1;
+    stroke-dashoffset:1;
   }
   .contact-box[data-label="X"]{
     background:var(--paper);
