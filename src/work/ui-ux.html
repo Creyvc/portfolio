@@ -31,19 +31,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500&family=Noto+Sans+Thai:wght@400;500&family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Jersey+10&family=VT323&family=Space+Grotesk:wght@400;500;700&family=Boogaloo&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../css/style.css?v=16">
+<link rel="stylesheet" href="../css/style.css?v=30">
 <script>
-/* Arrived through a page transition: mark <html> BEFORE the body renders so the
-   cover is already closed on this page's first frame — CSS then pushes the two
-   lines back out. Without this you would see the page for a frame first. */
+/* Arrived from another page of the site: mark <html> BEFORE the body renders so
+   the home page can skip its preloader without it showing for a frame first. */
 (function(){
   try {
     if (sessionStorage.getItem('pageTransition') !== '1') return;
     sessionStorage.removeItem('pageTransition');
   } catch(e){ return; }
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  /* How far the lines push back out, and what they do when they get there, is
-     the arrival option block in style.css — see "ARRIVAL: TWO OPTIONS". */
   document.documentElement.className += ' pt pt-open';
 })();
 </script>
@@ -72,31 +69,12 @@
     <img class="work-preview-img" data-name="solevault" src="../../assets/images/ui-ux/solevault-logo.png" alt="">
   </div>
 
-  <div class="home-lines page-lines" aria-hidden="true">
-    <span class="hl hl-1"></span>
-    <!-- Only the outer pair of verticals on this page; the 33% and 67% ones and
-         their plus marks are dropped. The horizontal rules keep only their end
-         stubs outside the verticals — see the .grid-fill rule in the CSS. -->
-    <span class="hl hl-4"></span>
-    <span class="hlh hlh-1"></span>
-    <span class="hlh hlh-2"></span>
-    <span class="plus" style="left:3%;top:33%"></span>
-    <span class="plus" style="left:3%;top:67%"></span>
-    <span class="plus" style="left:97%;top:33%"></span>
-    <span class="plus" style="left:97%;top:67%"></span>
-  </div>
-
-  <!-- follow the pointer: the vertical only slides left/right, the horizontal
-       only slides up/down, driven by main.js -->
-  <div class="cursor-guide-v" id="cursorGuideV" aria-hidden="true"></div>
-  <div class="cursor-guide-h" id="cursorGuideH" aria-hidden="true"></div>
-
   <header>
     <a class="close-btn reveal reveal-1" href="../../index.html" aria-label="Back to home">
       <span class="close-bracket" aria-hidden="true">[</span><span class="close-label">CLOSE</span><span class="close-bracket" aria-hidden="true">]</span>
     </a>
   </header>
 
-  <script defer src="../js/main.js?v=19"></script>
+  <script defer src="../js/main.js?v=26"></script>
 </body>
 </html>

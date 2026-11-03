@@ -17,7 +17,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vuthy Cheam</title>
-<meta name="description" content="Vuthy Cheam is a Computer Science student exploring AI/ML engineering, data science, and software development — with a background in jewelry design and UI/UX.">
+<meta name="description" content="Vuthy Cheam is a Computer Science student exploring AI/ML engineering, data science, and software development, alongside UI/UX design.">
 <link rel="canonical" href="https://vuthycheam.com/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Vuthy Cheam">
@@ -31,20 +31,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500&family=Noto+Sans+Thai:wght@400;500&family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Jersey+10&family=VT323&family=Space+Grotesk:wght@400;500;700&family=Boogaloo&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="src/css/style.css?v=16">
+<link rel="stylesheet" href="src/css/style.css?v=30">
 <link rel="prefetch" href="contact.html">
 <script>
-/* Arrived through a page transition: mark <html> BEFORE the body renders so the
-   cover is already closed on this page's first frame — CSS then pushes the two
-   lines back out. Without this you would see the page for a frame first. */
+/* Arrived from another page of the site: mark <html> BEFORE the body renders so
+   the home page can skip its preloader without it showing for a frame first. */
 (function(){
   try {
     if (sessionStorage.getItem('pageTransition') !== '1') return;
     sessionStorage.removeItem('pageTransition');
   } catch(e){ return; }
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  /* How far the lines push back out, and what they do when they get there, is
-     the arrival option block in style.css — see "ARRIVAL: TWO OPTIONS". */
   document.documentElement.className += ' pt pt-open';
 })();
 </script>
@@ -56,25 +53,11 @@
       <span></span><span></span><span></span><span></span><span></span>
     </div>
     <div class="loader-content">
-      <div class="loader-count-wrap">
-        <span class="loader-count" id="loaderCount">0</span><span class="loader-pct" aria-hidden="true"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="butt"><circle cx="24" cy="26" r="15"/><circle cx="76" cy="74" r="15"/><line x1="82" y1="14" x2="18" y2="86"/></svg></span>
-      </div>
       <div class="loader-line"><span class="loader-line-fill" id="loaderFill"></span></div>
     </div>
   </div>
 
   <header>
-    <div class="home-cluster reveal reveal-1">
-      <a href="index.html" aria-label="Home">
-        <svg class="header-logo" viewBox="6 36 218 148" aria-hidden="true">
-          <defs>
-            <mask id="header-logo-gap"><rect width="240" height="220" fill="#fff"></rect><rect x="150" y="80" width="100" height="60" fill="#000"></rect><polygon points="14,44 52,44 80,100 108,44 146,44 80,176" fill="#000" stroke="#000" stroke-width="10"></polygon></mask>
-          </defs>
-          <circle cx="150" cy="110" r="51" fill="none" stroke="#0E0F12" stroke-width="30" mask="url(#header-logo-gap)"></circle>
-          <polygon points="14,44 52,44 80,100 108,44 146,44 80,176" fill="#0E0F12"></polygon>
-        </svg>
-      </a>
-    </div>
     <a class="home-link reveal reveal-1" href="index.html" id="home-link">[VUTHY CHEAM]</a>
     <span class="time-badge reveal reveal-1">
       <span id="bkk-time">BKK[TH] --:--</span>
@@ -83,35 +66,6 @@
   </header>
 
   <section class="hero">
-    <div class="home-lines" aria-hidden="true">
-      <span class="hl hl-1"></span>
-      <span class="hl hl-2"></span>
-      <span class="hl hl-3"></span>
-      <span class="hl hl-4"></span>
-      <span class="hlh hlh-1"></span>
-      <span class="hlh hlh-2"></span>
-      <span class="plus" style="left:3%;top:33%;--dx:47vw;--dy:17vh"></span>
-      <span class="plus" style="left:3%;top:67%;--dx:47vw;--dy:-17vh"></span>
-      <span class="plus" style="left:33%;top:33%;--dx:17vw;--dy:17vh"></span>
-      <span class="plus" style="left:33%;top:67%;--dx:17vw;--dy:-17vh"></span>
-      <span class="plus" style="left:67%;top:33%;--dx:-17vw;--dy:17vh"></span>
-      <span class="plus" style="left:67%;top:67%;--dx:-17vw;--dy:-17vh"></span>
-      <span class="plus" style="left:97%;top:33%;--dx:-47vw;--dy:17vh"></span>
-      <span class="plus" style="left:97%;top:67%;--dx:-47vw;--dy:-17vh"></span>
-    </div>
-    <p class="home-blurb reveal reveal-2"><span class="blurb-text"><a class="blurb-link" href="about.html"><u class="u-vc">Vuthy Cheam</u></a><sup class="ref">[1]</sup> is a Computer Science student at Siam University in the joint program with La Trobe University. He is currently exploring opportunities in <a class="blurb-link" href="src/work/ai-ml.html"><u class="u-ai">AI/ML Engineering</u></a><sup class="ref">[2]</sup>, <a class="blurb-link" href="src/work/data-science.html"><u class="u-ds">Data Science</u></a><sup class="ref">[3]</sup>, and <a class="blurb-link" href="src/work/software-development.html"><u class="u-sd">Software Development</u></a><sup class="ref">[4]</sup>, with a strong interest in building practical and impactful technology.</span></p>
-    <p class="home-blurb home-blurb-2 reveal reveal-3"><span class="blurb-text">Beyond technology, Vuthy has been <a class="blurb-link" href="src/work/jewelry.html"><u class="u-jw">designing jewelry</u></a><sup class="ref">[5]</sup> since the age of 12, developing a keen eye for craftsmanship, precision, and aesthetics. More recently, he has expanded into <a class="blurb-link" href="src/work/ui-ux.html"><u class="u-ux">UI/UX design</u></a><sup class="ref">[6]</sup> using Figma, seeing it as a natural extension of the same attention to detail and creative thinking that first shaped his work with metal and gemstones, now applied to designing intuitive digital experiences.</span></p>
-    <p class="home-blurb home-blurb-3 reveal reveal-4"><span class="blurb-text"><a class="collab-link" href="contact.html"><u>Interested in collaborating?</u></a><sup class="ref">[7]</sup></span></p>
-    <span class="cell-c reveal reveal-2">C<span class="cell-c-rest">ONTACT</span></span>
-    <span class="cell-a reveal reveal-3">A<span class="cell-a-rest">BOUT ME</span></span>
-    <span class="cell-ai reveal reveal-2">A<span class="cell-ai-rest">I/ML ENGINEERING</span></span>
-    <span class="cell-j reveal reveal-3">J<span class="cell-j-rest">EWELRY DESIGN</span></span>
-    <span class="cell-d reveal reveal-2">D<span class="cell-d-rest">ATA SCIENCE</span></span>
-    <span class="cell-s reveal reveal-2">S<span class="cell-s-rest">OFTWARE DEVELOPMENT</span></span>
-    <div class="cell-u reveal reveal-3">
-      <span class="cell-u-line">U<span class="cell-u-rest">I</span></span>
-      <span class="cell-u-line">U<span class="cell-u-rest">X DESIGN</span></span>
-    </div>
   </section>
 
   <div class="hud reveal reveal-4" id="hud" aria-hidden="true">
@@ -123,6 +77,6 @@
   <!-- Discover More, Projects, About, and Contact sections moved to /sections/ for later reuse. -->
 
   <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
-  <script src="src/js/main.js?v=19"></script>
+  <script src="src/js/main.js?v=26"></script>
 </body>
 </html> 

@@ -6,254 +6,8 @@
   *{ box-sizing:border-box; }
   html,body{ margin:0; scroll-behavior:smooth; overflow-x:hidden; overscroll-behavior:none; }
 
-  /* pointer-following guide lines (ui-ux.html only) — full-length, 1px, same
-     grey as the .hl grid rules. main.js only ever writes a transform to these,
-     so their rest position (off-screen) never actually shows. */
-  .cursor-guide-v, .cursor-guide-h{
-    position:fixed;
-    z-index:5;
-    background:#dfe2e5;
-    pointer-events:none;
-    will-change:transform;
-  }
-  .cursor-guide-v{ top:0; left:0; bottom:0; width:1px; transform:translateX(-100vw); }
-  /* stops at .hl-1 / .hl-4 (3% / 97%) rather than running edge to edge, so it
-     never crosses the grid's outer verticals */
-  .cursor-guide-h{ left:3%; top:0; right:3%; height:1px; transform:translateY(-100vh); }
-
-  /* 4 long vertical lines across the home hero */
-  .home-lines{ position:fixed; top:0; left:0; right:0; bottom:0; z-index:1; pointer-events:none; }
-  .home-lines .hl{
-    position:absolute;
-    top:0; bottom:0;
-    width:1px; height:100%;
-    background:#dfe2e5;
-  }
-  .home-lines .hl-1{ left:3%; }    /* near left end */
-  .home-lines .hl-2{ left:33%; }   /* between */
-  .home-lines .hl-3{ left:67%; }   /* between */
-  .home-lines .hl-4{ left:97%; }   /* near right end */
-  /* dead centre — not part of the 3/33/67/97 grid, so it carries no plus marks.
-     Ink rather than the grid's grey: it is a marker for the line the measure
-     scale's numbers come to rest on, not another rule of the grid. */
-  .home-lines .hl-mid{
-    left:50%;
-    background:var(--ink);
-    bottom:auto;                    /* release .hl's full-height stretch */
-    /* Runs down to the foot of the ruler. main.js shortens it from here as a
-       number arrives on the line, so it clears the digits instead of striking
-       through them, and lets it back down once the number has passed. This value
-       is the resting length and what shows if the script never runs. */
-    height:calc(83.5% + 2.1rem);
-  }
-  /* Sits just under the foot of that line, on the same 50% centre, apex up so it
-     points at the line. Built from borders rather than a glyph so it stays crisp
-     at any size: a zero-size box whose coloured bottom border tapers to a point
-     between the two transparent side borders. Tied to the same calc as .hl-mid's
-     height, so line and arrow move together if the ruler is repositioned. */
-  .home-lines .mid-arrow{
-    position:absolute;
-    left:50%;
-    top:calc(83.5% + 2.1rem + 0.7rem);
-    transform:translateX(-50%);
-    width:0; height:0;
-    border-bottom:0.875rem solid var(--ink);
-    border-left:0.5rem solid transparent;
-    border-right:0.5rem solid transparent;
-  }
-  .home-lines .hlh{
-    position:absolute;
-    left:0; right:0;
-    width:100%; height:1px;
-    background:#dfe2e5;
-  }
-  .home-lines .hlh-1{ top:33%; }
-  .home-lines .hlh-2{ top:67%; }
-  /* The same grid on pages other than the home hero, drawn OVER the content:
-     the lines and plus marks cross the contact boxes rather than passing behind
-     them. z-index 1 clears .contact-inner, which creates a stacking context of
-     its own via transform and so paints at the 0 level. pointer-events:none is
-     already on .home-lines, so the boxes underneath stay clickable.
-     No --dx / --dy on these plus marks: those only feed the home intro's
-     fly-out, which never runs anywhere else. */
-  .home-lines.page-lines{ z-index:1; }
-
-  /* ui-ux only (keyed off .grid-fill, that page's own element, which sits just
-     before .home-lines): the horizontal rules keep only their two end stubs,
-     outside the verticals, and the whole run between them is dropped. Painted as
-     a gradient rather than by resizing the element, because the line has to
-     exist on BOTH sides of the gap and one element has only one left and one
-     right edge. */
-  .grid-fill ~ .home-lines .hlh{
-    background:linear-gradient(to right,
-      #dfe2e5 0 3%, transparent 3% 97%, #dfe2e5 97% 100%);
-  }
-
-
-  /* ===== Measure scale =====
-     The reference is a vertical ruler; this is that turned on its side and then
-     flipped, so the ticks rise from a shared bottom edge and the numbers sit
-     above them rather than below. The track carries half a viewport of padding
-     at each end (see main.js), so it rests with the 1 on the centre line and
-     scrolls until the 30 lands there too.
-     z-index 2 puts it just above .home-lines. The band has no background, so the
-     grid still shows straight through the gaps between ticks — but a tick that
-     lands on a grid line now wins, instead of being blanked by it. That matters
-     most at the centre line, which the numbers come to rest on: below the grid,
-     the 1 lost its tick to the very line marking where it had landed.
-     Ticks are built by main.js — see the "Measure scale" block there. */
-  .scale{
-    position:fixed;
-    left:0; right:0;
-    z-index:2;
-    /* 83.5% is the midpoint of row 3 (the 67% rule to the foot of the page), and
-       -50% centres the whole band on it — numbers and ticks together, rather
-       than standing the tick baseline on that line. */
-    top:83.5%;
-    transform:translateY(-50%);
-    /* tick band plus the numbers above it: a 2.8rem major, the 0.55rem gap and
-       the ~0.62rem digits come to 3.97rem, so this clears them. overflow-y is
-       hidden, so anything taller than this would be cut off rather than spill. */
-    height:4.2rem;
-    overflow-x:auto;                 /* one number to the next is 1.5 grid cells,
-                                        so 30 of them run far past the viewport */
-    overflow-y:hidden;
-    scrollbar-width:none;
-    -ms-overflow-style:none;
-  }
-  .scale::-webkit-scrollbar{ display:none; }
-  /* Ticks are placed absolutely rather than spaced by flex, so each one sits on
-     an exact multiple of the pitch. A gap-based layout would instead accumulate
-     each tick's own width along the run and drift off the 1.5-cell spacing. */
-  .scale-track{ position:relative; height:100%; }
-  .scale-tick{
-    position:absolute; bottom:0;
-    width:1px; height:1.1rem;
-    background:#a8adb3;
-    /* main.js scales the minor ticks vertically to build the arc around the
-       centre line; growing from the baseline keeps their feet on it */
-    transform-origin:bottom;
-  }
-  .scale-tick.is-major{
-    /* taller than the arc's 2.35x peak on a 1.1rem minor (41px), so the numbered
-       tick still reads as the tallest mark even at the middle of the swell */
-    width:1px; height:2.8rem;
-    background:var(--ink);
-  }
-  .scale-num{
-    position:absolute;
-    bottom:calc(100% + 0.55rem);     /* above the tick, which now grows upward */
-    left:50%;
-    transform:translateX(-50%);
-    font-family:var(--sans);
-    font-weight:300;
-    font-size:0.62rem;
-    line-height:1;
-    color:var(--ink);
-    opacity:0.75;
-    white-space:nowrap;
-  }
-  /* ===== Boxes between the numbers =====
-     One per gap, centred on the midpoint. They live in their own full-height
-     layer rather than inside .scale: that band is only 4.2rem tall with
-     overflow-y hidden, so anything reaching up into rows 1 and 2 would be cut
-     off. The layer is translated by the ruler's scrollLeft each frame instead of
-     scrolling itself, which keeps the two exactly in step with no second
-     scrollbar. z-index 2 puts it above .home-lines (1), so the boxes cover the
-     rules and plus marks rather than being crossed by them. */
-  .scale-field{
-    position:fixed; inset:0;
-    overflow:hidden;
-    pointer-events:none;
-    z-index:2;
-  }
-  .scale-field-track{ position:absolute; inset:0; will-change:transform; }
-  /* Square, and sized in vh rather than rem so it scales with the rows it has to
-     sit inside. The rows are percentages of the viewport height, so a rem-sized
-     box keeps its pixel height as the window shortens and eventually overruns
-     row 1; at 28vh it always leaves the same 5vh of headroom. */
-  .scale-box{
-    position:absolute;
-    width:28vh; height:28vh;
-    margin-left:-14vh;               /* left is the box's centre, not its edge */
-  }
-  /* The box is one photograph cut out by a single path, not a row of slices.
-     Slices could only ever approximate the wave as a staircase — each one has a
-     flat top, so sixty of them give sixty little steps, visible however small
-     the motion gets. A path bends continuously, so the edge is a true curve at
-     any amplitude. overflow:visible lets the crest swell past the box's own
-     bounds; main.js draws the picture past those bounds to meet it. */
-  .scale-svg{
-    position:absolute; inset:0;
-    display:block;
-    width:100%; height:100%;
-    overflow:visible;
-  }
-  /* The box's border. Same curve as the picture inside it — main.js points both
-     at one path — so it rides the wave and the curl rather than staying a
-     straight rectangle around a bending photograph. Matches the 1px edge every
-     other box on the site carries. stroke and fill are inherited properties, so
-     setting them on the <use> reaches the shape it clones.
-     Width is held at 1 device pixel by vector-effect (set in main.js), so the
-     opening sheet does not arrive with a border scaled up six times over. */
-  .scale-outline{
-    fill:none;
-    stroke:rgba(23,24,28,0.15);
-    stroke-width:1;
-  }
-  /* The corner marks. A shade firmer than the box's own edge so they read as
-     marks rather than as part of the frame, and held at 1 device pixel by
-     vector-effect (set in main.js) so they stay hairlines whatever the box does.
-     They sit outside the box, which .scale-svg's overflow:visible permits. */
-  .scale-mark{
-    fill:none;
-    stroke:rgba(23,24,28,0.6);
-    stroke-width:1.2;
-    stroke-linecap:square;
-  }
-  /* The name of the piece the centre line is standing over, set under the
-     arrow. Same calc as .mid-arrow's top, carried a little further down, so the
-     three of them — ruler, arrow, name — stay stacked if the band is ever moved.
-     Its own line across the full width and centred, rather than sized to the
-     text, so a long name and a short one are both centred on the line without
-     the box itself moving. */
-  .scale-name{
-    position:fixed;
-    left:0; right:0;
-    top:calc(83.5% + 2.1rem + 2.5rem);
-    z-index:2;
-    text-align:center;
-    font-family:var(--sans);
-    font-weight:400;
-    font-size:0.72rem;
-    letter-spacing:0.09em;
-    text-transform:uppercase;
-    color:var(--ink);
-    white-space:nowrap;
-    pointer-events:none;
-    user-select:none;
-  }
-  /* Free horizontally, but only ever resting on one of three lines: the foot of
-     row 1, the head of row 2, the foot of row 2.
-     The +1px on the two bottom-anchored spots is a fill-rule correction, not a
-     nudge. A box ending at 33% paints its last row at 33% - 1, while the rule
-     itself paints AT 33%, so the border landed one row short of the line and the
-     two read as a doubled edge with a seam. The top-anchored spot never had the
-     problem: its first row is 33%, exactly where the rule is. */
-  .scale-box.is-r1b{ top:calc(33% - 28vh + 1px); }
-  .scale-box.is-r2t{ top:33%; }
-  .scale-box.is-r2b{ top:calc(67% - 28vh + 1px); }
-
-  /* the number currently on the centre line reads [7] rather than 7 */
-  .num-bracket{ opacity:0; transition:opacity 0.18s ease; }
-  .scale-tick.is-current .scale-num{ opacity:1; }
-  .scale-tick.is-current .num-bracket{ opacity:1; }
-
-  /* A single field filling columns 2 and 3 across all three rows — the six cells
-     read as one shape rather than six. Bounded by .hl-2 (33%) and .hl-4 (97%) and
-     the full viewport height, so its edges land exactly on the grid. z-index 0
-     keeps it under .home-lines, which means the rules and plus marks still cross
-     it instead of being buried. */
+  /* A single field filling columns 2 and 3 across all three rows (33%-97% x,
+     full height) on ui-ux.html. */
   .grid-fill{
     position:fixed;
     top:0; bottom:0;
@@ -336,250 +90,12 @@
   }
   .work-preview-img.is-active{ opacity:1; }
 
-  /* ===== Intro grid-build (loader -> home) =====
-     The grid lines draw out from center while the plus marks fly out from
-     the center to their own intersections, then the page content reveals.
-     Each plus carries its center offset in --dx / --dy (see index.html).    */
-  /* Intro (JS / Web Animations API): the two horizontal lines collapse into a
-     single line at center, spin a full 360°, then split apart to their rows —
-     nothing fades away, the spinning line becomes the grid. The vertical lines
-     and plus marks fly out from center meanwhile. Keep those hidden until the
-     fly-out drives them (fallback; JS overrides). */
-  body.grid-build .home-lines .hl,
-  body.grid-build .home-lines .plus{ opacity:0; }
 
-  /* paragraph in the left-middle grid cell (between 3%-33% x, 33%-67% y) */
-  .home-blurb{
-    position:fixed;
-    left:3%; top:27.5%;
-    width:30%; height:34%;
-    box-sizing:border-box;
-    padding:1.4rem 1.6rem;
-    margin:0;
-    display:flex; align-items:center;
-    font-family:var(--sans);
-    font-weight:300;
-    font-size:0.82rem;
-    line-height:1.7;
-    color:var(--ink);
-    z-index:2;
-  }
-  .home-blurb .blurb-text{ display:block; width:100%; }
-  .home-blurb u{ white-space:nowrap; }   /* keep multi-word phrases on one line */
-  /* in-blurb links ("Interested in collaborating?" -> contact, "UI/UX design" -> ui-ux)
-     inherit the surrounding type so only the <u> underline marks them */
-  .home-blurb a.collab-link,
-  .home-blurb a.blurb-link{ color:inherit; text-decoration:none; cursor:pointer; }
-  /* big letter C in row 1, column 3 (67%-97% x, 0-33% y) */
-  .cell-c{
-    position:fixed;
-    left:67%; top:12%;
-    width:30%; height:33%;
-    display:flex; align-items:center; justify-content:flex-start;
-    padding-left:1.6rem;
-    box-sizing:border-box;
-    font-family:var(--sans);
-    font-weight:300;
-    font-size:3.8vh;
-    line-height:1;
-    color:var(--ink);
-    user-select:none;
-    white-space:nowrap;
-    z-index:2;
-  }
-  /* the "ONTACT" is collapsed (only "C" shows); it expands + fades in when
-     hovering the collaborating line -> C becomes CONTACT */
-  .cell-c-rest{
-    /* Empty until hovered — main.js holds the text and scrambles it in, so there
-       is no width or opacity to animate here. */
-    overflow:hidden;
-    white-space:nowrap;
-  }
-  /* letter A -> ABOUT ME on hover, row 3 column 1 (bottom-left) */
-  .cell-a{
-    position:fixed;
-    left:34.5%; top:61%;
-    display:flex; align-items:center;
-    font-family:var(--sans);
-    font-weight:300;
-    font-size:3.8vh;
-    line-height:1;
-    color:var(--ink);
-    white-space:nowrap;
-    user-select:none;
-    z-index:2;
-  }
-  .cell-a-rest{
-    /* Empty until hovered — main.js holds the text and scrambles it in, so there
-       is no width or opacity to animate here. */
-    overflow:hidden;
-    white-space:nowrap;
-  }
-  /* letter A -> AI/ML Engineering on hover, row 2 column 2 (center) */
-  .cell-ai{
-    position:fixed;
-    left:34.5%; top:35%;
-    display:flex; align-items:center;
-    font-family:var(--sans);
-    font-weight:300;
-    font-size:3.8vh;
-    line-height:1;
-    color:var(--ink);
-    white-space:nowrap;
-    user-select:none;
-    z-index:2;
-  }
-  .cell-ai-rest{
-    /* Empty until hovered — main.js holds the text and scrambles it in, so there
-       is no width or opacity to animate here. */
-    overflow:hidden;
-    white-space:nowrap;
-  }
-  /* letter J -> JEWELRY DESIGN on hover, row 3 column 3 (bottom-right) */
-  .cell-j{
-    position:fixed;
-    left:68.5%; top:94%;
-    display:flex; align-items:center;
-    font-family:var(--sans);
-    font-weight:300;
-    font-size:3.8vh;
-    line-height:1;
-    color:var(--ink);
-    white-space:nowrap;
-    user-select:none;
-    z-index:2;
-  }
-  .cell-j-rest{
-    /* Empty until hovered — main.js holds the text and scrambles it in, so there
-       is no width or opacity to animate here. */
-    overflow:hidden;
-    white-space:nowrap;
-  }
-  /* letter D -> DATA SCIENCE on hover, row 2 column 3 (right-aligned) */
-  .cell-d{
-    position:fixed;
-    left:67%; top:46%;
-    width:30.5%; height:34%;
-    box-sizing:border-box;
-    padding-right:1.6rem;
-    display:flex; align-items:center; justify-content:flex-end;
-    font-family:var(--sans);
-    font-weight:300;
-    font-size:3.8vh;
-    line-height:1;
-    color:var(--ink);
-    white-space:nowrap;
-    user-select:none;
-    z-index:2;
-  }
-  .cell-d-rest{
-    /* Empty until hovered — main.js holds the text and scrambles it in, so there
-       is no width or opacity to animate here. */
-    overflow:hidden;
-    white-space:nowrap;
-  }
-  /* letter S -> SOFTWARE DEVELOPMENT on hover, row 1 column 1 (right-aligned) */
-  .cell-s{
-    position:fixed;
-    left:3%; top:12%;
-    width:30%; height:33%;
-    box-sizing:border-box;
-    padding-right:1.6rem;
-    display:flex; align-items:center; justify-content:flex-end;
-    font-family:var(--sans);
-    font-weight:300;
-    font-size:3.8vh;
-    line-height:1;
-    color:var(--ink);
-    white-space:nowrap;
-    user-select:none;
-    z-index:2;
-  }
-  .cell-s-rest{
-    /* Empty until hovered — main.js holds the text and scrambles it in, so there
-       is no width or opacity to animate here. */
-    overflow:hidden;
-    white-space:nowrap;
-  }
-  /* the letter cells are display-only (triggered by hovering the text), so
-     their boxes must not intercept hover on the paragraphs beneath them */
-  .cell-c, .cell-a, .cell-ai, .cell-j, .cell-d, .cell-s, .cell-u{ pointer-events:none; }
-  /* stacked U's -> UI (top) / UX DESIGN (bottom) on hover, row 3 column 1 */
-  .cell-u{
-    position:fixed;
-    left:4.5%; top:90%;
-    display:flex; flex-direction:column;
-    font-family:var(--sans);
-    font-weight:300;
-    font-size:3.8vh;
-    line-height:1.1;
-    color:var(--ink);
-    user-select:none;
-    z-index:2;
-  }
-  .cell-u-line{ display:flex; align-items:center; white-space:nowrap; }
-  .cell-u-rest{
-    /* Empty until hovered — main.js holds the text and scrambles it in, so there
-       is no width or opacity to animate here. */
-    overflow:hidden;
-    white-space:nowrap;
-  }
-  .home-blurb .ref{
-    font-size:0.6em;
-    vertical-align:super;
-    line-height:0;
-    margin-left:1px;
-    color:var(--ink);
-  }
-  /* row 3, column 2 cell (33%-67% x, 67%-100% y) */
-  .home-blurb-2{
-    left:33%; top:75%;
-    width:34%; height:25%;
-    justify-content:flex-end;
-    text-align:right;
-  }
-  /* column 3, row 3 cell (67%-97% x, 67%-100% y) */
-  .home-blurb-3{
-    left:67%; top:67%;
-    width:30%; height:33%;
-    align-items:flex-start;
-    justify-content:flex-end;
-    text-align:right;
-  }
-  /* emphasized "+" at each line intersection */
-  .home-lines .plus{
-    position:absolute;
-    transform:translate(calc(-50% + 0.5px), calc(-50% + 0.5px));
-    width:9px; height:9px;
-    z-index:2;
-    color:#b3b9bf;   /* arm color (via currentColor) — animated on intro */
-  }
-  .home-lines .plus::before,
-  .home-lines .plus::after{
-    content:"";
-    position:absolute;
-    background:currentColor;
-  }
-  .home-lines .plus::before{ left:0; right:0; top:50%; height:1.5px; transform:translateY(-50%); }
-  .home-lines .plus::after{ top:0; bottom:0; left:50%; width:1.5px; transform:translateX(-50%); }
   body{
     background:var(--paper); color:var(--ink);
     font-family:var(--sans);
     font-weight:300;
     padding-top:var(--header-h);
-  }
-  .home-cluster{
-    display:flex; flex-direction:row; align-items:center;
-    gap:0.5rem;
-    position:absolute;
-    left:50%;
-    margin-left:-2rem;   /* half the 4rem logo -> true horizontal center */
-    margin-top:0.1rem;
-  }
-  .header-logo{
-    display:block;
-    width:4rem; height:auto;
-    margin-left:0;
   }
   .v-logo{
     position:relative;
@@ -854,7 +370,7 @@
     min-height:var(--header-h);
     display:flex; justify-content:space-between;
     align-items:flex-start;
-    padding:0.6rem 2rem;
+    padding:0.6rem 1rem;
     background:transparent;
     box-sizing:border-box;
   }
@@ -881,165 +397,75 @@
     pointer-events:none;
     user-select:none;
   }
-  /* ===== Page transition =====
-     The home grid's two outermost lines (.hl-1 at 3%, .hl-4 at 97%) pull inward
-     until they meet, wiping the page to blank paper behind them; on the page you
-     land on they push straight back out to 3% / 97% again.
-
-     Each "line" is really the leading edge of a paper-coloured panel — the panel
-     is what erases the page, the 1px rule is what you see moving. Drawn as
-     ::before/::after on <html> rather than injected elements, so the wipe is
-     already painted on the new page's FIRST frame and reopens on its own:
-     nothing waits on main.js, and if JS never runs the page still uncovers. */
-  html.pt{
-    /* How far the panels sit off-centre at rest, as a share of their own width.
-       100% parks each leading edge exactly on a page edge — the default, for any
-       page with no grid to rest on. 94% parks them on 3% / 97% instead: the home
-       grid's .hl-1 / .hl-4. The close picks its own via .pt-grid, which main.js
-       sets at click time on any page that draws a grid; the open is set by the
-       option block further down. */
-    --pt-travel:100%;
-  }
-  html.pt-grid{ --pt-travel:94%; }
-
-  html.pt::before,
-  html.pt::after{
-    content:'';
-    position:fixed;
-    top:0;
-    /* the spare 1px makes the two halves overlap by exactly their rule width, so
-       the two lines land on top of each other as one centred line when they meet
-       — and no sub-pixel gap shows through on odd viewport widths */
-    width:calc(50% + 1px);
-    height:100%;
-    /* The panels carry the grid's two horizontal rules across themselves, at the
-       same 33% / 67% the real .hlh lines sit at. Those lines overhang past .hl-1
-       and .hl-4, so without this the panels blank out their last 3% for the whole
-       transition — the ends look snipped off and then snap back the instant the
-       wipe clears. Painted on, the horizontal rules read as continuous and dead
-       still throughout, and they line up frame-for-frame across the page swap,
-       so there is nothing to give the seam away either.
-
-       The +0.33px / +0.67px are not fudge factors. A percentage in
-       background-position resolves against (height - image height), so plain 33%
-       puts the rule at 0.33*(H-1) while the real .hlh sits at top:33% = 0.33*H —
-       short by exactly p px, whatever the viewport height. Correcting it makes
-       the two land on the same subpixel and therefore snap to the same device
-       pixel; without it there is a visible 1px jog where panel meets page.
-       (Hairlines as gradient colour stops instead of positioned layers do not
-       survive the gradient rasteriser — one of the two bands drops out.) */
-    background:
-      linear-gradient(#dfe2e5, #dfe2e5) 0 calc(33% + 0.33px) / 100% 1px no-repeat,
-      linear-gradient(#dfe2e5, #dfe2e5) 0 calc(67% + 0.67px) / 100% 1px no-repeat,
-      var(--paper);
-    background-origin:border-box;
-    z-index:100000;
-    pointer-events:none;
-  }
-  /* same 1px #dfe2e5 rule as .home-lines .hl, so the moving line is visibly the
-     same line the home grid is drawn with */
-  html.pt::before{ left:0;  border-right:1px solid #dfe2e5; }
-  html.pt::after { right:0; border-left:1px solid #dfe2e5; }
-
-  /* Leaving a page that draws a grid: the real end lines step aside while the
-     moving ones are out, so you see one line travelling rather than a copy
-     detaching from a stationary original. The arrival has its own version of
-     this, further down, because the two options want opposite answers. */
-  html.pt-grid .home-lines .hl-1,
-  html.pt-grid .home-lines .hl-4{ opacity:0; }
-
-  /* Arrived through the transition (e.g. the back button): the preloader is for
-     first arrivals only — the two lines are the whole animation. These kill the
-     loader before it can paint, since main.js runs behind a render-blocking CDN
-     script and the wipe may already be retracting by the time it executes.
-     main.js also adds body.loaded in the same case, which is what holds the page
-     revealed once .pt-open is dropped. */
+  /* Arrived from another page of the site: the preloader is for first arrivals
+     only. html.pt-open is set by the inline script in every page's <head> before
+     the body renders, which is what lets these kill the loader before it can
+     paint — main.js runs behind a render-blocking CDN script. main.js also adds
+     body.loaded in the same case, which is what holds the page revealed. */
   html.pt-open .loader{ display:none; }
   html.pt-open .reveal{ opacity:1; transform:none; transition:none; }
 
-  /* leaving: pull the two lines together — easeInQuart, so they barely creep at
-     first and then rush the last stretch into the middle */
-  html.pt-close::before{ animation:pt-close-l 780ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
-  html.pt-close::after { animation:pt-close-r 780ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
-  /* ===== ARRIVAL: TWO OPTIONS, PICK ONE =====
-     The pull inward is the same either way. This is only about how far the two
-     lines push back out once you land, and what happens to them there.
+  /* ===== Page transition =====
+     The page you are leaving sinks back — shrinks a little towards its centre
+     and darkens, keeping its sharp square corners — and the new page slides up
+     from the bottom over it, casting a soft shadow ahead of itself. Every page
+     change plays it the same way round, going back to home included. Behind
+     both, the backdrop is a mid grey with the site's own grid (3 / 33 / 67 / 97 and
+     33 / 67) drawn faintly on it, so what the sinking page uncovers is the grid
+     underneath everything.
 
-     Option 1 — they stop on the grid. The lines travel to 3% / 97% and come to
-       rest exactly on .hl-1 / .hl-4, so the moving line BECOMES the page's end
-       line. The real ones are held out of sight underneath for the trip and the
-       moving rule fades over the last 30% of it, which is what makes the handover
-       invisible — without the fade the line blinks off when the class is dropped.
+     Done with cross-document View Transitions, so it is CSS only: every page
+     loads this stylesheet, the browser snapshots the old page and plays these
+     animations on the two snapshots. Browsers without it (Firefox for now)
+     just change page, and reduced motion turns it off. main.js prefetches a
+     page as soon as its link is hovered, so the transition starts the moment
+     you click instead of waiting on the network.
 
-     Option 2 — they run off the page. The lines carry on past the grid, out to
-       the far left and right edges, and leave. There is nothing to hand over to,
-       so the real end lines stay visible the whole time and are simply uncovered
-       as the panels sweep past them, and the moving rule keeps its colour right
-       up to the moment it goes over the edge.
+     Timing: both start together. The new page creeps up from the bottom edge
+     for about 0.5s, rushes most of the way in the next 0.2s and settles over
+     the rest of its 1.4s; the old page sinks on almost the same beat over 1.2s.
+     Both curves were fitted to frame-by-frame measurements of the reference
+     site (cathydolle.com).
 
-     TO SWITCH THE DEFAULT: comment out the live block below and uncomment the
-     other. Every arrival that does not name an option for itself reads these
-     three. To give one page its own answer instead, put .pt-edge-in on its
-     <html> and it takes option 2 whatever the default is — that is how
-     jewelry.html gets it while the rest of the site stays on option 1.
-
-     The close is a separate choice, since a page can want one and not the other:
-     .pt-edge-out on the <html> makes the lines pull in from the page edges when
-     you leave. main.js reads it at click time and withholds .pt-grid. jewelry
-     carries both, so its lines live at the edges in both directions; contact
-     carries only -out, so it is arrived at on the grid and left from the edges. */
-  html.pt-open{
-    /* ---- Option 1: stop on the grid (live default) ---- */
-    --pt-travel:94%;            /* how far out the lines go: 94% = 3% / 97% */
-    --pt-ends:0;                /* the real .hl-1 / .hl-4 while the wipe is out */
-    --pt-rest:transparent;      /* what the moving rule ends up as */
-
-    /* ---- Option 2: run off the page ----
-    --pt-travel:100%;
-    --pt-ends:1;
-    --pt-rest:#dfe2e5;
-    */
+     Transform and filter run on the compositor; the shadow fade doesn't, so it
+     is its own animation and can never hold the motion up. It fades in rather
+     than being set, so it isn't sitting at the bottom edge before its page
+     arrives. */
+  @view-transition{ navigation:auto; }
+  @media (prefers-reduced-motion: reduce){
+    @view-transition{ navigation:none; }
   }
-  /* Per-page opt-in to option 2 on arrival. Written into the page's own <html>
-     rather than added by script, so it is there on the very first frame — the
-     same reason the arrival class itself is set inline. */
-  html.pt-edge-in.pt-open{
-    --pt-travel:100%;
-    --pt-ends:1;
-    --pt-rest:#dfe2e5;
+  /* +0.03px … +0.97px: a percentage in background-position resolves against
+     (size - 1px), so this lands each rule on the same pixel as the real grid */
+  ::view-transition{
+    background:
+      linear-gradient(rgba(255,255,255,0.07), rgba(255,255,255,0.07)) calc(3% + 0.03px) 0 / 1px 100% no-repeat,
+      linear-gradient(rgba(255,255,255,0.07), rgba(255,255,255,0.07)) calc(33% + 0.33px) 0 / 1px 100% no-repeat,
+      linear-gradient(rgba(255,255,255,0.07), rgba(255,255,255,0.07)) calc(67% + 0.67px) 0 / 1px 100% no-repeat,
+      linear-gradient(rgba(255,255,255,0.07), rgba(255,255,255,0.07)) calc(97% + 0.97px) 0 / 1px 100% no-repeat,
+      linear-gradient(rgba(255,255,255,0.07), rgba(255,255,255,0.07)) 0 calc(33% + 0.33px) / 100% 1px no-repeat,
+      linear-gradient(rgba(255,255,255,0.07), rgba(255,255,255,0.07)) 0 calc(67% + 0.67px) / 100% 1px no-repeat,
+      #4a4b51;                        /* a mid grey rather than ink, so the change reads lighter */
   }
-  html.pt-open .home-lines .hl-1,
-  html.pt-open .home-lines .hl-4{ opacity:var(--pt-ends); }
-
-  /* arriving: they start met in the middle and push back out — easeOutQuart, the
-     exact mirror of the close: they break away fast and coast to their rest
-     position. The fade is a second animation rather than a 70% stop inside
-     pt-open-*, so the eased transform stays one uninterrupted 0->100% interval
-     with no stutter mid-flight. On option 2 it resolves to the colour the rule
-     already is, so it is there but does nothing. */
-  html.pt-open::before{ animation:pt-open-l 900ms cubic-bezier(0.25, 1, 0.5, 1) forwards,
-                                  pt-fade-l 900ms linear forwards; }
-  html.pt-open::after { animation:pt-open-r 900ms cubic-bezier(0.25, 1, 0.5, 1) forwards,
-                                  pt-fade-r 900ms linear forwards; }
-
-  /* Percentages all the way, never vw — this way the travel resolves against the
-     same containing block .home-lines uses and can't drift by the scrollbar
-     width. At 94% a (50% + 1px) panel parks its leading edge on 3% / 97% to
-     within 0.06px; at 100% it parks exactly on the page edge. */
-  @keyframes pt-close-l{ from{ transform:translateX(calc(var(--pt-travel) * -1)); } to{ transform:translateX(0); } }
-  @keyframes pt-close-r{ from{ transform:translateX(var(--pt-travel)); } to{ transform:translateX(0); } }
-  @keyframes pt-open-l { from{ transform:translateX(0); } to{ transform:translateX(calc(var(--pt-travel) * -1)); } }
-  @keyframes pt-open-r { from{ transform:translateX(0); } to{ transform:translateX(var(--pt-travel)); } }
-
-  @keyframes pt-fade-l{ 0%, 70%{ border-right-color:#dfe2e5; } 100%{ border-right-color:var(--pt-rest); } }
-  @keyframes pt-fade-r{ 0%, 70%{ border-left-color:#dfe2e5;  } 100%{ border-left-color:var(--pt-rest);  } }
-
-  /* Set by main.js at click time when the link points at the contact page, so
-     only that one closing wipe is slowed. It has to be a class on the page being
-     left rather than a rule on contact's own stylesheet — the close finishes
-     before the destination has loaded, so contact never gets to speak for it. */
-  html.pt-slow.pt-close::before{ animation:pt-close-l 1120ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
-  html.pt-slow.pt-close::after { animation:pt-close-r 1120ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
+  /* the default cross-fade blends the two with plus-lighter, which would wash
+     the darkening out — each snapshot paints normally on its own animation */
+  ::view-transition-old(root),
+  ::view-transition-new(root){
+    mix-blend-mode:normal;
+    transform-origin:50% 50%;
+  }
+  ::view-transition-old(root){
+    animation:pt-sink 1200ms cubic-bezier(0.85, 0.1, 0.15, 1) both;
+  }
+  ::view-transition-new(root){
+    animation:
+      pt-rise  1400ms cubic-bezier(0.75, 0.05, 0.05, 1) both,
+      pt-shade  600ms ease-out both;
+  }
+  @keyframes pt-sink { to  { transform:scale(0.91); filter:brightness(0.6); } }
+  @keyframes pt-rise { from{ transform:translateY(100%); } }
+  @keyframes pt-shade{ from{ box-shadow:0 -1.5rem 4rem rgba(0,0,0,0); }
+                       to  { box-shadow:0 -1.5rem 4rem rgba(0,0,0,0.45); } }
 
   .h-bottom-line{
     position:fixed;
@@ -1060,8 +486,11 @@
     letter-spacing:0.02em;
     width:16rem;
     height:1.8rem;
-    margin-left:1.8rem;
-    margin-top:-0.3rem;
+    /* the visible glyphs sit 16px from the top and 16px from the side, the
+       same as the time on the right — -3px cancels the bracket's own side
+       bearing (measured on the English name) */
+    margin-left:-0.1875rem;
+    margin-top:-0.175rem;
     display:flex;
     align-items:center;
     justify-content:flex-start;
@@ -1074,8 +503,7 @@
   }
   .time-badge{
     justify-self:end;
-    margin-right:1.7rem;
-    margin-top:0.15rem;
+    margin-top:0.275rem;          /* visible glyphs 16px from the top, as from the side */
     display:inline-flex; align-items:center; gap:0.5rem;
     color:var(--ink);
     font-family:var(--sans);
@@ -1573,7 +1001,7 @@
     padding:0 0.6rem;
     font-family:var(--sans);
     /* weight 300 and no stroke, so this renders identically to the home page's
-       type (.home-blurb / .cell-*) — same family, same weight. It was always the
+       type — same family, same weight. It was always the
        same family; the 900 weight and the 3.5px stroke were what made it read as
        a different typeface. Size, spacing and the marquee itself are unchanged. */
     font-weight:300;
@@ -1978,12 +1406,15 @@
 
   /* Close control on the contact page, standing in for the logo and back arrow.
      Reads CLOSE, and gains its brackets on hover -> [CLOSE]. Type matches the
-     home page paragraphs (.home-blurb) exactly. The brackets are always in the
+     home page's menu window (0.82rem mono). The brackets are always in the
      layout at opacity 0, so they only fade in and the word never shifts. */
+  /* At rest the visible word CLOSE sits 16px from the top and 16px from the
+     left, the same as the home page's name and time; the brackets that fade
+     in on hover step out into that margin around it. */
   .close-btn{
-    position:absolute; left:3.6rem; top:0.5rem; z-index:20;
+    position:absolute; left:0; top:0.0625rem; z-index:20;
     display:inline-flex; align-items:center; justify-content:center;
-    padding:0.6rem 0.4rem;
+    padding:0.6rem 0.4rem 0.6rem 0.375rem;
     font-family:var(--sans);
     font-weight:300;
     font-size:0.82rem;
@@ -2049,34 +1480,9 @@
     position:absolute; inset:0; z-index:2;
     display:flex; flex-direction:column; justify-content:flex-end;
   }
-  .loader-count-wrap{
-    display:flex; align-items:flex-end;
-    padding:0 2rem 1.4rem;
-    font-family:var(--sans);
-    font-weight:400;
-    line-height:0.85;
-    letter-spacing:-0.03em;
-  }
-  .loader-count{
-    font-size:clamp(3rem, 10vw, 8rem);
-    font-variant-numeric:tabular-nums;
-  }
-  /* one span per digit so the count can dissolve character by character —
-     inline-block so each carries its own opacity without reflowing the rest */
-  .loader-char{ display:inline-block; }
-  .loader-pct{
-    display:inline-block;
-    width:clamp(1.2rem, 2.8vw, 2.1rem);
-    opacity:0.5;
-    margin:0 0 0.5rem 0.3rem;
-  }
-  .loader-pct svg{ display:block; width:100%; height:auto; }
   .loader-line{
     position:absolute; left:0; top:50%;
     transform:translateY(-50%);
-    /* must stay in step with the height the grid's .hlh lines start at in the
-       build animation (see "the loader bar stays as a single horizontal line" in
-       main.js) — the bar becomes those lines, so a mismatch shows as a jump */
     width:100%; height:2.5px;
     background:rgba(23,24,28,0.12);
   }
