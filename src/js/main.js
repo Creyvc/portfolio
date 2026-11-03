@@ -749,17 +749,33 @@
       scroller.classList.add('is-intro');
       render(0);                      // dot state is up before the first paint
 
-      const start = performance.now();
-      (function step(now){
-        const t = Math.min(now - start, TOTAL);
-        render(t);
-        if (t < TOTAL) requestAnimationFrame(step); else finish();
-      })(start);
+      function run(){
+        const start = performance.now();
+        (function step(now){
+          const t = Math.max(0, Math.min(now - start, TOTAL));
+          render(t);
+          if (t < TOTAL) requestAnimationFrame(step); else finish();
+        })(start);
 
-      // The boxes are dot-sized and blank until the run completes, so never let
-      // that state be the final one: if the frame loop stalls for any reason,
-      // put the page into its normal state anyway.
-      setTimeout(finish, TOTAL + 900);
+        // The boxes are dot-sized and blank until the run completes, so never let
+        // that state be the final one: if the frame loop stalls for any reason,
+        // put the page into its normal state anyway.
+        setTimeout(finish, TOTAL + 900);
+      }
+
+      // Arriving through a page transition, the page rises in from below for
+      // 1.4s; start only once it has landed so the whole intro is seen, from
+      // the first stroke of the line. window.ptSettled comes from contact.html's
+      // head. The cap means a transition that never reports back can't leave
+      // the page sitting on a blank row.
+      if (window.ptSettled){
+        let started = false;
+        const go = function(){ if (!started){ started = true; run(); } };
+        window.ptSettled.then(go);
+        setTimeout(go, 2500);
+      } else {
+        run();
+      }
     })();
 
     // let users swipe the contact boxes in ANY direction (up/down or left/right),
@@ -921,6 +937,7 @@
 
       document.addEventListener('click', function(e){
         if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        if (e.defaultPrevented) return;    // handled in place (WHO IS), no page change
         const link = e.target.closest && e.target.closest('a[href]');
         if (!isInternal(link)) return;
         try { sessionStorage.setItem(KEY, '1'); } catch(_){}
@@ -1559,17 +1576,34 @@
 })();
 
 
-/* Work list previews (ui-ux.html only): hovering a row shows that piece's
-   logo, centred on the page, via the matching data-preview / data-name pair. */
+/* Work list previews (ui-ux.html, lab.html): hovering a row shows that piece's
+   logo on the row's own line, in the middle of the page, via the matching
+   data-preview / data-name pair. Each image is placed at its own row, so one
+   fading out stays where it was while the next fades in on its line. */
 (function(){
   const rows = document.querySelectorAll('.work-row[data-preview]');
   if (!rows.length) return;
+  let active = null;   // { row, img } under the pointer
+  function place(row, img){
+    const r = row.getBoundingClientRect();
+    img.style.top = (r.top + r.height / 2) + 'px';
+  }
   rows.forEach(function(row){
     const img = document.querySelector('.work-preview-img[data-name="' + row.getAttribute('data-preview') + '"]');
     if (!img) return;
-    row.addEventListener('mouseenter', function(){ img.classList.add('is-active'); });
-    row.addEventListener('mouseleave', function(){ img.classList.remove('is-active'); });
+    row.addEventListener('mouseenter', function(){
+      place(row, img);
+      img.classList.add('is-active');
+      active = { row: row, img: img };
+    });
+    row.addEventListener('mouseleave', function(){
+      img.classList.remove('is-active');
+      if (active && active.img === img) active = null;
+    });
   });
+  // the preview is fixed and the rows scroll, so keep it on its line
+  window.addEventListener('scroll', function(){ if (active) place(active.row, active.img); }, { passive:true });
+  window.addEventListener('resize', function(){ if (active) place(active.row, active.img); });
 })();
 
 /* Work list scramble (ui-ux.html only) — same glyph set/steps/tick as the home
@@ -1613,9 +1647,11 @@
 
   rows.forEach(function(row){
     const name = row.querySelector('.work-name');
+    const kind = row.querySelector('.work-kind');
     const meta = row.querySelector('.work-meta');
     row.addEventListener('mouseenter', function(){
       scramble(name);
+      scramble(kind);
       scramble(meta);
     });
   });
@@ -1627,6 +1663,7 @@
     rows.forEach(function(row, i){
       setTimeout(function(){
         scramble(row.querySelector('.work-name'));
+        scramble(row.querySelector('.work-kind'));
         scramble(row.querySelector('.work-meta'));
       }, i * 150);
     });
@@ -1821,4 +1858,38 @@
   // the animations now hold everything in its starting state; drop the
   // pre-paint hiding (and its 3s failsafe) underneath them
   document.documentElement.classList.remove('lockup-intro');
+})();
+
+
+/* Who is (home): WHO IS opens #whois in place instead of going to about.html
+   (a modified click, for a new tab, still goes there), and closes it again.
+   While it's open, a click anywhere else closes it too, and so does Esc. */
+(function(){
+  const panel = document.getElementById('whois');
+  const opener = document.querySelector('[data-whois]');
+  if (!panel || !opener) return;
+  const html = document.documentElement;
+
+  function isOpen(){ return panel.classList.contains('is-open'); }
+  function setOpen(on){
+    panel.classList.toggle('is-open', on);
+    html.classList.toggle('whois-open', on);
+    panel.inert = !on;
+    panel.setAttribute('aria-hidden', on ? 'false' : 'true');
+    opener.setAttribute('aria-expanded', on ? 'true' : 'false');
+    // focus left inside a closing panel would vanish with it
+    if (!on && panel.contains(document.activeElement)) opener.focus({ preventScroll:true });
+  }
+
+  opener.addEventListener('click', function(e){
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    setOpen(!isOpen());
+  });
+  // the click that opens it is WHO IS's own, which runs first; it mustn't
+  // reach here and close the panel straight away
+  document.addEventListener('click', function(e){
+    if (isOpen() && !opener.contains(e.target)) setOpen(false);
+  });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && isOpen()) setOpen(false); });
 })();

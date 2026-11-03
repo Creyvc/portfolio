@@ -31,7 +31,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500&family=Noto+Sans+Thai:wght@400;500&family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Jersey+10&family=VT323&family=Space+Grotesk:wght@400;500;700&family=Boogaloo&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="src/css/style.css?v=56">
+<link rel="stylesheet" href="src/css/style.css?v=86">
 <script>
 /* Arrived from another page of the site: mark <html> BEFORE the body renders so
    nothing on the page fades in again on the way back. */
@@ -43,6 +43,21 @@
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   document.documentElement.className += ' pt pt-open';
 })();
+</script>
+<script>
+/* pagereveal fires once, just before the first frame, and carries the page
+   transition if one is bringing this page in. main.js is deferred and can run
+   after it, so it is caught here: window.ptSettled resolves once the page has
+   finished arriving (straight away when there is no transition), and the
+   boxes' intro waits for it. */
+if ('onpagereveal' in window){
+  window.ptSettled = new Promise(function(done){
+    window.addEventListener('pagereveal', function(e){
+      if (e.viewTransition) e.viewTransition.finished.then(done, done);
+      else done();
+    }, { once:true });
+  });
+}
 </script>
 </head>
 <body class="loaded">
@@ -100,6 +115,6 @@
   <script defer src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
   <!-- the Instagram box's moving gradient (same engine as the home background) -->
   <script defer src="src/js/grainient.js?v=3"></script>
-  <script defer src="src/js/main.js?v=54"></script>
+  <script defer src="src/js/main.js?v=68"></script>
 </body>
 </html>

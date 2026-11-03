@@ -31,7 +31,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500&family=Noto+Sans+Thai:wght@400;500&family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Jersey+10&family=VT323&family=Space+Grotesk:wght@400;500;700&family=Boogaloo&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="src/css/style.css?v=56">
+<link rel="stylesheet" href="src/css/style.css?v=86">
 <link rel="prefetch" href="contact.html">
 <script>
 /* Arrived from another page of the site: mark <html> BEFORE the body renders so
@@ -80,8 +80,8 @@
        the words slide out from behind it (main.js). -->
   <div class="lockup" id="lockup" role="navigation" aria-label="Site">
     <div class="lockup-stack lockup-left">
-      <a class="lockup-word" href="about.html">WHO IS</a>
-      <a class="lockup-word" href="src/work/ui-ux.html">WORK</a>
+      <a class="lockup-word" href="about.html" data-whois aria-controls="whois" aria-expanded="false">WHO IS</a>
+      <a class="lockup-word" href="contact.html">CONTACT</a>
     </div>
     <span class="lockup-logo" aria-label="Vuthy Cheam" role="img">
       <svg viewBox="14 44 194.8 132" aria-hidden="true">
@@ -93,10 +93,22 @@
       </svg>
     </span>
     <div class="lockup-stack lockup-right">
-      <a class="lockup-word" href="src/work/software-development.html">LAB</a>
-      <a class="lockup-word" href="contact.html">CONTACT</a>
+      <a class="lockup-word" href="work.html">JOURNEY</a>
+      <a class="lockup-word" href="lab.html">WORK/LAB</a>
     </div>
   </div>
+
+  <!-- WHO IS opens this in place rather than leaving the page (main.js);
+       about.html stays the link's target for a new tab or no JS. After
+       cathydolle.com's about: the whole page goes soft behind a frosted layer
+       and a small block of text pops up sharp on it. A click anywhere, or Esc,
+       closes it. -->
+  <section class="whois" id="whois" aria-label="Who is Vuthy Cheam" aria-hidden="true" inert>
+    <div class="whois-text">
+      <p class="whois-bio">Vuthy Cheam (Bangkok, TH) is a Computer Science student exploring software engineering across full-stack web, AI/ML and data science, and cloud and DevOps, alongside UI/UX design.</p>
+      <p class="whois-note">AVAILABLE REMOTE / HYBRID / ON-SITE</p>
+    </div>
+  </section>
 
   <div class="hud reveal reveal-4" id="hud" aria-hidden="true">
     <span id="hudX">X&nbsp;&nbsp;&nbsp;&nbsp;0</span>
@@ -110,6 +122,6 @@
        held up the lockup intro and the background -->
   <script defer src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
   <script src="src/js/grainient.js?v=3"></script>
-  <script src="src/js/main.js?v=54"></script>
+  <script src="src/js/main.js?v=68"></script>
 </body>
 </html> 

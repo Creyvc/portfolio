@@ -30,6 +30,9 @@ description: How the vuthycheam.com portfolio frontend is built — stack, page 
 index.html            home: grainient background, header line (name, X/FPS/Y HUD, time),
                       bottom-centre lockup with its intro
 about.html            about ([CLOSE] only so far)
+work.html             Journey (the lockup's JOURNEY): only [CLOSE] and "COMING SOON", dead centre
+lab.html              Lab: academic + self-initiated projects (the lockup's LAB); no title, just
+                      the ui-ux work list (.work-row, hover logo preview)
 contact.html          contact boxes rail (uses Matter.js)
 desktop-only.html     mobile notice; self-contained inline <style>, loads nothing
 src/css/style.css     ALL styling (~2000 lines)
@@ -83,12 +86,12 @@ markup, so a shared change has to be made in every file.
   times a second (gl.readPixels in a rAF scheduled after the engine's), decides white or ink
   per letter (5% switching margin), and paints the unchanged text through a hard-stop stripe
   per letter (`.letter-tinted` = background-clip:text). The time's dot is decided on its own.
-- **Lockup** (home, `#lockup`, bottom-centre, fixed): `WHO IS / WORK` · VC logo · `LAB / CONTACT`,
+- **Lockup** (home, `#lockup`, bottom-centre, fixed): `WHO IS / CONTACT` · VC logo · `WORK / LAB`,
   after a "WHO IS / TALENTS · DENISE · PRODUCTION / CREATION" lockup the owner sent. Impact
   (a system font, so no web font; the site's mono was tried and rejected), 2.25rem, line-height
   .92, and the logo is 2 lines tall.
-  Words are letter-tinted and the logo is white/ink as a whole. Links: about, ui-ux (WORK, professional;
-  placeholder target), software-development (LAB, academic + self-initiated; placeholder), contact. **Intro (the preload animation):** the logo rises
+  Words are letter-tinted and the logo is white/ink as a whole. Links: WHO IS opens the #whois panel in place
+  (about.html only for a modified click / no JS), contact, work.html (JOURNEY), lab.html (WORK/LAB). **Intro (the preload animation):** the logo rises
   from below the bottom edge into place (1.3s, after 0.25s), then the stacks clip-reveal outward (0.9s, ease-in-out).
   A head script on index.html sets `html.lockup-intro` (hidden, with a 3s CSS failsafe) and
   `html.bg-pending` (dark page-bg until mount) before first paint, and main.js clears them.
@@ -146,10 +149,12 @@ Use these words with the user, and confirm a name before relying on one marked (
 | time badge | `.time-badge`, `#bkk-time` | `BKK[TH] 1:20:31 PM` plus a dot |
 | HUD (?) | `.hud`, `#hudX/#hudFps/#hudY` | X / FPS / Y readout under the logo |
 | close button | `.close-btn` | `[CLOSE]` top-left on inner pages |
-| contact boxes / rail | `.contact-boxes`, `.contact-box` | horizontally scrolling boxes on contact. Sticky, after cathydolle.com: the wheel glides (GLIDE 0.12s), and 160ms after input stops the nearest box glides to the page's middle (measured on screen; offsetLeft reads 32px off) and holds through the 0.4s resize. Touch follows the finger, and release momentum picks the box. Position is kept as a fraction (`pos`) because scrollLeft rounds. Locked during the opening intro (`.is-intro`): JS swallows wheel and touch, and CSS sets overflow:hidden and touch-action:none |
+| contact boxes / rail | `.contact-boxes`, `.contact-box` | horizontally scrolling boxes on contact. Sticky, after cathydolle.com: the wheel glides (GLIDE 0.12s), and 160ms after input stops the nearest box glides to the page's middle (measured on screen; offsetLeft reads 32px off) and holds through the 0.4s resize. Touch follows the finger, and release momentum picks the box. Position is kept as a fraction (`pos`) because scrollLeft rounds. Locked during the opening intro (`.is-intro`): JS swallows wheel and touch, and CSS sets overflow:hidden and touch-action:none. The intro waits for an arriving page transition to land: a head script on contact.html catches `pagereveal` into `window.ptSettled` (main.js is deferred and can miss the event), and the intro holds its blank first frame until that resolves (capped at 2.5s) |
 | Instagram gradient | `.contact-box[data-label="Instagram"]` | 7th contact box: its own Grainient (Instagram colours, wander, speed 16, flow 2.4) mounted by main.js; contact.html loads grainient.js; the CSS `insta-flow` is the fallback (off under `.is-lit`) |
 | Threads line | `.threads-mark` / `.threads-line` | 6th contact box: the Threads logo as one traced SVG line (pathLength 1), drawn on toward centre and off past it via stroke-dashoffset; run is 1.6 box-widths, and the line trails the scroll (TRAIL 0.45s) |
-| work list / work rows | `.work-list`, `.work-row` | ui-ux project rows; `.work-preview` shows the logo on hover |
+| work list / work rows | `.work-list`, `.work-row` | project rows on ui-ux and lab.html; `.work-preview` shows the logo on hover, on the hovered row's line (main.js sets its top) in the page's middle. On lab.html each name is followed by its kind of work in brackets (`.work-kind`, e.g. [UI/UX], [AI/ML]) inside a `.work-lead` wrapper. It's a sibling, not a child, of `.work-name` because the scramble rewrites textContent. Every logo is 3rem tall: logo files are trimmed to the mark with no transparent margin, so a new logo must be trimmed too |
+| Work / Lab pages | `work.html`, `lab.html`, `.work-page`, `.is-centred` | two separate pages: work.html is the Journey page, just "COMING SOON" in the window's dead centre; Lab has no title, only the list, also centred (`.is-centred`). Add only entries the owner supplies; don't invent any |
+| Who is | `#whois`, `.whois-text`, `[data-whois]`, `html.whois-open` | home only, after cathydolle.com's about: WHO IS opens a frosted layer over the WHOLE page (z 9998, above the header): blur 3px under a 50% paper tint, so the background, header, HUD and lockup show through soft. A small sharp text block pops up (rise + scale, overshoot), centred in the window and centre-aligned, with just the bio and availability; the owner removed the role line and the links. A click anywhere or Esc closes it. The 50% tint keeps ink text at AA over the darkest gradient, so don't thin it without checking. The content comes from the site; don't add claims the owner hasn't given, and there are no pronouns in the bio |
 | grid fill | `.grid-fill` | ui-ux merged field covering columns 2–3 |
 
 ## 5. Styles and scripts

@@ -59,34 +59,87 @@
     white-space:nowrap;
     transition:color 0.2s ease;
   }
+  /* the kind of work (UI/UX, AI/ML, …) in brackets right after the name, in
+     the site's [LABEL] style; a sibling of .work-name rather than inside it,
+     because the hover scramble rewrites each element's whole text */
+  .work-lead{
+    display:flex;
+    align-items:baseline;
+    gap:0.75rem;
+    min-width:0;
+  }
+  .work-kind{
+    font-family:var(--sans);
+    font-weight:300;
+    font-size:0.72rem;
+    letter-spacing:0.04em;
+    color:rgba(23,24,28,0.4);
+    white-space:nowrap;
+    transition:color 0.2s ease;
+  }
   .work-row:hover .work-name,
+  .work-row:hover .work-kind,
   .work-row:hover .work-meta{ color:var(--ink); }
 
-  /* centre-of-page logo shown while a work row is hovered — see .work-row's
-     data-preview / .work-preview-img's data-name pairing in main.js */
+  /* ===== Work page (work.html) =====
+     One page behind both of the home lockup's WORK and LAB: "Work" on top,
+     "/Lab" below (#lab, where LAB lands). The titles are the lockup's Impact
+     capitals so they read as the same two words; the rows are the ui-ux work
+     list, here in normal flow down the page instead of fixed mid-screen. */
+  /* sides line up with the [CLOSE] label above (22px in), on both edges */
+  .work-page{
+    padding:3.5rem 1.375rem 6rem;
+  }
+  /* lab.html: the list sits in the middle of the window. The page is pulled
+     up over the body's header padding so it spans the whole window, and a
+     longer list simply grows past it and scrolls. */
+  .work-page.is-centred{
+    box-sizing:border-box;
+    min-height:100vh;
+    margin-top:calc(-1 * var(--header-h));
+    padding-top:0;
+    padding-bottom:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+  .work-page .work-list{
+    position:static;
+    transform:none;
+    padding:0;
+  }
+  .work-empty{
+    margin:0;
+    padding:0.9rem 0;
+    font-family:var(--sans);
+    font-weight:300;
+    font-size:0.9rem;
+    color:rgba(23,24,28,0.4);
+  }
+  .work-empty.is-centre{ text-align:center; }   /* work.html's lone line */
+
+  /* The logo shown while a work row is hovered, sitting ON that row's line:
+     across the page's middle, at the row's height, and sized to fit the line
+     — see .work-row's data-preview / .work-preview-img's data-name pairing in
+     main.js, which sets each image's top to its row's middle. The container
+     is a zero-height strip at the top of the viewport, so that top is simply
+     a viewport y. */
   .work-preview{
     position:fixed;
-    top:50%; left:50%;
-    transform:translate(-50%, -50%);
+    top:0; left:50%;
     z-index:6;
     pointer-events:none;
   }
   .work-preview-img{
     position:absolute;
-    top:50%; left:50%;
+    top:0; left:0;
     transform:translate(-50%, -50%);
-    max-width:220px;
-    max-height:220px;
-    width:auto; height:auto;
+    height:3rem;                      /* every logo the same height; the files
+                                         are trimmed to the mark, so this is the
+                                         height you actually see */
+    width:auto;
     opacity:0;
     transition:opacity 0.25s ease;
-  }
-  /* solid, edge-to-edge mark vs. GAir's line-art wordmark with room around it —
-     same bounding box read as noticeably heavier, so it's scaled down to match
-     visual weight rather than pixel dimensions */
-  .work-preview-img[data-name="solevault"]{
-    max-width:170px;
-    max-height:170px;
   }
   .work-preview-img.is-active{ opacity:1; }
 
@@ -137,6 +190,65 @@
   html.lockup-intro .lockup-logo,
   html.lockup-intro .lockup-stack{ opacity:0; animation:lockup-failsafe 0.4s 3s forwards; }
   @keyframes lockup-failsafe{ to{ opacity:1; } }
+
+  /* ===== Who is (home) =====
+     WHO IS opens this in place, after cathydolle.com's about: the whole page
+     (background, header, HUD and lockup) stays visible but goes soft behind a
+     frosted layer (a light blur under a paper tint), and a small block of
+     text (the bio and availability) pops up sharp on it, centred in the
+     window.
+     Over everything, header included (9996), so a click anywhere or Esc closes
+     it (main.js). The tint is just enough to hold ink text at AA over the
+     darkest of the gradient. */
+  .whois{
+    position:fixed;
+    inset:0;
+    z-index:9998;
+    background:rgba(253,253,253,0.5);
+    -webkit-backdrop-filter:blur(3px);
+    backdrop-filter:blur(3px);
+    opacity:0;
+    visibility:hidden;
+    transition:opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.5s;
+    /* the text block sits dead centre of the window */
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .whois.is-open{
+    opacity:1;
+    visibility:visible;
+    transition:opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s;
+  }
+  .whois-text{
+    width:25%;
+    min-width:20rem;
+    text-align:center;
+    font-family:var(--sans);
+    font-size:0.75rem;
+    font-weight:400;
+    letter-spacing:0.01em;
+    color:rgba(23,24,28,0.85);
+    /* pops up: rises and grows into place with a little overshoot, just
+       behind the blur coming in; on closing it sinks back quickly */
+    opacity:0;
+    transform:translateY(1.75rem) scale(0.94);
+    transform-origin:50% 50%;
+    transition:opacity 0.2s ease, transform 0.3s ease-in;
+  }
+  .whois.is-open .whois-text{
+    opacity:1;
+    transform:none;
+    transition:opacity 0.35s ease 0.08s, transform 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s;
+  }
+  .whois-bio{
+    margin:0;
+    line-height:1.4;
+  }
+  .whois-note{ margin:2.5rem 0 0; }
+  @media (prefers-reduced-motion: reduce){
+    .whois-text{ transform:none !important; }
+  }
 
   /* ===== Page background (home) =====
      The animated "grainient" behind the whole home page: a drifting, wavy WebGL
