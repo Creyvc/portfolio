@@ -30,7 +30,8 @@ description: How the vuthycheam.com portfolio frontend is built — stack, page 
 index.html            home: grainient background, header line (name, X/FPS/Y HUD, time),
                       bottom-centre lockup with its intro
 about.html            about ([CLOSE] only); fallback for WHO IS on a modified click / no JS
-journey.html          Journey (the lockup's JOURNEY): only [CLOSE] and "COMING SOON", dead centre
+journey.html          Journey (the lockup's JOURNEY): [CLOSE] and "COMING SOON", dead centre, in
+                      light text over a glitching pixel field (.pixel-bg, after thibaud.film)
 lab.html              Lab: academic + self-initiated projects (the lockup's WORK/LAB); no title,
                       just the work list (.work-row, hover logo preview), centred
 contact.html          contact boxes rail
@@ -156,6 +157,8 @@ Use these words with the user, and confirm a name before relying on one marked (
 | Threads line | `.threads-mark` / `.threads-line` | 6th contact box: the Threads logo as one traced SVG line (pathLength 1), drawn on toward centre and off past it via stroke-dashoffset; run is 1.6 box-widths, and the line trails the scroll (TRAIL 0.45s) |
 | work list / work rows | `.work-list`, `.work-row` | project rows on lab.html; `.work-preview` shows the logo on hover, on the hovered row's line (main.js sets its top) in the page's middle. On lab.html each name is followed by its kind of work in brackets (`.work-kind`, e.g. [UI/UX], [AI/ML]) inside a `.work-lead` wrapper. It's a sibling, not a child, of `.work-name` because the scramble rewrites textContent. Every logo is 3rem tall: logo files are trimmed to the mark with no transparent margin, so a new logo must be trimmed too |
 | Journey / Lab pages | `journey.html`, `lab.html`, `.work-page`, `.is-centred` | two separate pages: journey.html is the Journey page, just "COMING SOON" in the window's dead centre; Lab has no title, only the list, also centred (`.is-centred`). Add only entries the owner supplies; don't invent any |
+| pixel field | `.pixel-bg`, `body.journey` | journey.html only, after thibaud.film: a canvas with one pixel per 45px cell, scaled up unsmoothed. Dark colours only: a near-black base with 8 drifting colour clouds (greys, oxblood, brown, olive, navy), each wandering in its own direction and wrapping at the edges. Single cells flicker, rows slip sideways and blocks flash another tint. Steps at ~12fps, and reduced motion gets one still frame. The page's text is light there (`body.journey`). Keep the tints dark; the brightest cell is ~#42 |
+| decrypting text | `[data-decrypt]`, `.sr-only` | journey.html's COMING SOON, big (clamp 1.5rem–3rem, mono so the width never moves). It loops: decode left to right through random glyphs (~1.2s), hold ~3.2s with the odd letter glitching for a frame, scramble back (~0.75s). The real text sits in a `.sr-only` copy, and the churning copy is `aria-hidden`. Reduced motion shows plain text |
 | Who is | `#whois`, `.whois-text`, `[data-whois]`, `html.whois-open` | home only, after cathydolle.com's about: WHO IS opens a frosted layer over the WHOLE page (z 9998, above the header): blur 3px under a 50% paper tint, so the background, header, HUD and lockup show through soft. A small sharp text block pops up (rise + scale, overshoot), centred in the window and centre-aligned, with just the bio and availability; the owner removed the role line and the links. A click anywhere or Esc closes it. The 50% tint keeps ink text at AA over the darkest gradient, so don't thin it without checking. The content comes from the site; don't add claims the owner hasn't given, and there are no pronouns in the bio |
 
 ## 5. Styles and scripts

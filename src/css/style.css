@@ -88,6 +88,46 @@
   }
   .work-empty.is-centre{ text-align:center; }   /* journey.html's lone line */
 
+  /* ===== Pixel field (journey.html) =====
+     After thibaud.film: the page behind is a grid of large square pixels in
+     dark colours only, drifting and glitching (main.js). The canvas holds one
+     pixel per cell and is scaled up unsmoothed, so every cell is a hard
+     square; main.js sizes it to whole cells, which can run a little past the
+     window's edge. The page is dark under it before it starts, and the
+     page's text turns light to read on it. */
+  body.journey{ background:#121316; }
+  .pixel-bg{
+    position:fixed;
+    top:0; left:0;
+    z-index:-1;
+    image-rendering:pixelated;
+    pointer-events:none;
+  }
+  body.journey .close-btn{ color:#f4f5f7; }
+  body.journey .work-empty{ color:rgba(244,245,247,0.72); }
+  /* the lone line, big, and decrypting itself on a loop (main.js,
+     [data-decrypt]); the mono face keeps its width still while the glyphs
+     churn */
+  body.journey .work-empty.is-centre{
+    padding:0;
+    font-size:clamp(1.5rem, 3.3vw, 3rem);
+    font-weight:400;
+    line-height:1;
+    letter-spacing:0.02em;
+    color:rgba(244,245,247,0.88);
+    white-space:nowrap;
+  }
+  /* read by screen readers, not shown */
+  .sr-only{
+    position:absolute;
+    width:1px; height:1px;
+    margin:-1px; padding:0;
+    overflow:hidden;
+    clip:rect(0 0 0 0);
+    white-space:nowrap;
+    border:0;
+  }
+
   /* The logo shown while a work row is hovered, sitting ON that row's line:
      across the page's middle, at the row's height, and sized to fit the line
      — see .work-row's data-preview / .work-preview-img's data-name pairing in
@@ -144,9 +184,13 @@
   .lockup-stack{ display:flex; flex-direction:column; }
   .lockup-left{ align-items:flex-end; text-align:right; }
   .lockup-right{ align-items:flex-start; }
-  .lockup-word{ color:inherit; text-decoration:none; transition:opacity 0.2s ease; }
+  .lockup-word{ color:inherit; text-decoration:none; transition:filter 0.2s ease; }
+  /* hovered, a word dims a step towards grey, whichever colour its letters
+     are at that moment: white letters go darker (#c6), ink ones lighter
+     (#46). Ink can't visibly get any darker, so this is what reads as the
+     same change on both. */
   .lockup-word:hover,
-  .lockup-word:focus-visible{ opacity:0.6; outline:none; }
+  .lockup-word:focus-visible{ filter:contrast(0.55); outline:none; }
   .lockup-logo{
     display:block;
     height:calc(2em * 0.92);           /* both lines of the stacks */

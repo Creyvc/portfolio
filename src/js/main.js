@@ -1353,3 +1353,188 @@
   });
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && isOpen()) setOpen(false); });
 })();
+
+/* Pixel field (journey.html): a grid of large square pixels behind the page,
+   after thibaud.film. Dark colours only. A few soft clouds of colour drift
+   across it, each in its own direction and turning as it goes, and the grid
+   quantises them into hard cells; on top of that, single cells flicker, a row
+   now and then slips sideways, and a block of cells flashes another dark
+   colour for a moment. It steps at about 12 frames a second rather than
+   gliding, which is what makes it read as glitching pixels. One canvas pixel
+   per cell, scaled up unsmoothed by CSS (.pixel-bg). Reduced motion gets a
+   single still frame. */
+(function(){
+  const canvas = document.querySelector('.pixel-bg');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const CELL = 45;                 // css px per pixel, as on thibaud.film
+  const STEP = 1000 / 12;          // ms per frame: stepped, not smooth
+  const BASE = [18, 19, 22];       // the page's own near-black
+  // the clouds' colours: greys, oxblood, brown, olive, navy, all kept dark
+  const TINTS = [
+    [62, 64, 70], [80, 82, 88], [40, 41, 46], [68, 26, 30],
+    [66, 48, 32], [52, 53, 36], [34, 43, 64], [8, 8, 10]
+  ];
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  let cols = 0, rows = 0, img = null;
+  let blobs = [], noise = null, glitches = [];
+
+  function size(){
+    cols = Math.ceil(window.innerWidth / CELL);
+    rows = Math.ceil(window.innerHeight / CELL);
+    canvas.width = cols; canvas.height = rows;
+    canvas.style.width = cols * CELL + 'px';
+    canvas.style.height = rows * CELL + 'px';
+    img = ctx.createImageData(cols, rows);
+    noise = new Float32Array(cols * rows).map(() => rand(-1, 1));
+    if (!blobs.length) blobs = TINTS.map(function(c){
+      return {
+        c: c,
+        x: rand(0, cols), y: rand(0, rows),
+        r: rand(3, 7),                       // radius in cells
+        a: rand(0, Math.PI * 2),             // heading
+        v: rand(0.06, 0.2),                  // cells per frame
+        turn: rand(-0.06, 0.06),             // how it bends its path
+        k: rand(0.7, 1)                      // how strongly it colours
+      };
+    });
+  }
+
+  function move(){
+    blobs.forEach(function(b){
+      b.turn += rand(-0.02, 0.02);
+      b.turn = Math.max(-0.08, Math.min(0.08, b.turn));
+      b.a += b.turn;
+      b.x += Math.cos(b.a) * b.v;
+      b.y += Math.sin(b.a) * b.v;
+      const m = b.r;                         // wrap round, just out of sight
+      if (b.x < -m) b.x = cols + m; else if (b.x > cols + m) b.x = -m;
+      if (b.y < -m) b.y = rows + m; else if (b.y > rows + m) b.y = -m;
+    });
+    // a few cells re-roll their flicker each frame
+    for (let n = Math.ceil(cols * rows * 0.06); n--; ) noise[Math.floor(Math.random() * noise.length)] = rand(-1, 1);
+    // start a glitch now and then: a row slipping sideways, or a block flashing
+    if (Math.random() < 0.12){
+      if (Math.random() < 0.5){
+        const y = Math.floor(rand(0, rows));
+        glitches.push({ kind:'shift', y0:y, y1:Math.min(rows, y + 1 + Math.floor(rand(0, 3))), dx:(Math.random() < 0.5 ? -1 : 1) * Math.ceil(rand(0, 4)), life:Math.ceil(rand(2, 6)) });
+      } else {
+        const w = Math.ceil(rand(1, 6)), h = Math.ceil(rand(1, 4));
+        glitches.push({ kind:'block', x0:Math.floor(rand(0, cols)), y0:Math.floor(rand(0, rows)), w:w, h:h, c:pick(TINTS), life:Math.ceil(rand(2, 8)) });
+      }
+    }
+    glitches.forEach(g => g.life--);
+    glitches = glitches.filter(g => g.life > 0);
+  }
+
+  function colourAt(x, y){
+    let r = BASE[0], g = BASE[1], bl = BASE[2];
+    for (let i = 0; i < blobs.length; i++){
+      const b = blobs[i], dx = x + 0.5 - b.x, dy = y + 0.5 - b.y;
+      const w = Math.exp(-(dx * dx + dy * dy) / (b.r * b.r)) * b.k;
+      if (w < 0.01) continue;
+      r += (b.c[0] - r) * w; g += (b.c[1] - g) * w; bl += (b.c[2] - bl) * w;
+    }
+    const f = noise[y * cols + ((x % cols) + cols) % cols] * 9;   // flicker, a few levels either way
+    return [r + f, g + f, bl + f];
+  }
+
+  function draw(){
+    const d = img.data;
+    for (let y = 0; y < rows; y++){
+      let shift = 0;
+      for (let i = 0; i < glitches.length; i++){
+        const gl = glitches[i];
+        if (gl.kind === 'shift' && y >= gl.y0 && y < gl.y1) shift = gl.dx;
+      }
+      for (let x = 0; x < cols; x++){
+        let c = colourAt(x - shift, y);
+        for (let i = 0; i < glitches.length; i++){
+          const gl = glitches[i];
+          if (gl.kind === 'block' && x >= gl.x0 && x < gl.x0 + gl.w && y >= gl.y0 && y < gl.y0 + gl.h) c = gl.c;
+        }
+        const o = (y * cols + x) * 4;
+        // stepped to 6 levels a channel: no smooth gradients inside the grid
+        d[o]     = Math.round(c[0] / 6) * 6;
+        d[o + 1] = Math.round(c[1] / 6) * 6;
+        d[o + 2] = Math.round(c[2] / 6) * 6;
+        d[o + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+
+  size();
+  draw();
+  window.addEventListener('resize', function(){ size(); draw(); });
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  let last = 0;
+  (function tick(now){
+    if (now - last >= STEP){ last = now; move(); draw(); }
+    requestAnimationFrame(tick);
+  })(0);
+})();
+
+/* Decrypting text ([data-decrypt], journey.html's COMING SOON): the line
+   decodes itself on a loop. Each letter churns through random glyphs and
+   locks in, roughly left to right; the line holds with the odd letter
+   glitching for a frame or two; then it scrambles back to noise and decodes
+   again. The real text stays in a screen-reader-only copy, and the churning
+   copy is hidden from them. Reduced motion leaves the text as it is. */
+(function(){
+  const els = document.querySelectorAll('[data-decrypt]');
+  if (!els.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const GLYPHS = '01<>[]{}/\\|=+*-#%&$@?!ABCDEFGHKMNXZ';
+  const TICK = 50;                          // ms between glyph changes
+  const glyph = () => GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+
+  els.forEach(function(el){
+    const text = el.textContent.trim();
+    const chars = Array.from(text);
+    el.textContent = '';
+    const real = document.createElement('span');
+    real.className = 'sr-only';
+    real.textContent = text;
+    const shown = document.createElement('span');
+    shown.setAttribute('aria-hidden', 'true');
+    el.append(real, shown);
+
+    let t = 0, phase = 'decode', lock = [], glitch = new Map();
+    function plan(){
+      // when each letter locks: left to right with some scatter
+      lock = chars.map((c, i) => i * 70 + Math.random() * 450);
+    }
+    plan();
+
+    function render(){
+      shown.textContent = chars.map(function(c, i){
+        if (c === ' ') return ' ';
+        if (phase === 'decode') return t >= lock[i] ? c : glyph();
+        if (phase === 'hold')   return glitch.has(i) ? glitch.get(i) : c;
+        return t >= lock[i] ? glyph() : c;           // 'encode': letters fall back to noise
+      }).join('');
+    }
+
+    setInterval(function(){
+      t += TICK;
+      const end = Math.max.apply(null, lock);
+      if (phase === 'decode' && t > end){ phase = 'hold'; t = 0; }
+      else if (phase === 'hold'){
+        glitch.forEach((g, i) => { if (Math.random() < 0.5) glitch.delete(i); });
+        if (Math.random() < 0.12){
+          const i = Math.floor(Math.random() * chars.length);
+          if (chars[i] !== ' ') glitch.set(i, glyph());
+        }
+        if (t > 3200){ glitch.clear(); phase = 'encode'; t = 0; lock = chars.map(() => Math.random() * 500); }
+      }
+      else if (phase === 'encode' && t > Math.max.apply(null, lock) + 250){ phase = 'decode'; t = 0; plan(); }
+      render();
+    }, TICK);
+    render();
+  });
+})();
