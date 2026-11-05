@@ -43,6 +43,7 @@ src/js/grainient.js   the owner's plain-JS port of React Bits' <Grainient /> (co
                       scroll heading and a roaming gradient angle, so colours go anywhere);
                       re-copying the original would drop it
 assets/icons/         logo.svg, favicon.png, logo(-white).png, apple-touch-icon.png
+assets/images/about/  avatar.png, the ink drawing right of the WHO IS text (greyscale, trimmed)
 assets/images/lab/    the Lab rows' hover logos, trimmed to the mark
 docs/                 notes and README screenshots
 ```

@@ -72,7 +72,9 @@ portfolio/
 │       └── grainient.js     the home page's animated gradient (WebGL2)
 ├── assets/
 │   ├── icons/               favicons and logos
-│   └── images/lab/          project logos for the Lab page
+│   └── images/
+│       ├── about/           the WHO IS drawing (avatar.png)
+│       └── lab/             project logos for the Lab page
 ├── docs/                    working notes and screenshots
 ├── CNAME                    custom domain for GitHub Pages
 ├── robots.txt
