@@ -23,15 +23,15 @@
 <meta property="og:title" content="Contact — Vuthy Cheam">
 <meta property="og:description" content="Get in touch with Vuthy Cheam.">
 <meta property="og:url" content="https://vuthycheam.com/contact.html">
-<meta property="og:image" content="https://vuthycheam.com/assets/icons/favicon.png?v=16">
-<link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg?v=16">
-<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/favicon.png?v=16">
-<link rel="icon" type="image/png" href="assets/icons/logo-white.png?v=16" media="(prefers-color-scheme: dark)">
-<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=15">
+<meta property="og:image" content="https://vuthycheam.com/assets/icons/logo.png?v=23">
+<link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg?v=23">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/favicon.png?v=23" media="(prefers-color-scheme: light)">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/logo-white.png?v=23" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=21">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500&family=Noto+Sans+Thai:wght@400;500&family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Jersey+10&family=VT323&family=Space+Grotesk:wght@400;500;700&family=Boogaloo&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="src/css/style.css?v=98">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Jersey+10&family=VT323&family=Space+Grotesk:wght@400;500;700&family=Boogaloo&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="src/css/style.css?v=176">
 <script>
 /* Arrived from another page of the site: mark <html> BEFORE the body renders so
    nothing on the page fades in again on the way back. */
@@ -45,19 +45,9 @@
 })();
 </script>
 <script>
-/* pagereveal fires once, just before the first frame, and carries the page
-   transition if one is bringing this page in. main.js is deferred and can run
-   after it, so it is caught here: window.ptSettled resolves once the page has
-   finished arriving (straight away when there is no transition), and the
-   boxes' intro waits for it. */
-if ('onpagereveal' in window){
-  window.ptSettled = new Promise(function(done){
-    window.addEventListener('pagereveal', function(e){
-      if (e.viewTransition) e.viewTransition.finished.then(done, done);
-      else done();
-    }, { once:true });
-  });
-}
+/* Opened inside the home page's CONTACT pop-up (contact.html?embed): no page
+   background of its own, so the blurred home page shows round the boxes. */
+if (/[?&]embed\b/.test(location.search)) document.documentElement.className += ' embed';
 </script>
 </head>
 <body class="loaded">
@@ -75,6 +65,8 @@ if ('onpagereveal' in window){
     <div class="contact-progress" id="contactProgress"></div>
 
     <div class="contact-inner">
+      <!-- each box opens its own place in a new tab; the ones still on href="#"
+           are waiting for their address and do nothing when clicked (main.js) -->
       <div class="contact-boxes">
         <div class="contact-box contact-info">
           <div class="info-circle"></div>
@@ -82,15 +74,15 @@ if ('onpagereveal' in window){
           <div class="info-row"><span class="info-label">City</span><span class="info-value">Bangkok, Thailand</span></div>
         </div>
         <a class="contact-box" href="mailto:crey2272@gmail.com" data-label="Email" data-copy="crey2272@gmail.com" title="Click to copy crey2272@gmail.com"><span class="email-clip"><span class="email-glyph">Email</span></span></a>
-        <a class="contact-box" href="#" data-label="LinkedIn"><span class="li-clip"><span class="li-letter li-i">i</span><span class="li-letter li-n">n</span></span></a>
+        <a class="contact-box" href="#" target="_blank" rel="noopener noreferrer" data-label="LinkedIn"><span class="li-clip"><span class="li-letter li-i">i</span><span class="li-letter li-n">n</span></span></a>
         <a class="contact-box" href="https://github.com/Creyvc" target="_blank" rel="noopener noreferrer" data-label="GitHub">
           <svg class="github-icon-src" viewBox="0 0 16 16" width="256" height="256" xmlns="http://www.w3.org/2000/svg" style="display:none;">
             <path fill="#000" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
           </svg>
           <img class="github-icon" alt="GitHub">
         </a>
-        <a class="contact-box" href="#" data-label="X"><span class="x-glyph">X</span></a>
-        <a class="contact-box" href="#" data-label="Threads">
+        <a class="contact-box" href="#" target="_blank" rel="noopener noreferrer" data-label="X"><span class="x-glyph">X</span></a>
+        <a class="contact-box" href="#" target="_blank" rel="noopener noreferrer" data-label="Threads">
           <!-- the Threads mark as the single line it is, traced along the middle
                of its stroke, so main.js can draw it on as the box comes to the
                centre and take it off again as it leaves -->
@@ -98,8 +90,8 @@ if ('onpagereveal' in window){
             <path class="threads-line" d="M432 170 C430.0 163.0 426.7 142.7 420 128 C413.3 113.3 404.5 95.8 392 82 C379.5 68.2 362.8 54.2 345 45 C327.2 35.8 305.8 30.3 285 27 C264.2 23.7 240.8 23.7 220 25 C199.2 26.3 180.0 28.8 160 35 C140.0 41.2 117.5 49.5 100 62 C82.5 74.5 67.0 90.3 55 110 C43.0 129.7 33.2 155.0 28 180 C22.8 205.0 24.2 235.0 24 260 C23.8 285.0 23.5 306.7 27 330 C30.5 353.3 35.3 379.2 45 400 C54.7 420.8 67.5 439.2 85 455 C102.5 470.8 126.7 486.7 150 495 C173.3 503.3 200.0 505.5 225 505 C250.0 504.5 277.5 499.5 300 492 C322.5 484.5 343.3 472.8 360 460 C376.7 447.2 391.7 430.0 400 415 C408.3 400.0 410.0 385.0 410 370 C410.0 355.0 405.8 338.3 400 325 C394.2 311.7 384.2 300.5 375 290 C365.8 279.5 355.8 269.2 345 262 C334.2 254.8 324.2 250.2 310 247 C295.8 243.8 276.7 243.0 260 243 C243.3 243.0 225.0 243.8 210 247 C195.0 250.2 180.3 254.8 170 262 C159.7 269.2 151.3 278.7 148 290 C144.7 301.3 146.3 318.3 150 330 C153.7 341.7 160.0 352.0 170 360 C180.0 368.0 195.8 375.0 210 378 C224.2 381.0 240.8 381.3 255 378 C269.2 374.7 284.5 367.7 295 358 C305.5 348.3 313.3 334.7 318 320 C322.7 305.3 322.3 286.7 323 270 C323.7 253.3 323.3 234.2 322 220 C320.7 205.8 319.5 195.0 315 185 C310.5 175.0 304.2 166.7 295 160 C285.8 153.3 271.7 147.5 260 145 C248.3 142.5 235.8 143.3 225 145 C214.2 146.7 205.0 150.5 195 155 C185.0 159.5 172.5 167.5 165 172 C157.5 176.5 152.5 180.3 150 182" pathLength="1"/>
           </svg>
         </a>
-        <a class="contact-box" href="#" data-label="Instagram"></a>
-        <a class="contact-box" href="#" data-label="Resume/CV">
+        <a class="contact-box" href="#" target="_blank" rel="noopener noreferrer" data-label="Instagram"></a>
+        <a class="contact-box" href="#" target="_blank" rel="noopener noreferrer" data-label="Resume/CV">
           <span class="resume-line corner-bl">RESUME</span>
           <span class="resume-line corner-tr">RESUME</span>
           <span class="resume-line corner-tl">CV</span>
@@ -112,6 +104,6 @@ if ('onpagereveal' in window){
 
   <!-- the Instagram box's moving gradient (same engine as the home background) -->
   <script defer src="src/js/grainient.js?v=3"></script>
-  <script defer src="src/js/main.js?v=74"></script>
+  <script defer src="src/js/main.js?v=131"></script>
 </body>
 </html>

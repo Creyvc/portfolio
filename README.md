@@ -37,8 +37,7 @@ extreme, the LinkedIn letters separate, the X glyph scales, and the info circle 
 **Preloader** — a counter and progress line on first load, skipped automatically when you
 arrive through a page transition so in-session navigation stays seamless.
 
-**Details** — click-to-copy email, live Bangkok time badge, cursor position and frame-rate
-HUD, and mobile visitors redirected to a desktop-only notice
+**Details** — click-to-copy email, live Bangkok time badge, and mobile visitors redirected to a desktop-only notice
 (with search-engine and link-preview crawlers explicitly exempted so the site still indexes).
 
 **Reduced motion** — every animated system checks `prefers-reduced-motion` and falls back to
@@ -51,7 +50,7 @@ the settled state.
 | **Markup** | HTML5 |
 | **Styling** | CSS3 — custom properties, flexbox, transforms, keyframe animation. No preprocessor. |
 | **Behaviour** | Vanilla JavaScript, organised as independent IIFEs that each guard on the elements they need |
-| **Type** | Google Fonts — Space Grotesk, Press Start 2P, Silkscreen, VT323, Jersey 10, Boogaloo, Noto Sans Khmer / Thai |
+| **Type** | Google Fonts — Space Grotesk, Press Start 2P, Silkscreen, VT323, Jersey 10, Boogaloo |
 | **Hosting** | GitHub Pages with a custom domain |
 | **Tooling** | None — no build, no dependencies, no package installs |
 
@@ -59,8 +58,9 @@ the settled state.
 
 ```
 portfolio/
-├── index.html               home: moving background, lockup, Who is
+├── index.html               home: name, WORK, / PLAYGROUND, and links, About and Contact pop-ups
 ├── journey.html             Journey
+├── playground.html          Playground (coming soon)
 ├── lab.html                 Lab: academic and self-initiated projects
 ├── contact.html             contact
 ├── about.html               about (fallback for Who is)
@@ -69,7 +69,7 @@ portfolio/
 │   ├── css/style.css        all styling for the site
 │   └── js/
 │       ├── main.js          all behaviour, one self-contained block per feature
-│       └── grainient.js     the home page's animated gradient (WebGL2)
+│       └── grainient.js     the Instagram box's animated gradient on contact (WebGL2)
 ├── assets/
 │   ├── icons/               favicons and logos
 │   └── images/

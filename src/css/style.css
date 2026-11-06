@@ -59,8 +59,7 @@
   .work-row:hover .work-meta{ color:var(--ink); }
 
   /* ===== Journey and Lab pages (journey.html, lab.html) =====
-     The lockup's JOURNEY ("COMING SOON" for now) and WORK/LAB (the work list
-     above). */
+     JOURNEY ("COMING SOON" for now) and WORK/LAB (the work list above). */
   /* sides line up with the [CLOSE] label above (22px in), on both edges */
   .work-page{
     padding:3.5rem 1.375rem 6rem;
@@ -86,7 +85,7 @@
     font-size:0.9rem;
     color:rgba(23,24,28,0.4);
   }
-  .work-empty.is-centre{ text-align:center; }   /* journey.html's lone line */
+  .work-empty.is-centre{ text-align:center; }   /* journey.html's and playground.html's lone line */
 
   /* ===== Pixel field (journey.html) =====
      After thibaud.film: the page behind is a grid of large square pixels in
@@ -115,6 +114,16 @@
     line-height:1;
     letter-spacing:0.02em;
     color:rgba(244,245,247,0.88);
+    white-space:nowrap;
+  }
+  /* playground.html: the same line, in ink on the plain paper page */
+  body.playground .work-empty.is-centre{
+    padding:0;
+    font-size:clamp(1.5rem, 3.3vw, 3rem);
+    font-weight:400;
+    line-height:1;
+    letter-spacing:0.02em;
+    color:rgba(23,24,28,0.88);
     white-space:nowrap;
   }
   /* read by screen readers, not shown */
@@ -159,54 +168,11 @@
     font-weight:300;
     padding-top:var(--header-h);
   }
-  /* ===== Lockup (home) =====
-     Bottom-centre: two words stacked either side of the logo, the logo as tall
-     as both lines, after the "WHO IS / TALENTS · DENISE · PRODUCTION / CREATION"
-     lockup the owner sent. Heavy condensed capitals from Impact, which ships
-     with macOS and Windows, so no web font is added (the site's mono was tried
-     and the owner preferred Impact). The words are coloured
-     letter by letter like the header (.letter-tinted), and the logo white or
-     ink as a whole, by main.js. White is what shows before that, or without
-     WebGL2. */
-  .lockup{
-    position:fixed; left:50%; bottom:1rem;
-    transform:translateX(-50%);
-    z-index:5;
-    display:flex; align-items:center; gap:0.8rem;
-    font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', 'Franklin Gothic Bold', sans-serif;
-    font-size:2.25rem;
-    line-height:0.92;
-    letter-spacing:0.01em;
-    text-transform:uppercase;
-    white-space:nowrap;
-    color:#fff;
-  }
-  .lockup-stack{ display:flex; flex-direction:column; }
-  .lockup-left{ align-items:flex-end; text-align:right; }
-  .lockup-right{ align-items:flex-start; }
-  .lockup-word{ color:inherit; text-decoration:none; transition:filter 0.2s ease; }
-  /* hovered, a word dims a step towards grey, whichever colour its letters
-     are at that moment: white letters go darker (#c6), ink ones lighter
-     (#46). Ink can't visibly get any darker, so this is what reads as the
-     same change on both. */
-  .lockup-word:hover,
-  .lockup-word:focus-visible{ filter:contrast(0.55); outline:none; }
-  .lockup-logo{
-    display:block;
-    height:calc(2em * 0.92);           /* both lines of the stacks */
-    color:#fff;
-    transition:color 0.4s ease;
-  }
-  .lockup-logo svg{ display:block; height:100%; width:auto; }
-  /* hidden for the intro until main.js takes them over; if it never does, they
-     come up on their own after 3s */
-  html.lockup-intro .lockup-logo,
-  html.lockup-intro .lockup-stack{ opacity:0; animation:lockup-failsafe 0.4s 3s forwards; }
-  @keyframes lockup-failsafe{ to{ opacity:1; } }
+
 
   /* ===== Who is (home) =====
      WHO IS opens this in place, after cathydolle.com's about: the whole page
-     (background, header, HUD and lockup) stays visible but goes soft behind a
+     (header and all) stays visible but goes soft behind a
      frosted layer (a light blur under a paper tint), and a small block of
      text (the bio and availability) pops up sharp on it, centred in the
      window.
@@ -218,8 +184,8 @@
     inset:0;
     z-index:9998;
     background:rgba(253,253,253,0.5);
-    -webkit-backdrop-filter:blur(3px);
-    backdrop-filter:blur(3px);
+    -webkit-backdrop-filter:blur(1.5px);
+    backdrop-filter:blur(1.5px);
     opacity:0;
     visibility:hidden;
     transition:opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.5s;
@@ -233,6 +199,10 @@
     visibility:visible;
     transition:opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s;
   }
+  /* any pop-up open, the header goes softer than the page behind the frosted
+     layer, so it stays out of the way of what's on top; timed with that layer */
+  header{ transition:filter 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+  html.whois-open header{ filter:blur(4px); }
   .whois-text{
     width:36%;
     min-width:30rem;
@@ -259,6 +229,15 @@
     transition:opacity 0.35s ease 0.08s, transform 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s;
   }
   .whois-copy{ flex:1; }
+  /* after cipher.tv's about: black pixel blocks fill the window from its
+     edges in, round a ragged opening that holds the words and the drawing
+     (main.js draws them) */
+  .whois-pixels{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    pointer-events:none;
+  }
+  #whois .whois-text{ position:relative; }   /* over the squares */
   .whois-avatar{
     flex:none;
     width:9rem;
@@ -269,60 +248,199 @@
     line-height:1.4;
   }
   .whois-note{ margin:2.5rem 0 0; }
+  /* CONTACT's pop-up: the same frosted layer, filled edge to edge by a frame
+     of the contact page, which brings its own intro */
+  .contact-frame{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    border:0;
+    background:transparent;
+    color-scheme:light;
+  }
+  /* the contact page as it sits in that frame: everything but the boxes is
+     see-through */
+  html.embed,
+  html.embed body,
+  html.embed .contact{ background:transparent; }
+  html.embed .contact{ border-top:0; }
+  /* like ABOUT's, the pop-up closes on a click in its empty space or Esc, so
+     no [CLOSE] sitting over the blurred name */
+  html.embed .close-btn{ display:none; }
   @media (prefers-reduced-motion: reduce){
     .whois-text{ transform:none !important; }
   }
+  /* PLAYGROUND's pop-up: the same frosted layer, holding big lines in WORK's
+     face, after almirakho.com's works list. Every line is a mask (.play-mask)
+     with its words (.play-word) sliding through it: up and in on opening, on
+     up and out on closing, one after another by --i. Each project row runs the
+     window's full width, so it stays hovered on the way over to OPEN PROJECT. No
+     transition until it's open, so the words can snap back below their masks
+     unseen. The small padding keeps the comma's tail inside the mask. The list
+     is a div, not a <nav>: the bare nav rules further down would dim its links
+     and bracket them. Its first line, CLOSE, stands exactly where the word
+     PLAYGROUND stands, with the rest hanging under it: the header spreads its
+     items, so main.js measures the word and sets top and --play-x. */
+  .play-pop{ display:block; }
+  /* the word itself goes up out of a mask of its own as CLOSE rises in its
+     place, and comes back down on closing; the link's aria-expanded is the
+     switch. It's under the frosted layer, so it can't simply become CLOSE. The
+     browser's focus ring needs the mask off. */
+  .home-playground{ clip-path:inset(0 -0.1em -0.15em -0.1em); }
+  .home-playground:focus-visible{ clip-path:none; }
+  .home-playground .home-ch{ transition:transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+  .home-playground[aria-expanded="true"] .home-ch{ transform:translateY(-115%); }
+  .play-item:first-child{ margin-bottom:0.5rem; }
+  .play-list{
+    position:absolute;
+    left:0; right:0;
+    display:flex;
+    flex-direction:column;
+    gap:0.25rem;
+  }
+  .play-item{
+    display:flex;
+    align-items:center;
+    width:100%;
+    padding:0 0 0 var(--play-x);
+    border:0; background:none;
+    cursor:pointer;
+    color:var(--ink);
+    text-align:left;
+    text-decoration:none;
+    text-transform:uppercase;
+    white-space:nowrap;
+    font-family:'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+    font-size:2rem;              /* the word PLAYGROUND's own size */
+    font-weight:500;
+    line-height:1;
+    letter-spacing:0.01em;
+  }
+  /* only the projects run the full width: CLOSE and VIEW ALL answer on their
+     words alone */
+  .play-item:not(.is-project){ width:max-content; margin-left:var(--play-x); padding:0; }
+  .play-mask{
+    display:block;
+    overflow:hidden;
+    padding-bottom:0.12em;
+    margin-bottom:-0.12em;
+  }
+  .play-word{
+    display:block;
+    transform:translateY(115%);
+  }
+  .play-pop.is-open .play-word{
+    transform:none;
+    transition:transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay:calc(0.12s + var(--i) * 0.07s);
+  }
+  /* the hovered project's screens, scattered under the list after
+     denise-agency.com: main.js works out each project's own scatter from its
+     name, so a new screen only needs its <img>. Each drifts out from nearer the
+     window's centre as it fades in. The size follows both the window's width and
+     height, and main.js leaves room for it (a screen up to 2.2 times as tall as
+     it is wide) in every spot, so changing --shot-w keeps them all on the window. */
+  .play-shots{
+    --shot-w:min(10vw, 14.5vh);
+    position:absolute; inset:0;
+    overflow:hidden;
+    pointer-events:none;
+  }
+  .play-shot{
+    position:absolute;
+    width:var(--shot-w);
+    height:auto;
+    opacity:0;
+    transform:translate(var(--dx, 0), var(--dy, 0)) scale(0.84);
+    transition:opacity 0.35s ease, transform 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  .play-shot.is-on{
+    opacity:1;
+    transform:none;
+    transition:opacity 0.6s ease, transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  /* a project's kind, sat on its name's baseline, set like the work list's
+     [LABEL]s; inside the words, so it masks and pushes with them */
+  .play-kind{
+    margin-left:0.5rem;
+    font-family:var(--sans);
+    font-size:0.72rem;
+    font-weight:300;
+    letter-spacing:0.04em;
+  }
+  /* pushed right when hovered; is-active comes from main.js, which carries it
+     across the gap between lines so nothing twitches on the way through */
+  .is-project .play-mask{ transition:transform 0.7s cubic-bezier(0.33, 1, 0.68, 1); }
+  .is-project.is-active .play-mask{ transform:translateX(4rem); }
+  /* one OPEN PROJECT for every project, at the window's left edge in the
+     header's small type. main.js sets its line, and it glides there in step
+     with the push; its mask only opens on arriving and closes on leaving */
+  .play-open{
+    --i:3;
+    position:absolute;
+    top:0; left:1rem;
+    pointer-events:none;
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:0.8125rem;
+    font-weight:500;
+    letter-spacing:0.03em;
+    transition:transform 0.7s cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  .play-pop.is-open .play-open .play-word{
+    transform:translateY(115%);
+    transition:transform 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  .play-pop.is-open .play-open.is-on .play-word{ transform:none; }
+  /* the hovered project's logo at the window's other edge, set on the name's
+     own line: as tall as its capitals, top level with theirs and bottom on the
+     baseline (measured: 22.4px caps, 4.6px down the 2rem line; the files are
+     trimmed to the mark, so that's the height you see). The box is a mask that
+     glides with OPEN PROJECT, so going from one project to the next swaps the
+     logos inside it as it moves */
+  .play-logos{
+    position:absolute;
+    top:0; right:1rem;
+    width:9rem; height:2rem;
+    overflow:hidden;
+    pointer-events:none;
+    transition:transform 0.7s cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  .play-logo{
+    position:absolute;
+    top:0.2875rem; right:0;
+    height:1.4rem;
+    width:auto;
+    transform:translateY(150%);    /* clear of the box from where it sits */
+  }
+  .play-pop.is-open .play-logo{ transition:transform 0.5s cubic-bezier(0.33, 1, 0.68, 1); }
+  .play-pop.is-open .play-logo.is-on{ transform:none; }
+  .play-pop.is-leaving .play-word{
+    transform:translateY(-115%);
+    transition:transform 0.45s cubic-bezier(0.7, 0, 0.84, 0);
+    transition-delay:calc((3 - var(--i)) * 0.04s);
+  }
+  @media (prefers-reduced-motion: reduce){
+    .play-word,
+    .play-pop.is-open .play-word,
+    .play-open,
+    .play-logos,
+    .play-pop.is-open .play-logo,
+    .is-project .play-mask{ transition:none; }
+    .play-word{ transform:none; }
+    .is-project.is-active .play-mask{ transform:none; }
+    .play-pop.is-open .play-open .play-word{ transform:none; transition:none; opacity:0; }
+    .play-pop.is-open .play-open.is-on .play-word{ opacity:1; }
+    .play-shot,
+    .play-shot.is-on{ transform:none; transition:none; }
+    .play-logo{ transform:none; opacity:0; }
+    .play-pop.is-open .play-logo.is-on{ opacity:1; }
+    body.loaded .home-playground[aria-expanded="true"]{ opacity:0; }
+  }
 
-  /* ===== Page background (home) =====
-     The animated "grainient" behind the whole home page: a drifting, wavy WebGL
-     gradient with satin folds, which the cursor drags like paint and a click
-     twists into a swirl (src/js/grainient.js, mounted by main.js). Fixed and
-     under everything at z-index -1. The CSS gradient here, in the same dark-to-
-     grey-to-white ramp at the same 75deg, is what shows without WebGL2. On top of it all, a
-     second, CSS film grain: fractal noise, desaturated and pushed hard, tiled
-     at 180px and overlaid. */
-  .page-bg{
-    position:fixed; inset:0;
-    z-index:-1;
-    pointer-events:none;
-    background:linear-gradient(75deg, #0e0f12, #2a2c31, #6b6e75, #b9bcc2, #f4f5f7);
-  }
-  .page-bg::after{
-    content:'';
-    position:fixed; inset:0;
-    pointer-events:none;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='3.6' intercept='-1.3'/%3E%3CfeFuncG type='linear' slope='3.6' intercept='-1.3'/%3E%3CfeFuncB type='linear' slope='3.6' intercept='-1.3'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size:180px 180px;
-    opacity:0.85;
-    mix-blend-mode:overlay;
-  }
-  /* grainient.js adds the container and canvas but leaves their sizing to us */
-  /* until main.js has mounted it (or found it can't), the background is the
-     dark its bloom starts from, so the fallback gradient doesn't flash first */
-  html.bg-pending .page-bg{ background:#0e0f12; }
+  /* grainient.js (the Instagram box on contact) adds the container and canvas
+     but leaves their sizing to us */
   .grainient-container{ position:absolute; inset:0; }
   .grainient-canvas{ display:block; width:100%; height:100%; }
-
-  /* Let it show through: the body and the hero are paper everywhere else. The
-     header and HUD sit straight on the gradient, and their text follows it
-     letter by letter: main.js reads the gradient under each letter a few times
-     a second and paints the text through a hard-edged stripe per letter, white
-     or ink, whichever holds more contrast there (.letter-tinted clips that
-     stripe to the glyphs). White is the starting colour, and what stays if
-     WebGL2 is missing. */
-  body.home,
-  body.home .hero{ background:transparent; }
-  body.home .home-link,
-  body.home .time-badge,
-  body.home .hud{ color:#fff; }
-  body.home .hud{ opacity:1; }
-  body.home .time-badge .dot{ background:#fff; transition:background-color 0.4s ease; }
-  .letter-tinted{
-    -webkit-background-clip:text;
-    background-clip:text;
-    -webkit-text-fill-color:transparent;
-    color:transparent;
-  }
 
   header{
     position:fixed; top:0; left:0; width:100%; z-index:9996;
@@ -333,133 +451,65 @@
     background:transparent;
     box-sizing:border-box;
   }
-  /* live cursor / fps readout — column 2, row 1, directly under the logo.
-     Centred with left/right:0 rather than a transform, because .reveal animates
-     translateY on this element and a transform here would override it. */
-  .hud{
-    position:fixed;
-    /* the column-2 / row-1 cell: vertical lines at 33%/67%, row line at 33% */
-    left:33%; right:33%;
-    top:1.0625rem;               /* on the header's line: baseline level with the name and time (measured) */
-    z-index:9995;
-    /* X hugs the bottom-left corner, Y the bottom-right, FPS centred between them */
-    display:flex; justify-content:space-between; align-items:flex-end;
-    padding:0 1.5rem;            /* pulls X and Y inward, off the cell edges */
-    font-family:var(--sans);
-    font-size:0.8rem;
-    font-weight:400;
-    letter-spacing:0.06em;
-    color:var(--ink);
-    opacity:0.45;
-    white-space:pre;
-    pointer-events:none;
-    user-select:none;
-  }
   /* Arrived from another page of the site: html.pt-open is set by the inline
      script in every page's <head> before the body renders, so nothing fades in
      again on the way back. */
   html.pt-open .reveal{ opacity:1; transform:none; transition:none; }
 
-  /* ===== Page transition =====
-     The page you are leaving sinks back — shrinks a little towards its centre
-     and darkens, keeping its sharp square corners — and the new page slides up
-     from the bottom over it, casting a soft shadow ahead of itself. Every page
-     change plays it the same way round, going back to home included. Behind
-     both, the backdrop is a mid grey with the site's own grid (3 / 33 / 67 / 97 and
-     33 / 67) drawn faintly on it, so what the sinking page uncovers is the grid
-     underneath everything.
-
-     Done with cross-document View Transitions, so it is CSS only: every page
-     loads this stylesheet, the browser snapshots the old page and plays these
-     animations on the two snapshots. Browsers without it (Firefox for now)
-     just change page, and reduced motion turns it off. main.js prefetches a
-     page as soon as its link is hovered, so the transition starts the moment
-     you click instead of waiting on the network.
-
-     Timing: both start together. The new page creeps up from the bottom edge
-     for about 0.5s, rushes most of the way in the next 0.2s and settles over
-     the rest of its 1.4s; the old page sinks on almost the same beat over 1.2s.
-     Both curves were fitted to frame-by-frame measurements of the reference
-     site (cathydolle.com).
-
-     Transform and filter run on the compositor; the shadow fade doesn't, so it
-     is its own animation and can never hold the motion up. It fades in rather
-     than being set, so it isn't sitting at the bottom edge before its page
-     arrives. */
-  @view-transition{ navigation:auto; }
-  @media (prefers-reduced-motion: reduce){
-    @view-transition{ navigation:none; }
-  }
-  /* +0.03px … +0.97px: a percentage in background-position resolves against
-     (size - 1px), so this lands each rule on the same pixel as the real grid */
-  ::view-transition{
-    background:
-      linear-gradient(rgba(255,255,255,0.07), rgba(255,255,255,0.07)) calc(3% + 0.03px) 0 / 1px 100% no-repeat,
-      linear-gradient(rgba(255,255,255,0.07), rgba(255,255,255,0.07)) calc(33% + 0.33px) 0 / 1px 100% no-repeat,
-      linear-gradient(rgba(255,255,255,0.07), rgba(255,255,255,0.07)) calc(67% + 0.67px) 0 / 1px 100% no-repeat,
-      linear-gradient(rgba(255,255,255,0.07), rgba(255,255,255,0.07)) calc(97% + 0.97px) 0 / 1px 100% no-repeat,
-      linear-gradient(rgba(255,255,255,0.07), rgba(255,255,255,0.07)) 0 calc(33% + 0.33px) / 100% 1px no-repeat,
-      linear-gradient(rgba(255,255,255,0.07), rgba(255,255,255,0.07)) 0 calc(67% + 0.67px) / 100% 1px no-repeat,
-      #4a4b51;                        /* a mid grey rather than ink, so the change reads lighter */
-  }
-  /* the default cross-fade blends the two with plus-lighter, which would wash
-     the darkening out — each snapshot paints normally on its own animation */
-  ::view-transition-old(root),
-  ::view-transition-new(root){
-    mix-blend-mode:normal;
-    transform-origin:50% 50%;
-  }
-  ::view-transition-old(root){
-    animation:pt-sink 1200ms cubic-bezier(0.85, 0.1, 0.15, 1) both;
-  }
-  ::view-transition-new(root){
-    animation:
-      pt-rise  1400ms cubic-bezier(0.75, 0.05, 0.05, 1) both,
-      pt-shade  600ms ease-out both;
-  }
-  @keyframes pt-sink { to  { transform:scale(0.91); filter:brightness(0.6); } }
-  @keyframes pt-rise { from{ transform:translateY(100%); } }
-  @keyframes pt-shade{ from{ box-shadow:0 -1.5rem 4rem rgba(0,0,0,0); }
-                       to  { box-shadow:0 -1.5rem 4rem rgba(0,0,0,0.45); } }
+  /* No page transition: changing page is an instant cut (the owner removed the
+     View Transitions slide on 2026-11-05). */
 
   header a{ color:var(--ink); text-decoration:none; }
-  .home-link{
-    font-family:var(--sans), 'Noto Sans Khmer', 'Noto Sans Thai', sans-serif;
-    font-weight:400;
+  /* the line runs name, WORK, PLAYGROUND, JOURNEY, ABOUT, CONTACT, time: the
+     name pinned top left and the time top right, and everything between spread
+     out at equal gaps (the header's space-between does that); the small ones
+     are all set exactly like the time so they share a line */
+  .home-name,
+  .home-nav{
+    margin-top:0.275rem;
     color:var(--ink);
-    font-size:0.9rem;
-    letter-spacing:0.02em;
-    width:16rem;
-    height:1.8rem;
-    /* the visible glyphs sit 16px from the top and 16px from the side, the
-       same as the time on the right — -4px cancels the bracket's own side
-       bearing (measured on the English name at 0.9rem) */
-    margin-left:-0.25rem;
-    margin-top:-0.05rem;
-    display:flex;
-    align-items:center;
-    justify-content:flex-start;
-    text-align:left;
+    font-family:var(--sans);
+    font-size:0.8125rem;
+    font-weight:500;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
     white-space:nowrap;
-    overflow:hidden;
   }
-  .home-link:lang(km), .home-link:lang(th){
-    font-size:0.99rem;
+  /* WORK, PLAYGROUND, is the one big phrase on the line, in a wide grotesk
+     rather than the mono, WORK's capitals topping out level with the rest
+     (16px down) */
+  .home-work{
+    color:var(--ink);
+    text-transform:uppercase;
+    white-space:nowrap;
+    margin-top:0.1375rem;
+    font-family:'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+    font-size:3rem;
+    font-weight:500;
+    line-height:1;
+    letter-spacing:0.01em;
   }
+  /* PLAYGROUND, a size down, its capitals topping out level with everything
+     else on the line */
+  .home-nav.home-playground{ font-size:2rem; margin-top:0.2rem; }
+  /* hovered, a link keeps its colour: the decrypt (main.js) is the only
+     change; keyboard focus keeps the browser's own outline */
+  /* one letter of a link, its width set by main.js so a churning glyph can't
+     move its neighbours */
+  .home-ch{ display:inline-block; text-align:center; }
   .time-badge{
-    justify-self:end;
-    margin-top:0.3375rem;         /* visible glyphs 16px from the top, as from the side */
+    margin-top:0.275rem;         /* visible glyphs 16px from the top, as from the side */
     display:inline-flex; align-items:center; gap:0.5rem;
     color:var(--ink);
     font-family:var(--sans);
-    font-size:0.9rem;
+    font-size:0.8125rem;
     font-weight:500;
     letter-spacing:0.03em;
     text-transform:uppercase;
     white-space:nowrap;
   }
   .time-badge .dot{
-    width:8px; height:8px; border-radius:50%;
+    width:6px; height:6px; border-radius:50%;
     background:var(--ink);
     flex-shrink:0;
     animation:blink-dot 1s ease-in-out infinite;

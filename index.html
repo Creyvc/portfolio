@@ -23,15 +23,15 @@
 <meta property="og:title" content="Vuthy Cheam">
 <meta property="og:description" content="Computer Science student exploring AI/ML engineering, data science, and software development.">
 <meta property="og:url" content="https://vuthycheam.com/">
-<meta property="og:image" content="https://vuthycheam.com/assets/icons/favicon.png?v=16">
-<link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg?v=16">
-<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/favicon.png?v=16">
-<link rel="icon" type="image/png" href="assets/icons/logo-white.png?v=16" media="(prefers-color-scheme: dark)">
-<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=15">
+<meta property="og:image" content="https://vuthycheam.com/assets/icons/logo.png?v=23">
+<link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg?v=23">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/favicon.png?v=23" media="(prefers-color-scheme: light)">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/logo-white.png?v=23" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=21">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500&family=Noto+Sans+Thai:wght@400;500&family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Jersey+10&family=VT323&family=Space+Grotesk:wght@400;500;700&family=Boogaloo&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="src/css/style.css?v=98">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Jersey+10&family=VT323&family=Space+Grotesk:wght@400;500;700&family=Boogaloo&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="src/css/style.css?v=176">
 <link rel="prefetch" href="contact.html">
 <script>
 /* Arrived from another page of the site: mark <html> BEFORE the body renders so
@@ -45,25 +45,16 @@
   document.documentElement.className += ' pt pt-open';
 })();
 </script>
-<script>
-/* Before the first paint: the background starts as the dark its colour bloom
-   grows out of (bg-pending), and on a first visit the lockup starts hidden so
-   its intro can bring it in (lockup-intro). main.js clears both. */
-(function(){
-  var html = document.documentElement;
-  html.className += ' bg-pending';
-  var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!still && html.className.indexOf('pt-open') < 0) html.className += ' lockup-intro';
-})();
-</script>
 </head>
 <body class="home loaded">
-  <!-- the animated "grainient" behind everything on this page; main.js mounts
-       src/js/grainient.js into it -->
-  <div class="page-bg" aria-hidden="true"></div>
 
   <header>
-    <a class="home-link reveal reveal-1" href="index.html" id="home-link">[VUTHY CHEAM]</a>
+    <span class="home-name reveal reveal-1">VUTHY CHEAM</span>
+    <a class="home-nav home-work reveal reveal-1" href="lab.html">WORK,</a>
+    <a class="home-nav home-work home-playground reveal reveal-1" href="playground.html" data-pop aria-controls="play-pop" aria-expanded="false">PLAYGROUND,</a>
+    <a class="home-nav reveal reveal-1" href="journey.html">JOURNEY</a>
+    <a class="home-nav home-about reveal reveal-1" href="about.html" data-pop aria-controls="whois" aria-expanded="false">ABOUT</a>
+    <a class="home-nav reveal reveal-1" href="contact.html" data-pop aria-controls="contact-pop" aria-expanded="false">CONTACT</a>
     <span class="time-badge reveal reveal-1">
       <span id="bkk-time">BKK[TH] --:--</span>
       <span class="dot"></span>
@@ -73,53 +64,66 @@
   <section class="hero">
   </section>
 
-  <!-- the bottom-centre lockup, after the "WHO IS / TALENTS · DENISE ·
-       PRODUCTION / CREATION" one the owner sent: two words stacked either side
-       of the logo, the logo as tall as both lines. On a first visit the logo
-       arrives large in the middle of the page and settles down into it, and
-       the words slide out from behind it (main.js). -->
-  <div class="lockup" id="lockup" role="navigation" aria-label="Site">
-    <div class="lockup-stack lockup-left">
-      <a class="lockup-word" href="about.html" data-whois aria-controls="whois" aria-expanded="false">WHO IS</a>
-      <a class="lockup-word" href="contact.html">CONTACT</a>
-    </div>
-    <span class="lockup-logo" aria-label="Vuthy Cheam" role="img">
-      <svg viewBox="14 44 194.8 132" aria-hidden="true">
-        <defs>
-          <mask id="lockup-gap"><rect width="240" height="220" fill="#fff"></rect><rect x="150" y="80" width="100" height="60" fill="#000"></rect><polygon points="14,44 52,44 80,100 108,44 146,44 80,176" fill="#000" stroke="#000" stroke-width="10"></polygon></mask>
-        </defs>
-        <circle cx="150" cy="110" r="51" fill="none" stroke="currentColor" stroke-width="30" mask="url(#lockup-gap)"></circle>
-        <polygon points="14,44 52,44 80,100 108,44 146,44 80,176" fill="currentColor"></polygon>
-      </svg>
-    </span>
-    <div class="lockup-stack lockup-right">
-      <a class="lockup-word" href="journey.html">JOURNEY</a>
-      <a class="lockup-word" href="lab.html">WORK/LAB</a>
-    </div>
-  </div>
-
-  <!-- WHO IS opens this in place rather than leaving the page (main.js);
+  <!-- ABOUT opens this in place rather than leaving the page (main.js);
        about.html stays the link's target for a new tab or no JS. After
        cathydolle.com's about: the whole page goes soft behind a frosted layer
        and a small block of text pops up sharp on it. A click anywhere, or Esc,
        closes it. -->
   <section class="whois" id="whois" aria-label="Who is Vuthy Cheam" aria-hidden="true" inert>
+    <!-- black pixel blocks that fly in from every side and corner of the
+         window and stop just short of the text and the drawing, leaving a
+         ragged opening round them; they fly back out on closing (main.js) -->
+    <canvas class="whois-pixels" aria-hidden="true"></canvas>
     <div class="whois-text">
       <div class="whois-copy">
-        <p class="whois-bio">Vuthy Cheam (Bangkok, TH) is a Computer Science student exploring software engineering across full-stack web, AI/ML and data science, and cloud and DevOps, alongside UI/UX design.</p>
+        <p class="whois-bio">Vuthy Cheam is a Computer Science student exploring software engineering across full-stack web, AI/ML and data science, and cloud and DevOps, alongside UI/UX design.</p>
         <p class="whois-note">AVAILABLE REMOTE / HYBRID / ON-SITE</p>
       </div>
       <img class="whois-avatar" src="assets/images/about/avatar.png?v=2" width="360" height="346" alt="Drawing of Vuthy Cheam">
     </div>
   </section>
 
-  <div class="hud reveal reveal-4" id="hud" aria-hidden="true">
-    <span id="hudX">X&nbsp;&nbsp;&nbsp;&nbsp;0</span>
-    <span id="hudFps">FPS&nbsp;&nbsp;&nbsp;--</span>
-    <span id="hudY">Y&nbsp;&nbsp;&nbsp;&nbsp;0</span>
-  </div>
+  <!-- CONTACT opens this in place the same way, over the same frosted layer:
+       the contact page itself (its boxes, intro and all) in a frame, loaded
+       fresh on every open with ?embed, which drops its own background so the
+       blurred home page shows round the boxes (main.js). contact.html stays
+       the link's target for a new tab or no JS. -->
+  <section class="whois whois-contact" id="contact-pop" aria-label="Contact Vuthy Cheam" aria-hidden="true" inert>
+    <iframe class="contact-frame" title="Contact" data-src="contact.html?embed"></iframe>
+  </section>
 
-  <script src="src/js/grainient.js?v=3"></script>
-  <script src="src/js/main.js?v=74"></script>
+  <!-- PLAYGROUND opens this in place, over the same frosted layer, after
+       almirakho.com's works list: big lines that rise through a mask, and a
+       project pushed right when hovered, with OPEN PROJECT at the window's left
+       edge and its logo at the right, gliding from line to line, and some of
+       its screens scattered behind, after denise-agency.com (main.js).
+       playground.html stays the
+       link's target for a new tab or no JS. The projects have no pages yet, so
+       their links go nowhere. -->
+  <section class="whois play-pop" id="play-pop" aria-label="Playground" aria-hidden="true" inert>
+    <div class="play-shots" aria-hidden="true">
+      <img class="play-shot" data-project="solevault" data-src="assets/images/lab/solevault/hover/welcoming.png" alt="">
+      <img class="play-shot" data-project="solevault" data-src="assets/images/lab/solevault/hover/ai-chatbot.png" alt="">
+      <img class="play-shot" data-project="solevault" data-src="assets/images/lab/solevault/hover/collection.png" alt="">
+      <img class="play-shot" data-project="solevault" data-src="assets/images/lab/solevault/hover/news.png" alt="">
+      <img class="play-shot" data-project="gair" data-src="assets/images/lab/gair/hover/search.png" alt="">
+      <img class="play-shot" data-project="gair" data-src="assets/images/lab/gair/hover/onboarding.png?v=2" alt="">
+      <img class="play-shot" data-project="gair" data-src="assets/images/lab/gair/hover/hotel.png" alt="">
+      <img class="play-shot" data-project="gair" data-src="assets/images/lab/gair/hover/trip-planner.png" alt="">
+    </div>
+    <div class="play-list" role="navigation" aria-label="Playground projects">
+      <button class="play-item" type="button" style="--i:0"><span class="play-mask"><span class="play-word">CLOSE,</span></span></button>
+      <a class="play-item" href="playground.html" style="--i:1"><span class="play-mask"><span class="play-word">VIEW ALL</span></span></a>
+      <a class="play-item is-project" href="#" data-logo="solevault" style="--i:2"><span class="play-mask"><span class="play-word">SOLE VAULT<span class="play-kind" aria-hidden="true">[UI/UX]</span></span></span></a>
+      <a class="play-item is-project" href="#" data-logo="gair" style="--i:3"><span class="play-mask"><span class="play-word">GAIR<span class="play-kind" aria-hidden="true">[UI/UX]</span></span></span></a>
+      <span class="play-mask play-open" aria-hidden="true"><span class="play-word">OPEN PROJECT</span></span>
+      <span class="play-logos" aria-hidden="true">
+        <img class="play-logo" data-name="solevault" src="assets/images/lab/solevault-logo.png?v=2" alt="">
+        <img class="play-logo" data-name="gair" src="assets/images/lab/gair-logo.png?v=2" alt="">
+      </span>
+    </div>
+  </section>
+
+  <script src="src/js/main.js?v=131"></script>
 </body>
 </html> 

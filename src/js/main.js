@@ -9,7 +9,10 @@
           second: '2-digit',
           hour12: true
         }).format(new Date());
-        timeEl.textContent = 'BKK[TH] ' + formatted;
+        const text = 'BKK[TH] ' + formatted;
+        // the header scramble (below) keeps the time as letters it can churn
+        if (timeEl._setTime) timeEl._setTime(text);
+        else timeEl.textContent = text;
       }
       updateClock();
       setInterval(updateClock, 1000);
@@ -46,55 +49,6 @@
       });
     })();
 
-
-    (function(){
-      const homeLink = document.getElementById('home-link');
-      if (!homeLink) return;
-      const names = [
-        { text: '[VUTHY CHEAM]', lang: 'en' },
-        { text: '[ជាម វុឌ្ឍី]', lang: 'km' },
-        { text: '[เฟิร์ส]', lang: 'th' }
-      ];
-      // same scramble/decode transition as the multilingual greeting above
-      const GLYPHS = '01<>[]{}/\\|=+*-#%&$ｦｧｨｩｪﾊﾋﾌﾍABCDEFGHKMNXZ';
-      const HOLD_MS = 2400;   // how long each resolved name stays
-      const STEPS = 15;       // scramble ticks before fully resolved
-      const TICK_MS = 45;     // ms per scramble tick
-
-      let index = 0;
-      let timer = null;
-
-      function play(){
-        const n = names[index % names.length];
-        homeLink.lang = n.lang;
-        const chars = Array.from(n.text);
-        const total = chars.length;
-        let step = 0;
-        clearInterval(timer);
-        timer = setInterval(function(){
-          step++;
-          const revealed = Math.floor(total * step / STEPS);
-          let out = '';
-          for (let i = 0; i < total; i++){
-            const c = chars[i];
-            if (i < revealed || c === ' ' || c === '[' || c === ']'){
-              out += c;
-            } else {
-              out += GLYPHS[(Math.random() * GLYPHS.length) | 0];
-            }
-          }
-          homeLink.textContent = out;
-          if (step >= STEPS){
-            clearInterval(timer);
-            homeLink.textContent = n.text;
-            index++;
-            setTimeout(play, HOLD_MS);
-          }
-        }, TICK_MS);
-      }
-
-      play();
-    })();
 
     // ===== Contact boxes: one driver for every scroll-linked effect =====
     // Six things move as the boxes are swiped: the shrink class, the progress
@@ -689,19 +643,7 @@
         setTimeout(finish, TOTAL + 900);
       }
 
-      // Arriving through a page transition, the page rises in from below for
-      // 1.4s; start only once it has landed so the whole intro is seen, from
-      // the first stroke of the line. window.ptSettled comes from contact.html's
-      // head. The cap means a transition that never reports back can't leave
-      // the page sitting on a blank row.
-      if (window.ptSettled){
-        let started = false;
-        const go = function(){ if (!started){ started = true; run(); } };
-        window.ptSettled.then(go);
-        setTimeout(go, 2500);
-      } else {
-        run();
-      }
+      run();
     })();
 
     // let users swipe the contact boxes in ANY direction (up/down or left/right),
@@ -843,9 +785,9 @@
     // Following a link to another page of the site leaves a flag in
     // sessionStorage. That page's inline head script reads it and marks <html>
     // with .pt-open before the body renders, so its .reveal elements don't fade
-    // in again for someone who is already on the site. (The flag
-    // and class are named for an earlier page transition; today's transition
-    // is CSS only — see "Page transition" in style.css.)
+    // in again for someone who is already on the site. (The flag and class
+    // are named for an earlier page transition; there is none now, pages just
+    // cut.)
     (function(){
       const KEY = 'pageTransition';
 
@@ -871,9 +813,8 @@
     })();
 
     // Prefetch a page of the site as soon as its link is hovered (or pressed),
-    // via Speculation Rules. The page transition can only start once the next
-    // page has arrived, so without this every click would sit on the old page
-    // for a network round trip first. Prefetch only fetches the HTML — none of
+    // via Speculation Rules, so a click changes page without first sitting on
+    // the old one for a network round trip. Prefetch only fetches the HTML — none of
     // the page's scripts run early — so the sessionStorage flag above still
     // reaches it. Browsers without Speculation Rules just skip this.
     (function(){
@@ -989,53 +930,6 @@
       }, { passive:false });
     })();
 
-    // live cursor position + frame rate readout (home page only)
-    (function(){
-      const xEl   = document.getElementById('hudX');
-      const yEl   = document.getElementById('hudY');
-      const fpsEl = document.getElementById('hudFps');
-      if (!xEl || !yEl || !fpsEl) return;
-
-      // fixed-width numbers so the readout never jitters as digits change
-      function pad(n, w){ return String(n).padStart(w, ' '); }
-
-      let x = 0, y = 0, posDirty = false;
-      window.addEventListener('mousemove', function(e){
-        x = e.clientX; y = e.clientY; posDirty = true;
-      }, { passive:true });
-
-      // Rolling average over the last N frames, recomputed EVERY frame. A fixed
-      // 250ms window smoothed away the short dips a hover or transition causes;
-      // this reacts within a few frames while still being readable.
-      const SAMPLES = 10;
-      const stamps = [];
-      let shownFps = -1;
-
-      function tick(now){
-        if (posDirty){
-          xEl.textContent = 'X ' + pad(x, 4);
-          yEl.textContent = 'Y ' + pad(y, 4);
-          posDirty = false;
-        }
-
-        stamps.push(now);
-        if (stamps.length > SAMPLES) stamps.shift();
-        if (stamps.length > 1){
-          const span = stamps[stamps.length - 1] - stamps[0];
-          if (span > 0){
-            const fps = Math.round((stamps.length - 1) * 1000 / span);
-            if (fps !== shownFps){            // only touch the DOM when it changes
-              shownFps = fps;
-              fpsEl.textContent = 'FPS ' + pad(fps, 4);
-            }
-          }
-        }
-        requestAnimationFrame(tick);
-      }
-      requestAnimationFrame(tick);
-    })();
-
-
 /* Work list previews (lab.html): hovering a row shows that piece's
    logo on the row's own line, in the middle of the page, via the matching
    data-preview / data-name pair. Each image is placed at its own row, so one
@@ -1064,6 +958,100 @@
   // the preview is fixed and the rows scroll, so keep it on its line
   window.addEventListener('scroll', function(){ if (active) place(active.row, active.img); }, { passive:true });
   window.addEventListener('resize', function(){ if (active) place(active.row, active.img); });
+})();
+
+/* Header scramble — hovering a letter of home's name, WORK, PLAYGROUND, JOURNEY,
+   ABOUT, CONTACT or time, or of an inner page's CLOSE (its brackets keep their
+   own fade), decrypts just that letter: it churns through random glyphs and
+   locks back, with the work list's glyph set, steps and tick. Each letter is its
+   own box, held at the width it had inside the word
+   (measured once the fonts are in, kerning included, kept in em), so the evenly
+   spread line never shifts (WORK, and PLAYGROUND, are in a proportional face).
+   Commas and spaces stay put. The real word sits in aria-label on the links and
+   in a .sr-only copy on the name and time, which are plain text and can't take
+   one. The time changes every second, so its letters stay in place and take new
+   values through _setTime; a letter mid-churn settles on the latest one. It's
+   all mono, so those letters need no held width. Reduced motion: no effect. */
+(function(){
+  const links = document.querySelectorAll('header .home-nav, header .home-name, .close-label');
+  if (!links.length) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const GLYPHS = '01<>[]{}/\\|=+*-#%&$ABCDEFGHKMNXZ';
+  const STEPS = 14;
+  const TICK_MS = 40;
+
+  function scramble(ch){
+    if (ch._scr) return;               // let a run finish rather than restart it
+    let step = 0;
+    ch._scr = setInterval(function(){
+      step++;
+      ch.textContent = GLYPHS[(Math.random() * GLYPHS.length) | 0];
+      if (step >= STEPS){
+        clearInterval(ch._scr);
+        ch._scr = null;
+        ch.textContent = ch._letter;
+      }
+    }, TICK_MS);
+  }
+
+  function split(a){
+    const word = a.textContent;
+    const node = a.firstChild;
+    const size = parseFloat(getComputedStyle(a).fontSize);
+    const range = document.createRange();
+    const widths = Array.from(word, function(c, i){
+      range.setStart(node, i);
+      range.setEnd(node, i + 1);
+      return range.getBoundingClientRect().width / size;
+    });
+    a.textContent = '';
+    if (a.tagName === 'A') a.setAttribute('aria-label', word);
+    else {
+      const real = document.createElement('span');
+      real.className = 'sr-only';
+      real.textContent = word;
+      a.appendChild(real);
+    }
+    Array.from(word).forEach(function(letter, i){
+      const ch = document.createElement('span');
+      ch.className = 'home-ch';
+      ch.setAttribute('aria-hidden', 'true');
+      ch.style.width = widths[i] + 'em';
+      ch.textContent = letter;
+      ch._letter = letter;
+      if (letter !== ',' && letter !== ' ') ch.addEventListener('mouseenter', function(){ scramble(ch); });
+      a.appendChild(ch);
+    });
+  }
+
+  document.fonts.ready.then(function(){ links.forEach(split); });
+
+  const clock = document.getElementById('bkk-time');
+  if (!clock) return;
+  const first = clock.textContent;
+  const real = document.createElement('span');
+  const letters = [];
+  real.className = 'sr-only';
+  clock.textContent = '';
+  clock.appendChild(real);
+  clock._setTime = function(text){
+    const chars = Array.from(text);
+    real.textContent = text;
+    while (letters.length > chars.length) letters.pop().remove();
+    chars.forEach(function(letter, i){
+      let ch = letters[i];
+      if (!ch){
+        const made = ch = letters[i] = document.createElement('span');
+        made.setAttribute('aria-hidden', 'true');
+        made.addEventListener('mouseenter', function(){ if (!/\s/.test(made._letter)) scramble(made); });
+        clock.appendChild(made);
+      }
+      if (ch._letter === letter) return;
+      ch._letter = letter;
+      if (!ch._scr) ch.textContent = letter;
+    });
+  };
+  clock._setTime(first);
 })();
 
 /* Work list scramble (lab.html) — same glyph set/steps/tick as the home
@@ -1130,228 +1118,414 @@
   }
 })();
 
-/* ===== Page background (home) =====
-   Mounts the animated "grainient" (src/js/grainient.js, a plain-JS port of
-   React Bits' <Grainient />) into .page-bg as soon as the page is .loaded
-   (it starts that way now there is no preloader), and its 1.6s colour bloom
-   from the middle plays straight away. Without
-   WebGL2 Grainient returns null and the still CSS gradient on .page-bg stays.
-   Other palettes the owner likes, for bg.set({ colors, angle }):
-     steel grey ["#1d232c","#34404d","#5d6c7c","#a9b8c8","#dfe8f1"], angle 128
-     deep teal  ["#071b1c","#0f3a3b","#1f5f5b","#4fa596","#c8eadf"], angle 35
-     ember      ["#120f17","#2a0f0a","#9a3412","#f97316","#fed7aa"], angle 55 */
+/* Pop-ups (home): ABOUT opens #whois and CONTACT opens #contact-pop in place,
+   each opener naming its pop-up in aria-controls, instead of going to
+   about.html / contact.html (a modified click, for a new tab, still goes
+   there). Clicking an opener again closes its pop-up; opening one closes the
+   other. While one is open a click anywhere else closes it (a link inside it
+   still goes where it goes), and so does Esc. */
 (function(){
-  const host = document.querySelector('.page-bg');
-  if (!host) return;
-  if (typeof Grainient === 'undefined'){ document.documentElement.classList.remove('bg-pending'); return; }
+  const html = document.documentElement;
+  const pops = Array.prototype.slice.call(document.querySelectorAll('[data-pop]')).map(function(opener){
+    return { opener:opener, panel:document.getElementById(opener.getAttribute('aria-controls')) };
+  }).filter(p => p.panel);
+  if (!pops.length) return;
 
-  function mount(){
-    const bg = Grainient(host, {
-      colors:['#0e0f12', '#2a2c31', '#6b6e75', '#b9bcc2', '#f4f5f7'],  // dark to grey to white
-      // (was violet: '#2a1f8f', '#5B4FD6', '#8B7FF2', '#b4aaff', '#f1edff')
-      angle:75,
-      speed:6,
-      flow:1.5,                                // looser, more fluid shapes (was 1.1)
-      silk:0.35,
-      grainAmount:0.08,
-      intro:true,
-      wander:true                              // drift and turn freely in every direction (grainient.js)
+  function isOpen(p){ return p.panel.classList.contains('is-open'); }
+  // closing a pop-up that holds a frame (CONTACT) asks the page in it to play
+  // its exit first; it answers 'pop-close' when done, and if it never does
+  // (not loaded yet, say) the pop-up closes anyway
+  function requestClose(p){
+    // a pop-up with an exit of its own (ABOUT's blocks flying back out) plays
+    // it, then closes
+    if (typeof p.panel.exit === 'function'){
+      if (p.closing) return;
+      p.closing = true;
+      p.panel.exit().then(function(){ if (isOpen(p)) setOpen(p, false); });
+      return;
+    }
+    const frame = p.panel.querySelector('iframe[data-src]');
+    if (!frame || !frame.getAttribute('src') || !frame.contentWindow){ setOpen(p, false); return; }
+    if (p.closing) return;
+    p.closing = true;
+    frame.contentWindow.postMessage('pop-exit', window.location.origin);
+    p.fallback = setTimeout(function(){ if (isOpen(p)) setOpen(p, false); }, 1500);
+  }
+  function setOpen(p, on){
+    p.closing = false;
+    clearTimeout(p.fallback);
+    // a pop-up holding a frame (CONTACT) loads it fresh on every open, so its
+    // intro plays again, and lets it go once the fade-out is over
+    const frame = p.panel.querySelector('iframe[data-src]');
+    if (frame){
+      clearTimeout(p.unload);
+      if (on) frame.src = frame.getAttribute('data-src');
+      else p.unload = setTimeout(function(){ if (!isOpen(p)) frame.removeAttribute('src'); }, 600);
+    }
+    p.panel.classList.toggle('is-open', on);
+    p.panel.inert = !on;
+    p.panel.setAttribute('aria-hidden', on ? 'false' : 'true');
+    p.opener.setAttribute('aria-expanded', on ? 'true' : 'false');
+    html.classList.toggle('whois-open', pops.some(isOpen));
+    // focus left inside a closing panel would vanish with it
+    if (!on && p.panel.contains(document.activeElement)) p.opener.focus({ preventScroll:true });
+  }
+
+  pops.forEach(function(p){
+    p.opener.addEventListener('click', function(e){
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      pops.forEach(q => { if (q !== p && isOpen(q)) requestClose(q); });
+      if (isOpen(p)) requestClose(p); else setOpen(p, true);
     });
-    document.documentElement.classList.remove('bg-pending');   // no WebGL2: the CSS gradient shows
-    if (!bg) return;
-    document.documentElement.classList.add('is-lit');
-    followText(host.querySelector('.grainient-canvas'));
-  }
-
-  // The text on the gradient is coloured letter by letter: each letter takes
-  // white or ink, whichever stands out more from the colours under that
-  // letter right now. The text itself is left alone (the name, the clock and
-  // the readings all rewrite theirs constantly); instead each piece is painted
-  // through a hard-edged stripe per letter, clipped to the text
-  // (background-clip: text, .letter-tinted). The canvas is read straight after
-  // grainient.js has drawn into it: getContext hands back its own WebGL2
-  // context, and a frame scheduled after its own runs after it in each
-  // animation frame, before the drawing is handed to the screen and cleared.
-  // It also draws once synchronously while mounting, so the first read is
-  // taken right away; that one also covers reduced motion, where it stops.
-  function followText(canvas){
-    const gl = canvas && canvas.getContext('webgl2');
-    if (!gl) return;
-    const WHITE = '#ffffff', INK = '#17181c', INK_L = 0.0092;   // INK_L: relative luminance of --ink
-    const pieces = Array.prototype.slice.call(
-      document.querySelectorAll('#home-link, #bkk-time, .hud > span, .lockup-word')).map(function(el){
-        return { el:el, light:[] };
-      });
-    // decided whole, not per letter: the time's dot and the lockup logo
-    const wholes = Array.prototype.slice.call(
-      document.querySelectorAll('.time-badge .dot, .lockup-logo')).map(function(el){
-        return { el:el, light:[], prop:el.classList.contains('dot') ? 'backgroundColor' : 'color' };
-      });
-    const range = document.createRange();
-    function channel(v){ v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
-
-    // grab the canvas under a page rect: { px, x0, y0, w, h } in canvas pixels
-    function grab(r, ratio){
-      const x0 = Math.max(0, Math.floor(r.left * ratio));
-      const y0 = Math.max(0, Math.floor((canvas.clientHeight - r.bottom) * ratio));
-      const w = Math.min(canvas.width - x0, Math.max(1, Math.ceil(r.width * ratio)));
-      const h = Math.min(canvas.height - y0, Math.max(1, Math.ceil(r.height * ratio)));
-      if (w < 1 || h < 1) return null;
-      const px = new Uint8Array(w * h * 4);
-      gl.readPixels(x0, y0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
-      for (let i = 0; i < px.length; i += 4) if (px[i] || px[i + 1] || px[i + 2]) return { px:px, x0:x0, y0:y0, w:w, h:h };
-      return null;                              // read after the frame was cleared: skip this round
-    }
-    // mean luminance of the grabbed pixels inside a smaller page rect
-    function lum(g, r, ratio){
-      const ax = Math.max(0, Math.floor(r.left * ratio) - g.x0), bx = Math.min(g.w, Math.ceil(r.right * ratio) - g.x0);
-      const ay = Math.max(0, Math.floor((canvas.clientHeight - r.bottom) * ratio) - g.y0);
-      const by = Math.min(g.h, Math.ceil((canvas.clientHeight - r.top) * ratio) - g.y0);
-      let sum = 0, n = 0;
-      for (let y = ay; y < by; y++){
-        for (let x = ax; x < bx; x++){
-          const i = (y * g.w + x) * 4;
-          sum += 0.2126 * channel(g.px[i]) + 0.7152 * channel(g.px[i + 1]) + 0.0722 * channel(g.px[i + 2]);
-          n++;
-        }
-      }
-      return n ? sum / n : -1;
-    }
-    // white or ink for one letter, with a 5% margin so letters near the middle don't flicker
-    function decide(state, i, L){
-      if (L < 0) return state[i];
-      const onWhite = 1.05 / (L + 0.05), onInk = (L + 0.05) / (INK_L + 0.05);
-      if (state[i] === undefined) state[i] = onInk > onWhite;
-      else if (!state[i] && onInk > onWhite * 1.05) state[i] = true;
-      else if (state[i] && onWhite > onInk * 1.05) state[i] = false;
-      return state[i];
-    }
-
-    function read(){
-      const ratio = canvas.width / Math.max(1, canvas.clientWidth);
-      pieces.forEach(function(p){
-        const node = p.el.firstChild;
-        if (!node || node.nodeType !== 3 || !node.length) return;
-        range.selectNodeContents(p.el);
-        const box = range.getBoundingClientRect();
-        const g = grab(box, ratio);
-        if (!g) return;
-        if (p.light.length !== node.length) p.light = [];   // the text changed length: start over
-        const left = p.el.getBoundingClientRect().left;
-        const stops = [];
-        for (let i = 0; i < node.length; i++){
-          range.setStart(node, i);
-          range.setEnd(node, i + 1);
-          const r = range.getBoundingClientRect();
-          if (!r.width) continue;
-          const c = decide(p.light, i, lum(g, r, ratio)) ? INK : WHITE;
-          const a = (r.left - left).toFixed(1), b = (r.right - left).toFixed(1);
-          stops.push(c + ' ' + a + 'px', c + ' ' + b + 'px');
-        }
-        if (!stops.length) return;
-        p.el.style.backgroundImage = 'linear-gradient(90deg, ' + stops.join(', ') + ')';
-        p.el.classList.add('letter-tinted');
-      });
-      wholes.forEach(function(w){
-        const r = w.el.getBoundingClientRect(), g = grab(r, ratio);
-        if (g) w.el.style[w.prop] = decide(w.light, 0, lum(g, r, ratio)) ? INK : WHITE;
-      });
-    }
-    read();
-
-    let tick = 0;
-    (function loop(){
-      requestAnimationFrame(loop);
-      if (document.hidden || ++tick % 6) return;   // about ten reads a second
-      read();
-    })();
-  }
-
-  if (document.body.classList.contains('loaded')){ mount(); return; }
-  const watch = new MutationObserver(function(){
-    if (!document.body.classList.contains('loaded')) return;
-    watch.disconnect();
-    mount();
   });
-  watch.observe(document.body, { attributes:true, attributeFilter:['class'] });
+  // the click that opens a pop-up is its opener's own, which runs first; it
+  // mustn't reach here and close the pop-up straight away
+  document.addEventListener('click', function(e){
+    pops.forEach(function(p){
+      if (isOpen(p) && !p.opener.contains(e.target)) requestClose(p);
+    });
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') pops.forEach(p => { if (isOpen(p)) requestClose(p); });
+  });
+  // the framed contact page is done with its exit (or was asked to close by a
+  // click on its empty space or Esc) — see "Embedded contact" below
+  window.addEventListener('message', function(e){
+    if (e.origin !== window.location.origin || e.data !== 'pop-close') return;
+    pops.forEach(p => { if (isOpen(p)) setOpen(p, false); });
+  });
 })();
 
-/* ===== Lockup intro (home) =====
-   The preload animation: on a first visit the logo rises up from below the
-   bottom edge of the page into its place in the lockup while the background
-   blooms, and then the words slide out from behind it on either side. It's all
-   transform, opacity and clip-path on the lockup's own pieces, laid out in
-   their final places from the start, so if this never runs the lockup is
-   simply there. Skipped when arriving from another page of the site
-   (html.pt-open) and for reduced motion — the head script only sets
-   .lockup-intro when it should play. */
+/* Playground pop-up (home): one of the pop-ups above, so a click or Enter on
+   PLAYGROUND opens it in place, but unlike them only CLOSE or Esc shuts it: no
+   click inside reaches the pop-ups' click-anywhere handler but CLOSE's. This adds
+   what's also its own: the list's CLOSE stands where the word PLAYGROUND
+   stands, wherever the header's spacing has put it, so the word reads as turning
+   into CLOSE (the swap itself is CSS, on aria-expanded); one OPEN PROJECT and one
+   box of logos serve every project, gliding to the hovered line rather than
+   masking out and in again, while some of the project's screens scatter behind
+   the list, each project in a scatter of its own, with a short wait on leaving a line so the gap between two lines
+   doesn't count as leaving; panel.exit sends the words up out of their masks
+   before the blur fades; and the projects, which have no pages yet, stay put
+   when clicked. Reduced motion: no exit to wait for. */
 (function(){
-  const lockup = document.getElementById('lockup');
-  if (!lockup || !document.documentElement.classList.contains('lockup-intro')) return;
-  const logo = lockup.querySelector('.lockup-logo');
-  const left = lockup.querySelector('.lockup-left');
-  const right = lockup.querySelector('.lockup-right');
+  const panel = document.getElementById('play-pop');
+  const opener = document.querySelector('[aria-controls="play-pop"]');
+  if (!panel || !opener) return;
+  const list = panel.querySelector('.play-list');
+  const label = panel.querySelector('.play-open');
+  const logos = panel.querySelector('.play-logos');
+  const shots = Array.from(panel.querySelectorAll('.play-shot'));
+  const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const EXIT_MS = 620;      // the last word's delay and travel
+  const FADE_MS = 600;      // .whois's fade, with a little to spare
+  const LEAVE_MS = 120;     // long enough to cross the gap between two lines
+  // how far apart a project's screens stay, as a share of the room across the
+  // window: enough for a clear gap at any size, and it fits six of them
+  const SPREAD = 0.18;
+  let active = null;        // the project line OPEN PROJECT is on
+  let leaving = null;
 
-  // start just below the bottom edge of the window, then rise into place
-  const r = logo.getBoundingClientRect();
-  const below = window.innerHeight - r.top + 24;
-  const OUT = 'cubic-bezier(0.16, 1, 0.3, 1)';
+  function place(){
+    const r = opener.getBoundingClientRect();
+    list.style.setProperty('--play-x', r.left + 'px');
+    list.style.top = r.top + 'px';
+  }
+  opener.addEventListener('click', place);
+  window.addEventListener('resize', place);
+  // the screens are heavy for a home page most visitors won't open this on
+  opener.addEventListener('click', function(){
+    shots.forEach(function(img){
+      if (!img.getAttribute('src')) img.src = img.getAttribute('data-src');
+    });
+  });
 
-  logo.animate([
-    { transform:'translateY(' + below + 'px)', opacity:0 },
-    { opacity:1, offset:0.25 },
-    { transform:'translateY(0px)', opacity:1 }
-  ], { duration:1300, delay:250, easing:OUT, fill:'both' });
+  // random-looking but the same every time: a project's name seeds its numbers
+  function seeded(text){
+    let n = 7;
+    Array.from(text).forEach(function(c){ n = (Math.imul(n, 31) + c.charCodeAt(0)) >>> 0; });
+    return function(){
+      n = Math.imul(n ^ (n >>> 15), 2246822519) >>> 0;
+      n = (n ^ (n >>> 13)) >>> 0;
+      return n / 4294967296;
+    };
+  }
+  // each screen lands anywhere under the list, as a share of the room left once
+  // its own size is taken off, so it's whole on the window at any size. A spot
+  // too near another is tried again; with no room left, the emptiest one found
+  Array.from(new Set(shots.map(function(img){ return img.getAttribute('data-project'); }))).forEach(function(name){
+    const random = seeded(name);
+    const placed = [];
+    shots.filter(function(img){ return img.getAttribute('data-project') === name; }).forEach(function(img){
+      let spot = null;
+      let widest = -1;
+      for (let tries = 0; tries < 200 && widest < SPREAD; tries++){
+        const here = { x:random(), y:random() };
+        const nearest = placed.reduce(function(least, p){ return Math.min(least, Math.abs(p.x - here.x)); }, 1);
+        if (nearest > widest){ widest = nearest; spot = here; }
+      }
+      placed.push(spot);
+      img.style.left = 'calc(1rem + (100vw - 2rem - var(--shot-w)) * ' + spot.x + ')';
+      img.style.top = 'calc(11rem + (100vh - 12rem - var(--shot-w) * 2.2) * ' + spot.y + ')';
+      img.style.setProperty('--dx', (0.5 - spot.x) * 20 + 'vw');
+      img.style.setProperty('--dy', (0.5 - spot.y) * 20 + 'vh');
+    });
+  });
+  function showShots(name){
+    shots.forEach(function(img){
+      img.classList.toggle('is-on', img.getAttribute('data-project') === name);
+    });
+  }
 
-  // the stacks open out from the logo's side once it has landed
-  // slowed from 0.75s by request (tried 1.5s and 1.15s, settled on 0.9s); an even
-  // ease-in-out rather than OUT, which front-loads the movement and looks quick
-  const WORDS = { duration:900, delay:1150, easing:'cubic-bezier(0.65, 0, 0.35, 1)', fill:'both' };
-  left.animate([
-    { clipPath:'inset(0 0 0 100%)', transform:'translateX(1.5rem)' },
-    { clipPath:'inset(0 0 0 0)', transform:'translateX(0)' }
-  ], WORDS);
-  right.animate([
-    { clipPath:'inset(0 100% 0 0)', transform:'translateX(-1.5rem)' },
-    { clipPath:'inset(0 0 0 0)', transform:'translateX(0)' }
-  ], WORDS);
-  // the animations now hold everything in its starting state; drop the
-  // pre-paint hiding (and its 3s failsafe) underneath them
-  document.documentElement.classList.remove('lockup-intro');
+  function moveTo(row){
+    [label, logos].forEach(function(el){
+      const y = row.offsetTop + (row.offsetHeight - el.offsetHeight) / 2;
+      el.style.transform = 'translateY(' + y + 'px)';
+    });
+  }
+  function showLogo(name){
+    logos.querySelectorAll('.play-logo').forEach(function(img){
+      img.classList.toggle('is-on', img.getAttribute('data-name') === name);
+    });
+  }
+  function show(row){
+    clearTimeout(leaving);
+    if (row === active) return;
+    if (active) active.classList.remove('is-active');
+    else {
+      // arriving from nowhere: be on the line already, then open the mask
+      label.style.transition = logos.style.transition = 'none';
+      moveTo(row);
+      label.getBoundingClientRect();
+      label.style.transition = logos.style.transition = '';
+    }
+    moveTo(row);
+    row.classList.add('is-active');
+    label.classList.add('is-on');
+    showLogo(row.getAttribute('data-logo'));
+    showShots(row.getAttribute('data-logo'));
+    active = row;
+  }
+  function clear(){
+    if (active) active.classList.remove('is-active');
+    label.classList.remove('is-on');
+    showLogo(null);
+    showShots(null);
+    active = null;
+  }
+  function hide(){
+    clearTimeout(leaving);
+    leaving = setTimeout(clear, LEAVE_MS);
+  }
+  panel.querySelectorAll('.is-project').forEach(function(row){
+    row.addEventListener('mouseenter', function(){ show(row); });
+    row.addEventListener('mouseleave', hide);
+    row.addEventListener('focus', function(){ show(row); });
+    row.addEventListener('blur', hide);
+  });
+
+  panel.exit = function(){
+    hide();
+    if (calm) return Promise.resolve();
+    panel.classList.add('is-leaving');
+    // the words stay above their masks until the layer has faded away
+    setTimeout(function(){ panel.classList.remove('is-leaving'); }, EXIT_MS + FADE_MS);
+    return new Promise(function(done){ setTimeout(done, EXIT_MS); });
+  };
+
+  panel.addEventListener('click', function(e){
+    if (e.target.closest('button.play-item')) return;
+    e.stopPropagation();
+    if (e.target.closest('a[href="#"]')) e.preventDefault();
+  });
 })();
 
-
-/* Who is (home): WHO IS opens #whois in place instead of going to about.html
-   (a modified click, for a new tab, still goes there), and closes it again.
-   While it's open, a click anywhere else closes it too, and so does Esc. */
+/* About pixels (home): after cipher.tv's about. When ABOUT opens, black pixel
+   blocks (18px cells) build up from every side and corner of the window
+   inward, each block simply appearing in its own place (flat: nothing travels,
+   so it never reads as a zoom), outer ones first with a little randomness,
+   and fill the window up to a ragged, tilted oval round the bio and the
+   drawing, which stay on the light frosted page in
+   the opening (no block ever lands on the words or the face). After that,
+   every 0.3s, eight blocks along the ragged edge change, some going and some
+   coming, so the edge keeps flickering. Closing (panel.exit, called by the pop-up code) takes them
+   away in reverse, the ones nearest the text first, back out to the edges,
+   before the pop-up fades. Reduced motion: the blocks are simply there, and
+   leave at once. */
 (function(){
   const panel = document.getElementById('whois');
-  const opener = document.querySelector('[data-whois]');
-  if (!panel || !opener) return;
-  const html = document.documentElement;
+  const canvas = panel && panel.querySelector('.whois-pixels');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const CELL = 18, PAD = 90, CORE = 48, TILT = -12 * Math.PI / 180, COLOUR = '#0b0b0b';
+  const OPEN = 0.85, EDGE = 1.15;            // the opening, and its ragged band, in oval radii
+  const IN_MS = 900, OUT_MS = 600, JITTER = 0.3, FLIPS = 8, FLIP_MS = 300;
+  let cells = [], edge = [], raf = 0, timer = 0, ratio = 1, level = 0;
 
-  function isOpen(){ return panel.classList.contains('is-open'); }
-  function setOpen(on){
-    panel.classList.toggle('is-open', on);
-    html.classList.toggle('whois-open', on);
-    panel.inert = !on;
-    panel.setAttribute('aria-hidden', on ? 'false' : 'true');
-    opener.setAttribute('aria-expanded', on ? 'true' : 'false');
-    // focus left inside a closing panel would vanish with it
-    if (!on && panel.contains(document.activeElement)) opener.focus({ preventScroll:true });
+  // the bio, the availability line and the drawing, in layout coordinates
+  // (offset* ignores the pop-in transform)
+  function content(){
+    let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+    panel.querySelectorAll('.whois-bio, .whois-note, .whois-avatar').forEach(function(el){
+      let x = 0, y = 0, n = el;
+      while (n && n !== panel){ x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+      l = Math.min(l, x); t = Math.min(t, y); r = Math.max(r, x + el.offsetWidth); b = Math.max(b, y + el.offsetHeight);
+    });
+    return { l:l, t:t, r:r, b:b };
+  }
+  // a block in the ragged band is there more often the further out it sits
+  function roll(c){ return Math.random() < (c.r - OPEN) / (EDGE - OPEN); }
+  function build(){
+    ratio = Math.min(window.devicePixelRatio || 1, 2);
+    const W = panel.clientWidth, H = panel.clientHeight;
+    canvas.width = Math.round(W * ratio); canvas.height = Math.round(H * ratio);
+    const box = content();
+    const cx = (box.l + box.r) / 2, cy = (box.t + box.b) / 2;
+    const a = (box.r - box.l) / 2 * 1.25 + PAD, b = (box.b - box.t) / 2 * 1.6 + PAD;
+    const cos = Math.cos(TILT), sin = Math.sin(TILT);
+    cells = []; edge = [];
+    // the grid is anchored on the opening's centre so it sits square on the text
+    const x0 = cx - Math.ceil(cx / CELL) * CELL, y0 = cy - Math.ceil(cy / CELL) * CELL;
+    for (let y = y0; y < H; y += CELL){
+      for (let x = x0; x < W; x += CELL){
+        const mx = x + CELL / 2, my = y + CELL / 2;
+        if (x + CELL > box.l - CORE && x < box.r + CORE && y + CELL > box.t - CORE && y < box.b + CORE) continue;
+        const dx = mx - cx, dy = my - cy;
+        const u = dx * cos + dy * sin, v = -dx * sin + dy * cos;
+        const r = Math.hypot(u / a, v / b);
+        if (r < OPEN) continue;
+        // when it turns up: by how far in from the nearest edge of the window
+        // it sits (0 at the edge), loosened a little so the front is ragged
+        const inward = Math.min(mx, W - mx, my, H - my) / (Math.min(W, H) / 2);
+        const c = { x:x, y:y, r:r, k:Math.min(inward, 1) * (1 - JITTER) + Math.random() * JITTER };
+        c.on = r >= EDGE || roll(c);
+        cells.push(c);
+        if (r < EDGE) edge.push(c);
+      }
+    }
+  }
+  // every block whose turn (k) has come by the current level is there
+  function draw(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = COLOUR;
+    const s = Math.ceil(CELL * ratio);
+    for (const c of cells){
+      if (!c.on || c.k > level) continue;
+      ctx.fillRect(Math.round(c.x * ratio), Math.round(c.y * ratio), s, s);
+    }
+  }
+  // runs the level from where it is to `to`: up brings blocks in from the
+  // edges, down takes the innermost away first
+  function sweep(to, ms){
+    cancelAnimationFrame(raf);
+    const from = level, start = performance.now();
+    return new Promise(function(done){
+      (function frame(now){
+        const t = Math.min((now - start) / ms, 1);
+        level = from + (to - from) * t;
+        draw();
+        if (t < 1) raf = requestAnimationFrame(frame); else done();
+      })(start);
+    });
   }
 
-  opener.addEventListener('click', function(e){
-    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    e.preventDefault();
-    setOpen(!isOpen());
+  function open(){
+    stop();
+    build();
+    level = 0;
+    if (still){ level = 1; draw(); return; }
+    sweep(1, IN_MS).then(function(){
+      // every 0.3s eight edge blocks change, each a real change (one going
+      // or one coming), so the ragged edge keeps flickering; the rest stay put
+      timer = setInterval(function(){
+        for (let k = 0, tries = 0; k < FLIPS && edge.length && tries < FLIPS * 6; tries++){
+          const c = edge[(Math.random() * edge.length) | 0];
+          const on = roll(c);
+          if (on !== c.on){ c.on = on; k++; }
+        }
+        draw();
+      }, FLIP_MS);
+    });
+  }
+  function stop(){ cancelAnimationFrame(raf); clearInterval(timer); raf = timer = 0; }
+
+  // the pop-up code calls this to close ABOUT: the blocks fly back out first
+  panel.exit = function(){
+    clearInterval(timer);
+    if (still || !cells.length) return Promise.resolve();
+    return sweep(0, OUT_MS);
+  };
+
+  new MutationObserver(function(){
+    if (panel.classList.contains('is-open')) open();
+    else stop();
+  }).observe(panel, { attributes:true, attributeFilter:['class'] });
+  window.addEventListener('resize', function(){
+    if (!panel.classList.contains('is-open')) return;
+    stop(); build(); level = 1; draw();
   });
-  // the click that opens it is WHO IS's own, which runs first; it mustn't
-  // reach here and close the panel straight away
+})();
+
+/* Embedded contact (contact.html?embed, inside home's CONTACT pop-up): a click
+   on the empty space round the boxes, Esc, or the home page asking
+   ('pop-exit') plays the exit: the boxes draw in to the middle and shrink
+   away, outer ones first, and the progress ticks fade; then it tells the home
+   page to close the pop-up ('pop-close'), which fades the blur out. Clicking a
+   box still does that box's own thing. While the boxes' intro is still
+   running, clicks do nothing at all; Esc still closes, straight away. */
+(function(){
+  if (!document.documentElement.classList.contains('embed') || window.parent === window) return;
+  const scroller = document.querySelector('.contact-boxes');
+  let leaving = false;
+  function close(){ window.parent.postMessage('pop-close', window.location.origin); }
+  function intro(){ return scroller && scroller.classList.contains('is-intro'); }
+
+  function exit(){
+    if (leaving) return;
+    leaving = true;
+    if (!scroller || intro()){ close(); return; }   // nothing settled to animate yet
+    const boxes = Array.prototype.slice.call(scroller.querySelectorAll('.contact-box'));
+    const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+    const near = boxes.map(function(b){
+      const r = b.getBoundingClientRect();
+      return { dx:cx - (r.left + r.width / 2), dy:cy - (r.top + r.height / 2) };
+    });
+    // the boxes furthest out leave first, so the row closes in on the middle
+    const order = near.map((n, i) => i).sort((a, b) => Math.abs(near[b].dx) - Math.abs(near[a].dx));
+    const DUR = 620, STEP = 35;
+    const runs = order.map(function(i, k){
+      return boxes[i].animate([
+        { transform:'translate(' + near[i].dx.toFixed(1) + 'px,' + near[i].dy.toFixed(1) + 'px) scale(0.04)', opacity:0 }
+      ], { duration:DUR, delay:k * STEP, easing:'cubic-bezier(0.65, 0, 0.35, 1)', fill:'forwards' }).finished;
+    });
+    const bar = document.getElementById('contactProgress');
+    if (bar) bar.animate([{ opacity:0 }], { duration:300, fill:'forwards' });
+    Promise.all(runs).then(close, close);
+  }
+
+  // capture, so this runs before the site's own link handling
   document.addEventListener('click', function(e){
-    if (isOpen() && !opener.contains(e.target)) setOpen(false);
+    if (intro() || leaving){ e.preventDefault(); e.stopPropagation(); return; }
+    if (e.target.closest && e.target.closest('.close-btn')){ e.preventDefault(); exit(); return; }
+    if (e.target.closest && e.target.closest('.contact-box, a, button')) return;
+    exit();
+  }, true);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') exit(); });
+  window.addEventListener('message', function(e){
+    if (e.origin === window.location.origin && e.data === 'pop-exit') exit();
   });
-  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && isOpen()) setOpen(false); });
+})();
+
+/* Contact boxes still waiting for their address (href="#"): a click does
+   nothing, rather than opening a copy of this page in a new tab. Fill in the
+   href and the box works. */
+(function(){
+  document.addEventListener('click', function(e){
+    const box = e.target.closest && e.target.closest('a.contact-box[href="#"]');
+    if (box) e.preventDefault();
+  });
 })();
 
 /* Pixel field (journey.html): a grid of large square pixels behind the page,
