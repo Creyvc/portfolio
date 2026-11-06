@@ -8,6 +8,15 @@
 //   bg.hold(true) pauses it while it's hidden behind something; bg.hold(false) carries on.
 // Options are the component's props. Without WebGL2 it returns null and leaves the element as it was.
 //
+// Local addition: the `relief` option (0 is off, as on contact). It reads the colour field as a
+// surface and lights it from one fixed direction, shaded with a sharp highlight, so the flat
+// gradient looks like folded cloth with depth. Unlike `silk`, whose light turns with the angle.
+//
+// Local addition: the `anchor` option (0 to 1, 0 off). It ties the first colours to the left of the
+// box and the last to the right: the field keeps its drift but loses its own position, so colours
+// still roam and mix but each stays on its side. `anchorSpan` is how much of the list reaches across
+// the box: below 1 the first colours get more of it and the last ones run off the far edge.
+//
 // Local addition (not in the React Bits component or the ~/tokenz original): the `wander` option.
 // A linear gradient normally scrolls along one fixed line, across its angle. With wander: true the
 // scroll heading meanders round the whole circle instead and the distance travelled is summed along
@@ -29,7 +38,7 @@
     colors: DEFAULT_COLORS, type: "linear", angle: 55, bands: 1, speed: 1, flow: 0.8, scale: 1,
     softness: 1, silk: 0.35, grainAmount: 0.08, grainSize: 1.2, grainAnimated: true, contrast: 1,
     saturation: 1, variation: 0, interactive: true, stir: 1, clickSwirl: true, intro: true,
-    lightMode: false, dpr: undefined, wander: false
+    lightMode: false, dpr: undefined, wander: false, relief: 0, anchor: 0, anchorSpan: 1
   };
 
   // ---- Shaders, unchanged from the component
@@ -67,6 +76,9 @@ uniform float uSettle;
 uniform float uReveal;
 uniform vec2 uScroll;
 uniform int uWander;
+uniform float uRelief;
+uniform float uAnchor;
+uniform float uAnchorSpan;
 in vec2 vUv;
 out vec4 outColor;
 
@@ -129,6 +141,12 @@ vec3 labToRgb(vec3 lab) {
   );
 }
 
+// the relief option's surface: the colour field as height, rippled along its contours
+float surface(vec2 p) {
+  float c = coord(p);
+  return c + sin(c * 24.0) * 0.022;
+}
+
 vec3 encode(vec3 c) {
   c = clamp(c, 0.0, 1.0);
   return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c));
@@ -153,6 +171,10 @@ void main() {
   }
   float raw = coord(p);
   float s = raw;
+  if (uAnchor > 0.0) {
+    float drifted = raw - (dot(p, uDir) / uExtent + 0.5);
+    s = mix(raw, (p.x / uAspect + 0.5 + drifted) * uAnchorSpan, uAnchor);
+  }
   if (uBands > 1.0) {
     s *= uBands;
     float cycle = floor(s);
@@ -181,6 +203,20 @@ void main() {
     vec3 light = normalize(vec3(-uDir.y, uDir.x, 1.2));
     float diffuse = dot(normal, light) - light.z;
     lab = uRamp[0] + (lab - uRamp[0]) * (1.0 + (diffuse * 0.35 + max(diffuse, 0.0) * diffuse * 0.6) * uSilk);
+  }
+  if (uRelief > 0.0) {
+    float e = 0.005;
+    vec2 slope = vec2(surface(p + vec2(e, 0.0)) - surface(p - vec2(e, 0.0)), surface(p + vec2(0.0, e)) - surface(p - vec2(0.0, e))) / (2.0 * e);
+    vec3 normal = normalize(vec3(-slope * uRelief, 1.0));
+    vec3 light = normalize(vec3(-0.55, 0.7, 0.75));
+    float shade = dot(normal, light) - light.z;
+    float shine = pow(max(dot(normal, normalize(light + vec3(0.0, 0.0, 1.0))), 0.0), 40.0);
+    // shadows go deep but light stays in hand, or the creams burn out to white
+    // anchored, the shadows ease towards the light end so it doesn't turn to charcoal
+    float depth = 0.85 - uAnchor * (0.3 + 0.32 * smoothstep(0.35, 0.8, s));
+    lab.x = lab.x * (1.0 + clamp(shade, -0.85, 0.12) * depth);
+    lab.x += shine * 0.1 * (1.0 - lab.x);
+    lab.yz *= 1.0 - shine * 0.35;
   }
   lab = mix(uRamp[0], lab, smoothstep(0.0, 1.0, uReveal * 1.5 - length(vUv - 0.5) * 0.6));
   lab.x = (lab.x - 0.55) * uContrast + 0.55;
@@ -300,6 +336,9 @@ void main() {
       intro: p.intro,
       lightMode: p.lightMode,
       wander: !!p.wander,
+      relief: clamp(p.relief, 0, 3),
+      anchor: clamp(p.anchor, 0, 1),
+      anchorSpan: clamp(p.anchorSpan, 0.4, 1.4),
       dpr: p.dpr
     };
   }
@@ -426,6 +465,9 @@ void main() {
       gl.uniform1f(fu.uReveal, introClock);
       gl.uniform2f(fu.uScroll, scroll[0], scroll[1]);
       gl.uniform1i(fu.uWander, s.wander ? 1 : 0);
+      gl.uniform1f(fu.uRelief, s.relief);
+      gl.uniform1f(fu.uAnchor, s.anchor);
+      gl.uniform1f(fu.uAnchorSpan, s.anchorSpan);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       gl.viewport(0, 0, canvas.width, canvas.height);

@@ -177,15 +177,14 @@
      text (the bio and availability) pops up sharp on it, centred in the
      window.
      Over everything, header included (9996), so a click anywhere or Esc closes
-     it (main.js). The tint is just enough to hold ink text at AA over the
-     darkest of the gradient. */
+     it (main.js). */
   .whois{
     position:fixed;
     inset:0;
     z-index:9998;
     background:rgba(253,253,253,0.5);
-    -webkit-backdrop-filter:blur(1.5px);
-    backdrop-filter:blur(1.5px);
+    -webkit-backdrop-filter:blur(1px);
+    backdrop-filter:blur(1px);
     opacity:0;
     visibility:hidden;
     transition:opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.5s;
@@ -202,7 +201,7 @@
   /* any pop-up open, the header goes softer than the page behind the frosted
      layer, so it stays out of the way of what's on top; timed with that layer */
   header{ transition:filter 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-  html.whois-open header{ filter:blur(4px); }
+  html.whois-open header{ filter:blur(3px); }
   .whois-text{
     width:36%;
     min-width:30rem;
@@ -333,31 +332,40 @@
     transition:transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     transition-delay:calc(0.12s + var(--i) * 0.07s);
   }
-  /* the hovered project's screens, scattered under the list after
-     denise-agency.com: main.js works out each project's own scatter from its
-     name, so a new screen only needs its <img>. Each drifts out from nearer the
-     window's centre as it fades in. The size follows both the window's width and
-     height, and main.js leaves room for it (a screen up to 2.2 times as tall as
-     it is wide) in every spot, so changing --shot-w keeps them all on the window. */
-  .play-shots{
-    --shot-w:min(10vw, 14.5vh);
-    position:absolute; inset:0;
-    overflow:hidden;
+  /* the hovered project's logo as a backdrop: as big as the window allows while
+     keeping clear of the header and every edge */
+  .play-marks{
+    position:absolute;
+    top:6rem; left:4rem; right:4rem; bottom:4rem;
     pointer-events:none;
   }
-  .play-shot{
-    position:absolute;
-    width:var(--shot-w);
-    height:auto;
+  .play-mark{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:contain;
     opacity:0;
-    transform:translate(var(--dx, 0), var(--dy, 0)) scale(0.84);
-    transition:opacity 0.35s ease, transform 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+    transition:opacity 0.5s ease;
   }
-  .play-shot.is-on{
-    opacity:1;
-    transform:none;
-    transition:opacity 0.6s ease, transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+  .play-mark.is-on{ opacity:1; }
+  /* text turns light where it crosses that logo: main.js lays a light copy of the
+     list over the real one, and this mask cuts it to the logo's shape, sized and
+     placed exactly as .play-marks places the logo (the padding is its inset). A
+     blend mode can't do it: the frosted layer is see-through, which greys it */
+  .play-ghost{
+    position:absolute; inset:0;
+    padding:6rem 4rem 4rem;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity 0.5s ease;
+    -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+    -webkit-mask-position:center; mask-position:center;
+    -webkit-mask-size:contain; mask-size:contain;
+    -webkit-mask-origin:content-box; mask-origin:content-box;
   }
+  .play-ghost.is-on{ opacity:1; }
+  .play-ghost .play-item,
+  .play-ghost .play-open{ color:var(--paper); }
+  .play-ghost .play-logo{ filter:invert(1); }
   /* a project's kind, sat on its name's baseline, set like the work list's
      [LABEL]s; inside the words, so it masks and pushes with them */
   .play-kind{
@@ -424,14 +432,14 @@
     .play-pop.is-open .play-word,
     .play-open,
     .play-logos,
+    .play-mark,
+    .play-ghost,
     .play-pop.is-open .play-logo,
     .is-project .play-mask{ transition:none; }
     .play-word{ transform:none; }
     .is-project.is-active .play-mask{ transform:none; }
     .play-pop.is-open .play-open .play-word{ transform:none; transition:none; opacity:0; }
     .play-pop.is-open .play-open.is-on .play-word{ opacity:1; }
-    .play-shot,
-    .play-shot.is-on{ transform:none; transition:none; }
     .play-logo{ transform:none; opacity:0; }
     .play-pop.is-open .play-logo.is-on{ opacity:1; }
     body.loaded .home-playground[aria-expanded="true"]{ opacity:0; }
@@ -526,6 +534,12 @@
   nav a:hover::before, nav a:hover::after{ opacity:1; }
 
   
+
+  /* ===== Home steps =====
+     The walking shadows (main.js), over the empty page and under the header, whose
+     letters go white as a shadow crosses them. PLAYGROUND and CONTACT hide them */
+  .home-steps{ position:fixed; inset:0; z-index:1; width:100%; height:100%; pointer-events:none; transition:opacity 0.3s ease; }
+  html.steps-off .home-steps{ opacity:0; }
 
   .hero{
     position:sticky; top:0;

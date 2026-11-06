@@ -1167,6 +1167,8 @@
     p.panel.setAttribute('aria-hidden', on ? 'false' : 'true');
     p.opener.setAttribute('aria-expanded', on ? 'true' : 'false');
     html.classList.toggle('whois-open', pops.some(isOpen));
+    // the walkers keep out of PLAYGROUND and CONTACT ("Home steps")
+    html.classList.toggle('steps-off', pops.some(q => isOpen(q) && q.panel.id !== 'whois'));
     // focus left inside a closing panel would vanish with it
     if (!on && p.panel.contains(document.activeElement)) p.opener.focus({ preventScroll:true });
   }
@@ -1197,6 +1199,391 @@
   });
 })();
 
+/* Home steps: after the menu on fromanother.love: people walking on frosted glass, seen
+   almost straight from below, so a body is only a low Λ of two thin legs from long-striding
+   feet, fading out just above the hips. Each is a jointed body walking in 3D, worked out
+   here in centimetres, and what shows is its shadow on the glass, cast at a slant by one
+   light: the higher a part of the body, the further it falls and the more it blurs and
+   pales. A bare foot strikes on the heel, rolls flat, peels up from the heel and leaves
+   off the toes; only what's on the glass prints, so a footprint comes and goes part by
+   part: heel, outer edge, ball, five toes. Legs have a calf and a thigh, knees are solved
+   from hip and ankle, the pelvis turns and sways, and the arms swing against the legs,
+   all of it melting away above the hips. Up to three walk at once, no two alike: each has their own pace, stride
+   and turn of the foot, no two of their steps fall quite the same, and they wander a little
+   on their way across the window, at any angle, from beyond one edge to beyond another.
+   Header letters go white over a shadow, read from what's just been drawn. They wait, out
+   of sight, while PLAYGROUND or CONTACT is open. With reduced motion they stand still
+   mid-stride; without WebGL2 the page stays bare. */
+(function(){
+  const canvas = document.querySelector('.home-steps');
+  if (!canvas) return;
+  const html = document.documentElement;
+  const gl = canvas.getContext('webgl2', { alpha:false, depth:false, stencil:false, antialias:false });
+  if (!gl) return;
+  const WALKERS = 3;
+  const LIMBS = 12;           // shins, thighs, feet, arms, hips, trunk, shoulders, head
+  const PX = 3.8;             // px to a centimetre, in a window 1440 wide
+  const SLANT = 0.6;          // how far a shadow falls for each unit of height
+  const LIGHT = 0.3;          // rad off straight up the window that it falls
+  const CYCLE_S = [0.96, 1.18];   // seconds for two steps, from one walker to another
+  const STRIDE = [165, 200];  // cm covered in those two steps
+  const STANCE = 0.62;        // how much of its cycle a foot spends down
+  const FLAT = 0.1;           // when the sole has rolled flat
+  const HEEL_OFF = 0.4;       // when the heel starts to leave
+  const FOOT = 30;            // cm, heel to toe
+  const BALL = 0.68;          // where the ball of the foot is along it
+  const ANKLE_UP = 8;
+  const STRIKE = 0.31;        // rad, the toes up as the heel lands
+  const PUSH = 0.8;           // rad, the heel up as the toes leave
+  const CLEAR = 7;            // cm the foot clears the glass by in mid-swing
+  const LEAD = 0.24;          // how far of a stride the heel lands ahead of the body
+  const TRACK = 7;            // cm each foot falls to the side of the line
+  const TOE_OUT = [0.18, 0.32];
+  const THIGH = 46, SHIN = 46;
+  const KNEE = 0.5;           // from below, a bent knee only shows some of its bend
+  const HIP = 84, BOB = 3, HIP_WIDE = 9, TURN = 0.14, SWAY = 2.5;
+  const SHOULDER = 142, SHOULDER_WIDE = 19, HAND = 78, ARM_SWING = 24;
+  const REACH = 190;          // cm a body shows beyond its feet
+
+  const VERTEX = `#version 300 es
+    void main(){
+      vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+      gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+    }`;
+  const FRAGMENT = `#version 300 es
+    precision highp float;
+    #define WALKERS ${WALKERS}
+    #define LIMBS ${LIMBS}
+    const vec3 PAPER = vec3(0.992);
+    const vec3 HAZE = vec3(0.94, 0.52, 0.49);
+    const vec3 RED = vec3(0.79, 0.07, 0.1);
+    const vec3 DEEP = vec3(0.56, 0.03, 0.07);     // where the weight is
+    const float PENUMBRA = 0.1;     // how much blur each px of height brings
+    uniform vec4 uLimb[WALKERS * LIMBS * 3];  // its two ends on the glass; their heights and how solid; its form
+    uniform vec4 uFoot[WALKERS * 2];          // the end of the heel and of the toes, on the glass
+    uniform vec4 uRaised[WALKERS * 2];        // how high heel, ball and toes are, and which way is in
+    uniform vec4 uBox[WALKERS];               // all of a body's shadow, to skip the rest of the window
+    uniform float uSize[WALKERS];             // a foot's length, 0 for nobody there
+    uniform float uHeight;                    // the window, in drawn pixels
+    uniform float uRatio;                     // drawn pixels to a CSS pixel
+    out vec4 colour;
+
+    // a limb's shadow: as wide as its form there, spread by its height, paler for being
+    // spread, and with more of an edge than a plain blur, as it has a body to it
+    float limb(vec2 p, vec4 ends, vec4 look, vec4 form){
+      vec2 e = ends.zw - ends.xy;
+      float past = dot(p - ends.xy, e) / max(dot(e, e), 1e-4);
+      float along = clamp(past, 0.0, 1.0);
+      vec2 gap = p - ends.xy - e * along;
+      float wide = mix(form.x, form.y, along) + form.z * exp(-pow((along - form.w) / 0.28, 2.0));
+      float blur = PENUMBRA * mix(look.x, look.y, along);
+      float s2 = wide * wide + blur * blur;
+      // it comes in from its first end over its own blur, so that it melts into the limb
+      // before it there; added whole, a joint would show twice as dark
+      float start = smoothstep(-1.1, 1.1, past * length(e) * inversesqrt(s2));
+      return start * look.z * wide * inversesqrt(s2) * exp(-pow(dot(gap, gap) / (2.0 * s2), 1.15));
+    }
+    float blend(float a, float b, float k){
+      float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+      return mix(b, a, h) - k * h * (1.0 - h);
+    }
+    float capsule(vec2 q, vec2 a, vec2 b, float r0, float r1){
+      vec2 e = b - a;
+      float t = clamp(dot(q - a, e) / dot(e, e), 0.0, 1.0);
+      return length(q - a - e * t) - mix(r0, r1, t);
+    }
+    // a footprint, measured in foot lengths from the heel, y running towards the big toe's
+    // side: what's down of it, each part fading as it lifts
+    float sole(vec2 p, vec4 ends, vec4 raised, float size){
+      vec2 axis = ends.zw - ends.xy;
+      float span = max(dot(axis, axis), 1e-4);
+      vec2 q = vec2(dot(p - ends.xy, axis) / span, dot(p - ends.xy, vec2(-axis.y, axis.x)) * inversesqrt(span) / size * raised.w);
+      if (q.x < -0.5 || q.x > 1.5 || abs(q.y) > 0.8) return 0.0;
+      // the heel, the outer edge where the arch lifts away inside it, and the ball
+      float heel = length((q - vec2(0.15, -0.012)) / vec2(0.15, 0.125)) * 0.125 - 0.125;
+      float edge = capsule(q, vec2(0.2, -0.035), vec2(0.6, -0.065), 0.078, 0.092);
+      float ball = capsule(q, vec2(0.64, -0.06), vec2(0.665, 0.055), 0.115, 0.118);
+      float main_ = blend(blend(heel, edge, 0.08), ball, 0.09);
+      float x = clamp(q.x, 0.0, 1.0);
+      float height = x < 0.68 ? mix(raised.x, raised.y, x / 0.68) : raised.y;
+      float soft = 0.028 + 0.3 * height / size;
+      // the weight is on the heel and the ball, and least of all on that edge
+      float weight = 0.45 + 0.75 * exp(-pow((x - 0.14) / 0.14, 2.0)) + 0.75 * exp(-pow((x - 0.66) / 0.13, 2.0));
+      float print = (1.0 - smoothstep(-soft, soft, main_)) * (1.25 + 0.95 * weight * (1.0 - smoothstep(-0.11, 0.0, main_)));
+      print *= exp(-height / (size * 0.1));
+      // five toes, the big one leading
+      float toe = length((q - vec2(0.875, 0.09)) / vec2(0.075, 0.058)) * 0.058 - 0.058;
+      toe = min(toe, length(q - vec2(0.885, -0.012)) - 0.037);
+      toe = min(toe, length(q - vec2(0.865, -0.078)) - 0.034);
+      toe = min(toe, length(q - vec2(0.835, -0.135)) - 0.031);
+      toe = min(toe, length(q - vec2(0.795, -0.182)) - 0.028);
+      float tipSoft = 0.016 + 0.3 * raised.z / size;
+      float toes = (1.0 - smoothstep(-tipSoft, tipSoft, toe)) * 1.75 * exp(-raised.z / (size * 0.1));
+      // and the glass darkens just round it all, where the foot is nearly touching
+      float close = 1.0 - smoothstep(-0.02, 0.17, min(main_, toe));
+      return max(print, toes) + 0.3 * close * exp(-min(height, raised.z) / (size * 0.1));
+    }
+    float noise(vec2 p){ return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }
+
+    void main(){
+      vec2 p = vec2(gl_FragCoord.x, uHeight - gl_FragCoord.y) / uRatio;
+      float ink = 0.0;
+      for (int i = 0; i < WALKERS; i++){
+        vec4 box = uBox[i];
+        if (uSize[i] <= 0.0 || p.x < box.x || p.y < box.y || p.x > box.z || p.y > box.w) continue;
+        for (int l = 0; l < LIMBS; l++){
+          int at = (i * LIMBS + l) * 3;
+          ink += limb(p, uLimb[at], uLimb[at + 1], uLimb[at + 2]);
+        }
+        ink += sole(p, uFoot[i * 2], uRaised[i * 2], uSize[i]);
+        ink += sole(p, uFoot[i * 2 + 1], uRaised[i * 2 + 1], uSize[i]);
+      }
+      vec3 c = mix(PAPER, HAZE, 1.0 - exp(-ink * 2.1));
+      c = mix(c, RED, smoothstep(0.5, 1.5, ink));
+      c = mix(c, DEEP, smoothstep(1.4, 2.7, ink));
+      colour = vec4(c + (noise(gl_FragCoord.xy) - 0.5) / 255.0, 1.0);
+    }`;
+
+  function compile(type, source){
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    return shader;
+  }
+  const program = gl.createProgram();
+  gl.attachShader(program, compile(gl.VERTEX_SHADER, VERTEX));
+  gl.attachShader(program, compile(gl.FRAGMENT_SHADER, FRAGMENT));
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
+  gl.useProgram(program);
+  gl.bindVertexArray(gl.createVertexArray());
+  const at = name => gl.getUniformLocation(program, name);
+  const u = { limb:at('uLimb'), foot:at('uFoot'), raised:at('uRaised'), box:at('uBox'), size:at('uSize'), height:at('uHeight'), ratio:at('uRatio') };
+
+  let strip = null;
+  function fit(){
+    const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+    canvas.width = Math.round(innerWidth * ratio);
+    canvas.height = Math.round(innerHeight * ratio);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.uniform1f(u.height, canvas.height);
+    gl.uniform1f(u.ratio, ratio);
+    strip = null;
+  }
+
+  const between = (a, b) => a + Math.random() * (b - a);
+  const smooth = t => t * t * (3 - 2 * t);
+  const clamp01 = t => Math.min(1, Math.max(0, t));
+  const mix = (a, b, t) => a + (b - a) * t;
+  const add = (a, b, by) => a.map((v, n) => v + b[n] * by);
+  const length = a => Math.hypot(a[0], a[1], a[2]);
+
+  // a straight line through somewhere in the window, from beyond one edge to beyond another
+  function walk(from){
+    const px = PX * between(0.9, 1.1) * innerWidth / 1440;
+    const angle = between(0, Math.PI * 2);
+    const way = [Math.cos(angle), Math.sin(angle)];
+    const through = [between(0.1, 0.9) * innerWidth, between(0.15, 0.9) * innerHeight];
+    const size = [innerWidth, innerHeight];
+    const ahead = Math.min(...[0, 1].map(n => way[n] > 0 ? (size[n] - through[n]) / way[n] : -through[n] / (way[n] || 1e-6)));
+    const behind = Math.min(...[0, 1].map(n => way[n] > 0 ? through[n] / way[n] : (through[n] - size[n]) / (way[n] || 1e-6)));
+    const margin = REACH * px;
+    const lean = LIGHT + between(-0.15, 0.15);
+    return {
+      from:from,
+      px:px,
+      seed:between(0, 100),
+      stride:between(STRIDE[0], STRIDE[1]),
+      cycle:between(CYCLE_S[0], CYCLE_S[1]),
+      toeOut:between(TOE_OUT[0], TOE_OUT[1]),
+      drift:between(6, 26),
+      way:way,
+      side:[-way[1], way[0]],
+      slant:[Math.sin(lean) * SLANT, -Math.cos(lean) * SLANT],
+      start:[through[0] - way[0] * (behind + margin), through[1] - way[1] * (behind + margin)],
+      length:behind + ahead + margin * 2
+    };
+  }
+  // from [along the line, to its side, height], in cm, to a shadow on the glass, in px
+  function cast(w, p){
+    const side = p[1] + w.drift * Math.sin(p[0] * 0.012 + w.seed);   // their wandering
+    return [
+      w.start[0] + (w.way[0] * p[0] + w.side[0] * side + w.slant[0] * p[2]) * w.px,
+      w.start[1] + (w.way[1] * p[0] + w.side[1] * side + w.slant[1] * p[2]) * w.px
+    ];
+  }
+  // the same small difference every time for a given step of a given walker, from -1 to 1
+  function shake(w, n){
+    const x = Math.sin((n + w.seed) * 127.1) * 43758.5453;
+    return (x - Math.floor(x)) * 2 - 1;
+  }
+
+  // foot 0 or 1, its cycle having reached this far: heel, toes and ankle
+  function foot(w, which, cycle){
+    const turn = cycle + which * 0.5;
+    const k = Math.floor(turn), u = turn - k;
+    const plant = n => (n - which * 0.5 + LEAD) * w.stride + shake(w, n * 2 + which) * 3;
+    const track = n => TRACK + shake(w, n * 2 + which + 0.5) * 1.8;
+    const peelAlong = plant(k) + BALL * FOOT * (1 - Math.cos(PUSH));
+    const peelHeight = BALL * FOOT * Math.sin(PUSH);
+    let along, height, pitch, wide = track(k);
+    if (u < FLAT){ along = plant(k); height = 0; pitch = STRIKE * (1 - smooth(u / FLAT)); }
+    else if (u < HEEL_OFF){ along = plant(k); height = 0; pitch = 0; }
+    else if (u < STANCE){
+      // over the ball of the foot, which stays where it is
+      pitch = -PUSH * smooth((u - HEEL_OFF) / (STANCE - HEEL_OFF));
+      along = plant(k) + BALL * FOOT * (1 - Math.cos(pitch));
+      height = BALL * FOOT * Math.sin(-pitch);
+    } else {
+      const v = (u - STANCE) / (1 - STANCE);
+      along = mix(peelAlong, plant(k + 1), smooth(v));
+      height = peelHeight * (1 - v) * (1 - v) + CLEAR * Math.sin(Math.PI * v) * (1 - 0.4 * v);
+      pitch = mix(-PUSH, STRIKE, smooth(v));
+      wide = mix(track(k), track(k + 1), smooth(v));
+    }
+    const out = which ? 1 : -1;
+    const c = Math.cos(pitch), s = Math.sin(pitch);
+    // toes turned out a little
+    const at = by => [along + FOOT * by * c, out * (wide + FOOT * by * w.toeOut), Math.max(0, height + FOOT * by * s)];
+    return {
+      out:out,
+      heel:at(0),
+      ball:at(BALL),
+      toes:at(1),
+      ankle:[along + FOOT * 0.2 * c - ANKLE_UP * s, out * wide, height + FOOT * 0.2 * s + ANKLE_UP * c]
+    };
+  }
+  // the knee between a hip and an ankle, bending the way the body is going
+  function knee(hip, ankle){
+    const reach = add(ankle, hip, -1);
+    const d = Math.min(length(reach), THIGH + SHIN - 0.01);
+    const down = reach.map(v => v / (length(reach) || 1));
+    const a = (THIGH * THIGH - SHIN * SHIN + d * d) / (2 * d);
+    const bend = Math.sqrt(Math.max(0, THIGH * THIGH - a * a));
+    const forward = add([1, 0, 0], down, -down[0]);
+    return add(add(hip, down, a), forward, KNEE * bend / (length(forward) || 1));
+  }
+
+  const limbs = new Float32Array(WALKERS * LIMBS * 12);
+  const soles = new Float32Array(WALKERS * 8);
+  const raised = new Float32Array(WALKERS * 8);
+  const boxes = new Float32Array(WALKERS * 4);
+  const sizes = new Float32Array(WALKERS);
+  // the form of a limb, in cm: wide at each end, and what it swells by, and where
+  const CALF = [2.4, 3.6, 1.5, 0.4], THIGH_FORM = [3.6, 6, 0.8, 0.5], SMUDGE = [2.6, 2.6, 0, 0.5];
+  const HIPS = [7, 7, 0, 0.5], TRUNK = [8, 11, -1.5, 0.4], YOKE = [5, 5, 0, 0.5], ARM = [3, 2, 0.8, 0.25], HEAD = [5, 6, 1, 0.5];
+  function place(w, i, now){
+    const seconds = (now - w.from) / 1000;
+    const cycle = seconds / w.cycle + 0.02 * Math.sin(seconds * 0.9 + w.seed);   // never quite even
+    const along = cycle * w.stride;
+    const swing = Math.PI * 2 * cycle;
+    const pelvis = [along, -SWAY * Math.sin(swing), HIP - BOB * Math.cos(swing * 2)];
+    const turn = TURN * Math.cos(swing);
+    const chest = [along + 5, pelvis[1] * 0.5, SHOULDER - BOB * Math.cos(swing * 2)];
+    let slot = i * LIMBS, left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
+    function stroke(a, b, form, solid){
+      const from = cast(w, a), to = cast(w, b);
+      limbs.set([from[0], from[1], to[0], to[1], a[2] * w.px, b[2] * w.px, solid, 0,
+        form[0] * w.px, form[1] * w.px, form[2] * w.px, form[3]], slot * 12);
+      slot++;
+      const spread = Math.max(a[2], b[2]) * w.px * 0.6 + 60;
+      left = Math.min(left, from[0] - spread, to[0] - spread);
+      right = Math.max(right, from[0] + spread, to[0] + spread);
+      top = Math.min(top, from[1] - spread, to[1] - spread);
+      bottom = Math.max(bottom, from[1] + spread, to[1] + spread);
+    }
+    const hips = [], shoulders = [];
+    [foot(w, 0, cycle), foot(w, 1, cycle)].forEach(function(f, n){
+      const hip = [pelvis[0] + f.out * -HIP_WIDE * Math.sin(turn), pelvis[1] + f.out * HIP_WIDE, pelvis[2]];
+      const joint = knee(hip, f.ankle);
+      stroke(f.ankle, joint, CALF, 0.55);
+      stroke(joint, hip, THIGH_FORM, 0.44);
+      // the foot off the glass: all that's left of it is this smudge
+      stroke(f.heel, f.toes, SMUDGE, 0.3);
+      const heel = cast(w, f.heel), toes = cast(w, f.toes);
+      soles.set([heel[0], heel[1], toes[0], toes[1]], (i * 2 + n) * 4);
+      raised.set([f.heel[2] * w.px, f.ball[2] * w.px, f.toes[2] * w.px, -f.out], (i * 2 + n) * 4);
+      // each arm goes with the other leg, and the shoulders turn against the hips
+      const shoulder = [chest[0] + f.out * SHOULDER_WIDE * Math.sin(turn), chest[1] + f.out * SHOULDER_WIDE, chest[2]];
+      stroke(shoulder, [chest[0] + f.out * ARM_SWING * Math.cos(swing), shoulder[1] + f.out * 3, HAND], ARM, 0.22);
+      hips.push(hip);
+      shoulders.push(shoulder);
+    });
+    stroke(hips[0], hips[1], HIPS, 0.26);
+    stroke(pelvis, chest, TRUNK, 0.26);
+    stroke(shoulders[0], shoulders[1], YOKE, 0.16);
+    stroke([chest[0], chest[1], chest[2] + 10], [chest[0] + 2, chest[1], chest[2] + 28], HEAD, 0.16);
+    boxes.set([left, top, right, bottom], i * 4);
+    sizes[i] = FOOT * w.px;
+    return along * w.px > w.length;
+  }
+  function paint(){
+    gl.uniform4fv(u.limb, limbs);
+    gl.uniform4fv(u.foot, soles);
+    gl.uniform4fv(u.raised, raised);
+    gl.uniform4fv(u.box, boxes);
+    gl.uniform1fv(u.size, sizes);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+
+  // header letters over a shadow go white: the green of what's just been drawn tells,
+  // red having next to none. Only worth reading while a shadow reaches the header
+  const header = document.querySelector('header');
+  function tint(){
+    const ratio = canvas.width / innerWidth;
+    const w = canvas.width, h = Math.min(canvas.height, Math.ceil(header.getBoundingClientRect().bottom * ratio));
+    strip = strip || new Uint8Array(w * h * 4);
+    gl.readPixels(0, canvas.height - h, w, h, gl.RGBA, gl.UNSIGNED_BYTE, strip);
+    let letters = header.querySelectorAll('.home-ch, #bkk-time > [aria-hidden], .time-badge .dot');
+    if (letters.length < 2) letters = header.querySelectorAll('.home-name, .home-nav, #bkk-time, .time-badge .dot');
+    letters.forEach(function(el){
+      const r = el.getBoundingClientRect();
+      const x = Math.min(w - 1, Math.round((r.left + r.right) / 2 * ratio));
+      const y = Math.max(0, h - 1 - Math.round((r.top + r.bottom) / 2 * ratio));
+      const green = strip[(y * w + x) * 4 + 1];
+      if (el._over ? green > 120 : green < 90){
+        el._over = !el._over;
+        el.style[el.classList.contains('dot') ? 'backgroundColor' : 'color'] = el._over ? '#fff' : '';
+      }
+    });
+  }
+
+  fit();
+  const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const walkers = [];
+  const begun = performance.now();
+  for (let i = 0; i < WALKERS; i++) walkers.push(walk(begun + i * between(1200, 1900)));
+  if (calm){
+    // the middle of the walk, whichever line it is
+    const still = () => { walkers.forEach(function(w, i){ place(w, i, w.from + w.length / 2 / w.px / w.stride * w.cycle * 1000); }); paint(); tint(); };
+    still();
+    window.addEventListener('resize', function(){ fit(); still(); });
+    return;
+  }
+  window.addEventListener('resize', fit);
+  // their own clock, stopped while they're hidden, so they carry on from where they were;
+  // a long gap between frames (a hidden tab) doesn't count either
+  let clock = begun, last = begun, tick = 0, reached = false;
+  (function frame(now){
+    requestAnimationFrame(frame);
+    const passed = Math.min(now - last, 100);
+    last = now;
+    if (html.classList.contains('steps-off')) return;
+    clock += passed;
+    walkers.forEach(function(w, i){
+      sizes[i] = 0;             // not on the glass yet, or waiting
+      if (clock < w.from) return;
+      if (place(w, i, clock)) walkers[i] = walk(clock + between(200, 1600));
+    });
+    paint();
+    if (++tick % 3) return;
+    const reach = header.getBoundingClientRect().bottom;
+    const near = walkers.some((w, i) => sizes[i] > 0 && boxes[i * 4 + 1] < reach);
+    if (near || reached) tint();      // once more after, to put the letters back
+    reached = near;
+  })(begun);
+})();
+
 /* Playground pop-up (home): one of the pop-ups above, so a click or Enter on
    PLAYGROUND opens it in place, but unlike them only CLOSE or Esc shuts it: no
    click inside reaches the pop-ups' click-anywhere handler but CLOSE's. This adds
@@ -1204,121 +1591,86 @@
    stands, wherever the header's spacing has put it, so the word reads as turning
    into CLOSE (the swap itself is CSS, on aria-expanded); one OPEN PROJECT and one
    box of logos serve every project, gliding to the hovered line rather than
-   masking out and in again, while some of the project's screens scatter behind
-   the list, each project in a scatter of its own, with a short wait on leaving a line so the gap between two lines
-   doesn't count as leaving; panel.exit sends the words up out of their masks
-   before the blur fades; and the projects, which have no pages yet, stay put
-   when clicked. Reduced motion: no exit to wait for. */
+   masking out and in again, the logo also fading in huge behind it all, with
+   the text turning light where it crosses it (a copy of the list, kept in step
+   here and cut to the logo's shape in CSS), with a short wait on leaving a line so the gap
+   between two lines doesn't count as leaving; panel.exit sends the words up out
+   of their masks before the blur fades; and the projects, which have no pages
+   yet, stay put when clicked. Reduced motion: no exit to wait for. */
 (function(){
   const panel = document.getElementById('play-pop');
   const opener = document.querySelector('[aria-controls="play-pop"]');
   if (!panel || !opener) return;
   const list = panel.querySelector('.play-list');
-  const label = panel.querySelector('.play-open');
-  const logos = panel.querySelector('.play-logos');
-  const shots = Array.from(panel.querySelectorAll('.play-shot'));
+  const ghost = document.createElement('div');
+  ghost.className = 'play-ghost';
+  ghost.setAttribute('aria-hidden', 'true');
+  ghost.inert = true;
+  ghost.appendChild(list.cloneNode(true));
+  panel.appendChild(ghost);
+  const movers = panel.querySelectorAll('.play-open, .play-logos');
   const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const EXIT_MS = 620;      // the last word's delay and travel
   const FADE_MS = 600;      // .whois's fade, with a little to spare
   const LEAVE_MS = 120;     // long enough to cross the gap between two lines
-  // how far apart a project's screens stay, as a share of the room across the
-  // window: enough for a clear gap at any size, and it fits six of them
-  const SPREAD = 0.18;
   let active = null;        // the project line OPEN PROJECT is on
   let leaving = null;
 
   function place(){
     const r = opener.getBoundingClientRect();
-    list.style.setProperty('--play-x', r.left + 'px');
-    list.style.top = r.top + 'px';
+    panel.querySelectorAll('.play-list').forEach(function(el){
+      el.style.setProperty('--play-x', r.left + 'px');
+      el.style.top = r.top + 'px';
+    });
   }
   opener.addEventListener('click', place);
   window.addEventListener('resize', place);
-  // the screens are heavy for a home page most visitors won't open this on
-  opener.addEventListener('click', function(){
-    shots.forEach(function(img){
-      if (!img.getAttribute('src')) img.src = img.getAttribute('data-src');
-    });
-  });
-
-  // random-looking but the same every time: a project's name seeds its numbers
-  function seeded(text){
-    let n = 7;
-    Array.from(text).forEach(function(c){ n = (Math.imul(n, 31) + c.charCodeAt(0)) >>> 0; });
-    return function(){
-      n = Math.imul(n ^ (n >>> 15), 2246822519) >>> 0;
-      n = (n ^ (n >>> 13)) >>> 0;
-      return n / 4294967296;
-    };
-  }
-  // each screen lands anywhere under the list, as a share of the room left once
-  // its own size is taken off, so it's whole on the window at any size. A spot
-  // too near another is tried again; with no room left, the emptiest one found
-  Array.from(new Set(shots.map(function(img){ return img.getAttribute('data-project'); }))).forEach(function(name){
-    const random = seeded(name);
-    const placed = [];
-    shots.filter(function(img){ return img.getAttribute('data-project') === name; }).forEach(function(img){
-      let spot = null;
-      let widest = -1;
-      for (let tries = 0; tries < 200 && widest < SPREAD; tries++){
-        const here = { x:random(), y:random() };
-        const nearest = placed.reduce(function(least, p){ return Math.min(least, Math.abs(p.x - here.x)); }, 1);
-        if (nearest > widest){ widest = nearest; spot = here; }
-      }
-      placed.push(spot);
-      img.style.left = 'calc(1rem + (100vw - 2rem - var(--shot-w)) * ' + spot.x + ')';
-      img.style.top = 'calc(11rem + (100vh - 12rem - var(--shot-w) * 2.2) * ' + spot.y + ')';
-      img.style.setProperty('--dx', (0.5 - spot.x) * 20 + 'vw');
-      img.style.setProperty('--dy', (0.5 - spot.y) * 20 + 'vh');
-    });
-  });
-  function showShots(name){
-    shots.forEach(function(img){
-      img.classList.toggle('is-on', img.getAttribute('data-project') === name);
-    });
-  }
 
   function moveTo(row){
-    [label, logos].forEach(function(el){
+    movers.forEach(function(el){
       const y = row.offsetTop + (row.offsetHeight - el.offsetHeight) / 2;
       el.style.transform = 'translateY(' + y + 'px)';
     });
   }
-  function showLogo(name){
-    logos.querySelectorAll('.play-logo').forEach(function(img){
+  // everything here is in the list and its copy alike
+  function showProject(name){
+    panel.querySelectorAll('.is-project').forEach(function(row){
+      row.classList.toggle('is-active', row.getAttribute('data-logo') === name);
+    });
+    panel.querySelectorAll('.play-open').forEach(function(el){
+      el.classList.toggle('is-on', name !== null);
+    });
+    panel.querySelectorAll('.play-logo, .play-mark').forEach(function(img){
       img.classList.toggle('is-on', img.getAttribute('data-name') === name);
     });
+    const mark = panel.querySelector('.play-mark.is-on');
+    // no logo: the mask stays as it was while the copy fades away
+    if (mark) ghost.style.webkitMaskImage = ghost.style.maskImage = 'url("' + mark.src + '")';
+    ghost.classList.toggle('is-on', !!mark);
   }
   function show(row){
     clearTimeout(leaving);
     if (row === active) return;
-    if (active) active.classList.remove('is-active');
-    else {
+    if (!active){
       // arriving from nowhere: be on the line already, then open the mask
-      label.style.transition = logos.style.transition = 'none';
+      movers.forEach(function(el){ el.style.transition = 'none'; });
       moveTo(row);
-      label.getBoundingClientRect();
-      label.style.transition = logos.style.transition = '';
+      movers[0].getBoundingClientRect();
+      movers.forEach(function(el){ el.style.transition = ''; });
     }
     moveTo(row);
-    row.classList.add('is-active');
-    label.classList.add('is-on');
-    showLogo(row.getAttribute('data-logo'));
-    showShots(row.getAttribute('data-logo'));
+    showProject(row.getAttribute('data-logo'));
     active = row;
   }
   function clear(){
-    if (active) active.classList.remove('is-active');
-    label.classList.remove('is-on');
-    showLogo(null);
-    showShots(null);
+    showProject(null);
     active = null;
   }
   function hide(){
     clearTimeout(leaving);
     leaving = setTimeout(clear, LEAVE_MS);
   }
-  panel.querySelectorAll('.is-project').forEach(function(row){
+  list.querySelectorAll('.is-project').forEach(function(row){
     row.addEventListener('mouseenter', function(){ show(row); });
     row.addEventListener('mouseleave', hide);
     row.addEventListener('focus', function(){ show(row); });

@@ -31,7 +31,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Jersey+10&family=VT323&family=Space+Grotesk:wght@400;500;700&family=Boogaloo&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="src/css/style.css?v=176">
+<link rel="stylesheet" href="src/css/style.css?v=222">
 <link rel="prefetch" href="contact.html">
 <script>
 /* Arrived from another page of the site: mark <html> BEFORE the body renders so
@@ -47,6 +47,9 @@
 </script>
 </head>
 <body class="home loaded">
+
+  <!-- shadows of people walking on frosted glass (main.js, "Home steps") -->
+  <canvas class="home-steps" aria-hidden="true"></canvas>
 
   <header>
     <span class="home-name reveal reveal-1">VUTHY CHEAM</span>
@@ -95,21 +98,14 @@
   <!-- PLAYGROUND opens this in place, over the same frosted layer, after
        almirakho.com's works list: big lines that rise through a mask, and a
        project pushed right when hovered, with OPEN PROJECT at the window's left
-       edge and its logo at the right, gliding from line to line, and some of
-       its screens scattered behind, after denise-agency.com (main.js).
-       playground.html stays the
+       edge and its logo at the right, gliding from line to line, and the logo
+       again behind it all, huge and blurred (main.js). playground.html stays the
        link's target for a new tab or no JS. The projects have no pages yet, so
        their links go nowhere. -->
   <section class="whois play-pop" id="play-pop" aria-label="Playground" aria-hidden="true" inert>
-    <div class="play-shots" aria-hidden="true">
-      <img class="play-shot" data-project="solevault" data-src="assets/images/lab/solevault/hover/welcoming.png" alt="">
-      <img class="play-shot" data-project="solevault" data-src="assets/images/lab/solevault/hover/ai-chatbot.png" alt="">
-      <img class="play-shot" data-project="solevault" data-src="assets/images/lab/solevault/hover/collection.png" alt="">
-      <img class="play-shot" data-project="solevault" data-src="assets/images/lab/solevault/hover/news.png" alt="">
-      <img class="play-shot" data-project="gair" data-src="assets/images/lab/gair/hover/search.png" alt="">
-      <img class="play-shot" data-project="gair" data-src="assets/images/lab/gair/hover/onboarding.png?v=2" alt="">
-      <img class="play-shot" data-project="gair" data-src="assets/images/lab/gair/hover/hotel.png" alt="">
-      <img class="play-shot" data-project="gair" data-src="assets/images/lab/gair/hover/trip-planner.png" alt="">
+    <div class="play-marks" aria-hidden="true">
+      <img class="play-mark" data-name="solevault" src="assets/images/lab/solevault-logo.svg?v=1" alt="">
+      <img class="play-mark" data-name="gair" src="assets/images/lab/gair-logo.svg?v=1" alt="">
     </div>
     <div class="play-list" role="navigation" aria-label="Playground projects">
       <button class="play-item" type="button" style="--i:0"><span class="play-mask"><span class="play-word">CLOSE,</span></span></button>
@@ -118,12 +114,12 @@
       <a class="play-item is-project" href="#" data-logo="gair" style="--i:3"><span class="play-mask"><span class="play-word">GAIR<span class="play-kind" aria-hidden="true">[UI/UX]</span></span></span></a>
       <span class="play-mask play-open" aria-hidden="true"><span class="play-word">OPEN PROJECT</span></span>
       <span class="play-logos" aria-hidden="true">
-        <img class="play-logo" data-name="solevault" src="assets/images/lab/solevault-logo.png?v=2" alt="">
-        <img class="play-logo" data-name="gair" src="assets/images/lab/gair-logo.png?v=2" alt="">
+        <img class="play-logo" data-name="solevault" src="assets/images/lab/solevault-logo.svg?v=1" alt="">
+        <img class="play-logo" data-name="gair" src="assets/images/lab/gair-logo.svg?v=1" alt="">
       </span>
     </div>
   </section>
 
-  <script src="src/js/main.js?v=131"></script>
+  <script src="src/js/main.js?v=198"></script>
 </body>
 </html> 
