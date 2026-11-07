@@ -907,8 +907,11 @@
       function atBottom(){
         return window.scrollY + window.innerHeight >= document.documentElement.scrollHeight;
       }
+      // a project's page scrolls by itself, inside a page that doesn't
+      function inDetail(e){ return e.target.closest && e.target.closest('.view-detail'); }
 
       window.addEventListener('wheel', function(e){
+        if (inDetail(e)) return;
         if (window.scrollY <= 0 && e.deltaY < 0){
           e.preventDefault();
         } else if (atBottom() && e.deltaY > 0){
@@ -921,6 +924,7 @@
         touchStartY = e.touches[0].clientY;
       }, { passive:true });
       window.addEventListener('touchmove', function(e){
+        if (inDetail(e)) return;
         const deltaY = e.touches[0].clientY - touchStartY;
         if (window.scrollY <= 0 && deltaY > 0){
           e.preventDefault();
@@ -1197,6 +1201,167 @@
     if (e.origin !== window.location.origin || e.data !== 'pop-close') return;
     pops.forEach(p => { if (isOpen(p)) setOpen(p, false); });
   });
+})();
+
+/* View all (playground.html): on opening, after gilhuybrecht.com, each tile shoots up from
+   below the window and eases a long way into place, brightening as it comes, the columns
+   setting off a moment apart so they arrive as a wave. It waits for the screens themselves,
+   or not for long. Hovering a tile dims every other project's. The videos play once the page
+   is up; with reduced motion they stay on their posters and nothing rises.
+
+   Clicking a tile opens its project, as gilhuybrecht.com does: the grid dims, the project's
+   tiles tilt up out of it and fly to a big column on the right, and the text comes down in
+   on the left, staying put while the column scrolls. The column holds copies of the tiles'
+   media, so each flies from its tile's place, and back there on closing: Esc, the browser's
+   back, or a click on the left, where a small "Back" follows the cursor. */
+(function(){
+  const tiles = Array.prototype.slice.call(document.querySelectorAll('.view-tile'));
+  if (!tiles.length) return;
+  const html = document.documentElement;
+  const grid = tiles[0].parentElement;
+  const RISE_MS = 1200, BRIGHTEN_MS = 350, WAIT_MS = 1500;
+  const WAVE = [80, 60, 180, 100, 260, 0, 320];   // ms each column sets off after the first
+
+  function dim(project){
+    tiles.forEach(function(tile){
+      tile.classList.toggle('is-dim', !!project && tile.getAttribute('data-project') !== project);
+    });
+  }
+  grid.addEventListener('mouseover', function(e){
+    const tile = e.target.closest('.view-tile');
+    dim(tile && tile.getAttribute('data-project'));
+  });
+  grid.addEventListener('mouseleave', function(){ dim(null); });
+
+  const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const FLY_MS = 750, STAGGER_MS = 35, TEXT_AT_MS = 480, TEXT_MS = 500, TEXT_STEP_MS = 80;
+  const back = document.querySelector('.view-back');
+  let open = null;      // the project on show
+  let busy = false;
+
+  document.querySelectorAll('.view-detail').forEach(function(detail){
+    const project = detail.getAttribute('data-project');
+    const own = tiles.filter(tile => tile.getAttribute('data-project') === project);
+    const column = detail.querySelector('.view-column');
+    const shots = own.map(function(tile){
+      const shot = document.createElement('figure');
+      shot.className = 'view-shot';
+      shot.appendChild(tile.querySelector('img, video').cloneNode(true));
+      column.appendChild(shot);
+      return shot;
+    });
+    const texts = detail.querySelectorAll('.view-title, .view-about, .view-facts > div');
+
+    // each shot, from flat on its tile, tilted on the way, to flat in the column
+    function fly(leaving){
+      return Promise.all(shots.map(function(shot, i){
+        const to = shot.getBoundingClientRect();
+        const from = own[i].querySelector('img, video').getBoundingClientRect();
+        const k = from.width / to.width, dx = from.left - to.left, dy = from.top - to.top;
+        const at = (x, y, size, rx, ry, rz) => 'perspective(1400px) translate(' + x + 'px, ' + y + 'px) scale(' + size + ') rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) rotateZ(' + rz + 'deg)';
+        const frames = [at(dx, dy, k, 0, 0, 0), at(dx * 0.45, dy * 0.45, k + (1 - k) * 0.55, 8, -16, -3), at(0, 0, 1, 0, 0, 0)];
+        if (leaving) frames.reverse();
+        return shot.animate(frames.map(f => ({ transform:f })), {
+          duration:FLY_MS, delay:i * STAGGER_MS, easing:'cubic-bezier(0.6, 0, 0.2, 1)', fill:'both'
+        }).finished;
+      }));
+    }
+    function show(){
+      if (busy || open) return;
+      open = detail;
+      dim(null);
+      history.pushState({ project:project }, '', '#' + project);
+      own.forEach(tile => tile.classList.add('is-lifted'));
+      html.classList.add('view-open');
+      detail.classList.add('is-on');
+      detail.inert = false;
+      detail.setAttribute('aria-hidden', 'false');
+      detail.scrollTop = 0;
+      shots.forEach(function(shot, i){
+        const video = shot.querySelector('video');
+        if (!video || calm) return;
+        video.currentTime = own[i].querySelector('video').currentTime;
+        video.play().catch(function(){});
+      });
+      if (calm) return;
+      busy = true;
+      texts.forEach(function(text, i){
+        text.animate([{ clipPath:'inset(0 0 100% 0)' }, { clipPath:'inset(0 0 0 0)' }], {
+          duration:TEXT_MS, delay:TEXT_AT_MS + i * TEXT_STEP_MS, easing:'cubic-bezier(0.16, 1, 0.3, 1)', fill:'backwards'
+        });
+      });
+      fly(false).then(function(){ busy = false; });
+    }
+    function hide(){
+      if (busy || open !== detail) return;
+      html.classList.remove('view-open');
+      back.classList.remove('is-on');
+      function done(){
+        detail.classList.remove('is-on');
+        detail.inert = true;
+        detail.setAttribute('aria-hidden', 'true');
+        own.forEach(tile => tile.classList.remove('is-lifted'));
+        shots.forEach(function(shot){
+          shot.getAnimations().forEach(a => a.cancel());
+          const video = shot.querySelector('video');
+          if (video) video.pause();
+        });
+        open = null;
+        busy = false;
+      }
+      if (calm){ done(); return; }
+      busy = true;
+      detail.querySelector('.view-info').animate([{ opacity:1 }, { opacity:0 }], { duration:200, fill:'forwards' });
+      fly(true).then(function(){
+        detail.querySelector('.view-info').getAnimations().forEach(a => a.cancel());
+        done();
+      });
+    }
+    detail.close = hide;
+    own.forEach(function(tile){
+      tile.setAttribute('role', 'button');
+      tile.setAttribute('tabindex', '0');
+      tile.addEventListener('click', show);
+      tile.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); show(); }
+      });
+    });
+    const info = detail.querySelector('.view-info');
+    info.addEventListener('click', function(){ history.back(); });
+    info.addEventListener('pointermove', function(e){
+      back.style.transform = 'translate(' + e.clientX + 'px, ' + e.clientY + 'px)';
+      back.classList.add('is-on');
+    });
+    info.addEventListener('pointerleave', function(){ back.classList.remove('is-on'); });
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && open) history.back();
+  });
+  window.addEventListener('popstate', function(){ if (open) open.close(); });
+
+  if (!html.classList.contains('view-intro')) return;
+  function rise(){
+    tiles.forEach(function(tile, i){
+      const delay = WAVE[i % WAVE.length];
+      const below = Math.max(innerHeight - tile.getBoundingClientRect().top, 80);
+      tile.animate([{ transform:'translateY(' + below + 'px)' }, { transform:'none' }],
+        { duration:RISE_MS, delay:delay, easing:'cubic-bezier(0.16, 1, 0.3, 1)', fill:'backwards' });
+      tile.animate([{ opacity:0.35 }, { opacity:1 }], { duration:BRIGHTEN_MS, delay:delay, fill:'backwards' });
+    });
+    html.classList.remove('view-intro');
+    grid.querySelectorAll('video').forEach(function(video){ video.play().catch(function(){}); });
+  }
+  const ready = Array.prototype.map.call(grid.querySelectorAll('img, video'), function(media){
+    if (media.tagName === 'IMG') return media.decode().catch(function(){});
+    return new Promise(function(done){
+      if (media.readyState >= 2) done();
+      else media.addEventListener('loadeddata', done, { once:true });
+    });
+  });
+  Promise.race([
+    Promise.all(ready),
+    new Promise(function(done){ setTimeout(done, WAIT_MS); })
+  ]).then(rise);
 })();
 
 /* Home steps: after the menu on fromanother.love: people walking on frosted glass, seen
@@ -1584,10 +1749,10 @@
   })(begun);
 })();
 
-/* Playground pop-up (home): one of the pop-ups above, so a click or Enter on
-   PLAYGROUND opens it in place, but unlike them only CLOSE or Esc shuts it: no
+/* Playground and Work pop-ups (home): one of the pop-ups above, so a click or Enter on
+   PLAYGROUND or WORK opens it in place, but unlike them only CLOSE or Esc shuts it: no
    click inside reaches the pop-ups' click-anywhere handler but CLOSE's. This adds
-   what's also its own: the list's CLOSE stands where the word PLAYGROUND
+   what's also its own: the list's CLOSE stands where the word that opened it
    stands, wherever the header's spacing has put it, so the word reads as turning
    into CLOSE (the swap itself is CSS, on aria-expanded); one OPEN PROJECT and one
    box of logos serve every project, gliding to the hovered line rather than
@@ -1595,12 +1760,15 @@
    the text turning light where it crosses it (a copy of the list, kept in step
    here and cut to the logo's shape in CSS), with a short wait on leaving a line so the gap
    between two lines doesn't count as leaving; panel.exit sends the words up out
-   of their masks before the blur fades; and the projects, which have no pages
-   yet, stay put when clicked. Reduced motion: no exit to wait for. */
-(function(){
-  const panel = document.getElementById('play-pop');
-  const opener = document.querySelector('[aria-controls="play-pop"]');
-  if (!panel || !opener) return;
+   of their masks before the blur fades. VIEW ALL leaves in style, and so do the
+   projects, which have no pages yet and go to the same place: the words and the header
+   go up out of their masks, the window fades to stone, and the page, stone itself,
+   comes up from there. Work's has no projects yet, so
+   what's for them just never runs. Reduced motion: no exit
+   to wait for, and no fade. */
+document.querySelectorAll('.play-pop').forEach(function(panel){
+  const opener = document.querySelector('[aria-controls="' + panel.id + '"]');
+  if (!opener) return;
   const list = panel.querySelector('.play-list');
   const ghost = document.createElement('div');
   ghost.className = 'play-ghost';
@@ -1686,12 +1854,37 @@
     return new Promise(function(done){ setTimeout(done, EXIT_MS); });
   };
 
+  let fade = null;
+  function viewAll(href){
+    if (fade) return;
+    fade = document.createElement('div');
+    fade.className = 'view-fade';
+    document.documentElement.classList.add('view-all');
+    panel.exit().then(function(){
+      document.body.appendChild(fade);
+      fade.animate([{ opacity:0 }, { opacity:1 }], { duration:400, easing:'ease-in-out', fill:'forwards' }).finished.then(function(){
+        window.location.href = href;
+      });
+    });
+  }
+  // back again from the browser's memory of the page, covered and all
+  window.addEventListener('pageshow', function(e){
+    if (!e.persisted || !fade) return;
+    fade.remove();
+    fade = null;
+    document.documentElement.classList.remove('view-all');
+  });
+
   panel.addEventListener('click', function(e){
     if (e.target.closest('button.play-item')) return;
     e.stopPropagation();
-    if (e.target.closest('a[href="#"]')) e.preventDefault();
+    const all = e.target.closest('a.play-item');
+    if (all && !calm && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey){
+      e.preventDefault();
+      viewAll(all.href);
+    }
   });
-})();
+});
 
 /* About pixels (home): after cipher.tv's about. When ABOUT opens, black pixel
    blocks (18px cells) build up from every side and corner of the window

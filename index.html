@@ -19,11 +19,13 @@
 <title>Vuthy Cheam</title>
 <meta name="description" content="Vuthy Cheam is a Computer Science student exploring AI/ML engineering, data science, and software development, alongside UI/UX design.">
 <link rel="canonical" href="https://vuthycheam.com/">
+<meta property="og:site_name" content="Vuthy Cheam">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Vuthy Cheam">
 <meta property="og:description" content="Computer Science student exploring AI/ML engineering, data science, and software development.">
 <meta property="og:url" content="https://vuthycheam.com/">
 <meta property="og:image" content="https://vuthycheam.com/assets/icons/logo.png?v=23">
+<link rel="icon" href="favicon.ico?v=1" sizes="48x48">
 <link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg?v=23">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/favicon.png?v=23" media="(prefers-color-scheme: light)">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/logo-white.png?v=23" media="(prefers-color-scheme: dark)">
@@ -31,7 +33,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Jersey+10&family=VT323&family=Space+Grotesk:wght@400;500;700&family=Boogaloo&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="src/css/style.css?v=222">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":"Vuthy Cheam","url":"https://vuthycheam.com/"}
+</script>
+<link rel="stylesheet" href="src/css/style.css?v=233">
 <link rel="prefetch" href="contact.html">
 <script>
 /* Arrived from another page of the site: mark <html> BEFORE the body renders so
@@ -53,7 +58,7 @@
 
   <header>
     <span class="home-name reveal reveal-1">VUTHY CHEAM</span>
-    <a class="home-nav home-work reveal reveal-1" href="lab.html">WORK,</a>
+    <a class="home-nav home-work reveal reveal-1" href="lab.html" data-pop aria-controls="work-pop" aria-expanded="false">WORK,</a>
     <a class="home-nav home-work home-playground reveal reveal-1" href="playground.html" data-pop aria-controls="play-pop" aria-expanded="false">PLAYGROUND,</a>
     <a class="home-nav reveal reveal-1" href="journey.html">JOURNEY</a>
     <a class="home-nav home-about reveal reveal-1" href="about.html" data-pop aria-controls="whois" aria-expanded="false">ABOUT</a>
@@ -95,31 +100,44 @@
     <iframe class="contact-frame" title="Contact" data-src="contact.html?embed"></iframe>
   </section>
 
+  <!-- WORK opens this in place, PLAYGROUND's pop-up below at WORK's size, with only its
+       two lines for now (main.js). lab.html stays the link's target for a new tab or
+       no JS. -->
+  <section class="whois play-pop work-pop" id="work-pop" aria-label="Work" aria-hidden="true" inert>
+    <div class="play-list" role="navigation" aria-label="Work">
+      <button class="play-item" type="button" style="--i:0"><span class="play-mask"><span class="play-word">CLOSE,</span></span></button>
+      <a class="play-item" href="lab.html" style="--i:1"><span class="play-mask"><span class="play-word">VIEW ALL</span></span></a>
+    </div>
+  </section>
+
   <!-- PLAYGROUND opens this in place, over the same frosted layer, after
        almirakho.com's works list: big lines that rise through a mask, and a
        project pushed right when hovered, with OPEN PROJECT at the window's left
        edge and its logo at the right, gliding from line to line, and the logo
        again behind it all, huge and blurred (main.js). playground.html stays the
        link's target for a new tab or no JS. The projects have no pages yet, so
-       their links go nowhere. -->
+       their links go there too. -->
   <section class="whois play-pop" id="play-pop" aria-label="Playground" aria-hidden="true" inert>
     <div class="play-marks" aria-hidden="true">
       <img class="play-mark" data-name="solevault" src="assets/images/lab/solevault-logo.svg?v=1" alt="">
       <img class="play-mark" data-name="gair" src="assets/images/lab/gair-logo.svg?v=1" alt="">
+      <img class="play-mark" data-name="tokenz" src="assets/images/lab/tokenz-logo.svg?v=1" alt="">
     </div>
     <div class="play-list" role="navigation" aria-label="Playground projects">
       <button class="play-item" type="button" style="--i:0"><span class="play-mask"><span class="play-word">CLOSE,</span></span></button>
       <a class="play-item" href="playground.html" style="--i:1"><span class="play-mask"><span class="play-word">VIEW ALL</span></span></a>
-      <a class="play-item is-project" href="#" data-logo="solevault" style="--i:2"><span class="play-mask"><span class="play-word">SOLE VAULT<span class="play-kind" aria-hidden="true">[UI/UX]</span></span></span></a>
-      <a class="play-item is-project" href="#" data-logo="gair" style="--i:3"><span class="play-mask"><span class="play-word">GAIR<span class="play-kind" aria-hidden="true">[UI/UX]</span></span></span></a>
+      <a class="play-item is-project" href="playground.html" data-logo="tokenz" style="--i:2"><span class="play-mask"><span class="play-word">TOKENZ<span class="play-kind" aria-hidden="true">[AI]</span></span></span></a>
+      <a class="play-item is-project" href="playground.html" data-logo="solevault" style="--i:3"><span class="play-mask"><span class="play-word">SOLE VAULT<span class="play-kind" aria-hidden="true">[UI/UX]</span></span></span></a>
+      <a class="play-item is-project" href="playground.html" data-logo="gair" style="--i:4"><span class="play-mask"><span class="play-word">GAIR<span class="play-kind" aria-hidden="true">[UI/UX]</span></span></span></a>
       <span class="play-mask play-open" aria-hidden="true"><span class="play-word">OPEN PROJECT</span></span>
       <span class="play-logos" aria-hidden="true">
         <img class="play-logo" data-name="solevault" src="assets/images/lab/solevault-logo.svg?v=1" alt="">
         <img class="play-logo" data-name="gair" src="assets/images/lab/gair-logo.svg?v=1" alt="">
+        <img class="play-logo" data-name="tokenz" src="assets/images/lab/tokenz-logo.svg?v=1" alt="">
       </span>
     </div>
   </section>
 
-  <script src="src/js/main.js?v=198"></script>
+  <script src="src/js/main.js?v=208"></script>
 </body>
 </html> 

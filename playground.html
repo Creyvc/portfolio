@@ -24,6 +24,7 @@
 <meta property="og:description" content="Playground — Vuthy Cheam. Coming soon.">
 <meta property="og:url" content="https://vuthycheam.com/playground.html">
 <meta property="og:image" content="https://vuthycheam.com/assets/icons/logo.png?v=23">
+<link rel="icon" href="favicon.ico?v=1" sizes="48x48">
 <link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg?v=23">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/favicon.png?v=23" media="(prefers-color-scheme: light)">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/logo-white.png?v=23" media="(prefers-color-scheme: dark)">
@@ -31,7 +32,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Jersey+10&family=VT323&family=Space+Grotesk:wght@400;500;700&family=Boogaloo&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="src/css/style.css?v=222">
+<link rel="stylesheet" href="src/css/style.css?v=233">
 <script>
 /* Arrived from another page of the site: mark <html> BEFORE the body renders so
    nothing on the page fades in again on the way back. */
@@ -44,6 +45,13 @@
   document.documentElement.className += ' pt pt-open';
 })();
 </script>
+<script>
+/* The tiles rise into place (main.js, "View all"): hold them back before the body renders. */
+(function(){
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.documentElement.className += ' view-intro';
+})();
+</script>
 </head>
 <body class="loaded playground">
 
@@ -53,12 +61,45 @@
     </a>
   </header>
 
-  <!-- Home's PLAYGROUND,. Nothing here yet but the line below, dead centre of
-       the window, decrypting like journey.html's but in ink on paper. -->
-  <main class="work-page is-centred">
-    <p class="work-empty is-centre" data-decrypt>COMING SOON</p>
+  <!-- PLAYGROUND's VIEW ALL lands here: each project's screens in a row, after
+       gilhuybrecht.com, named over the first and numbered. data-project ties a project's
+       tiles together, as hovering one dims every other project's. The videos are started
+       by main.js, unless motion is reduced: then they stay on their posters. -->
+  <main class="view-grid">
+    <figure class="view-tile" data-project="solevault">
+      <figcaption><span>Sole Vault</span><span>1</span></figcaption>
+      <img src="assets/images/lab/solevault/pics/welcoming.png?v=1" width="658" height="1434" alt="Sole Vault welcome screen">
+    </figure>
+    <figure class="view-tile" data-project="solevault">
+      <figcaption><span></span><span>2</span></figcaption>
+      <video muted loop playsinline preload="auto" width="660" height="1434" poster="assets/images/lab/solevault/pics/news-gyakusou.png?v=1" src="assets/images/lab/solevault/video/news.mp4?v=2" aria-label="Sole Vault news screen, scrolling"></video>
+    </figure>
+    <figure class="view-tile" data-project="solevault">
+      <figcaption><span></span><span>3</span></figcaption>
+      <video muted loop playsinline preload="auto" width="658" height="1434" poster="assets/images/lab/solevault/pics/collection-top.png?v=1" src="assets/images/lab/solevault/video/collection.mp4?v=2" aria-label="Sole Vault collection screen, scrolling"></video>
+    </figure>
+    <figure class="view-tile" data-project="solevault">
+      <figcaption><span></span><span>4</span></figcaption>
+      <img src="assets/images/lab/solevault/pics/ai-chatbot.png?v=1" width="660" height="1434" alt="Sole Vault AI chatbot screen">
+    </figure>
   </main>
 
-  <script defer src="src/js/main.js?v=198"></script>
+  <!-- A tile opens its project's page: this text, with the tiles' own pictures and videos
+       copied into the column by main.js, flying there from the grid. -->
+  <section class="view-detail" data-project="solevault" aria-label="Sole Vault" aria-hidden="true" inert>
+    <div class="view-info">
+      <h1 class="view-title">Sole Vault</h1>
+      <p class="view-about">The only app built for serious collectors. Track, manage, and grow your sneaker collection, all in one place.</p>
+      <dl class="view-facts">
+        <div><span>1</span><dt>Type</dt><dd>UI/UX</dd></div>
+        <div><span>2</span><dt>Platform</dt><dd>Mobile app</dd></div>
+        <div><span>3</span><dt>Made in</dt><dd>Figma</dd></div>
+      </dl>
+    </div>
+    <div class="view-column"></div>
+  </section>
+  <span class="view-back" aria-hidden="true">Back</span>
+
+  <script defer src="src/js/main.js?v=208"></script>
 </body>
 </html>
