@@ -1,6 +1,6 @@
   :root{
     --paper:#FDFDFD;
-    --stone:#E2E1DC; --ink:#17181C; --accent:#B4371F;
+    --stone:#FDFDFD; --ink:#17181C; --accent:#B4371F;
     --sans:ui-monospace, 'SF Mono', 'JetBrains Mono', 'IBM Plex Mono', Menlo, Consolas, monospace;
     --header-h: 3.25rem;
   }
@@ -118,7 +118,7 @@
     white-space:nowrap;
   }
   /* playground.html: every project's screens in a grid of ten, after gilhuybrecht.com,
-     each under its number, and the project's name over the first */
+     each under its number */
   .view-grid{
     display:grid;
     grid-template-columns:repeat(10, minmax(0, 1fr));
@@ -127,12 +127,12 @@
   }
   .view-tile{ margin:0; transition:opacity 0.3s ease; }
   .view-tile.is-dim{ opacity:0.25; }
-  /* until they rise (main.js) */
-  html.view-intro .view-tile{ opacity:0; }
+  /* until they rise (main.js). Not by opacity: the tiles' own fade, there for the dimming,
+     would run as this comes off, keeping them unseen for the first of the way up */
+  html.view-intro .view-grid{ visibility:hidden; }
   /* all the words here are in the home header's small type */
   .view-tile figcaption,
-  .view-detail,
-  .view-back{
+  .view-detail{
     font-family:var(--sans);
     font-size:0.8125rem;
     font-weight:500;
@@ -143,17 +143,40 @@
   .view-tile figcaption{
     display:flex;
     justify-content:space-between;
+    align-items:baseline;
     margin-bottom:0.45rem;
     white-space:nowrap;
   }
+  .view-number{ font-size:0.625rem; }
+  /* an empty name holds a line all the same, or the tiles without one would sit higher */
+  .view-tile figcaption span:empty::before{ content:'\200b'; }
   .view-tile img,
   .view-tile video{ display:block; width:100%; height:auto; aspect-ratio:658 / 1434; object-fit:cover; }
   .view-tile{ cursor:pointer; }
-  /* a project opened from its tile (main.js): the grid stays, dim, behind everything */
-  .view-grid{ transition:opacity 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-  html.view-open .view-grid{ opacity:0.16; pointer-events:none; }
+  /* a project opened from its tile (main.js): the other projects go soft behind a frosted
+     layer, .whois's tint and timing with more blur; its own tiles have left the grid */
+  html.view-open .view-grid{ pointer-events:none; }
   .view-tile.is-lifted{ visibility:hidden; }
-  html.view-open header{ opacity:0; pointer-events:none; }
+  /* [CLOSE] stays away until the project's text has gone */
+  html.view-open header,
+  html.view-leaving header{ opacity:0; pointer-events:none; }
+  .view-frost{
+    position:fixed;
+    inset:0;
+    z-index:19;
+    background:rgba(253,253,253,0.5);
+    -webkit-backdrop-filter:blur(7px);
+    backdrop-filter:blur(7px);
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transition:opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.5s;
+  }
+  html.view-open .view-frost{
+    opacity:1;
+    visibility:visible;
+    transition:opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s;
+  }
   body.playground header{ transition:opacity 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
   .view-detail{
     position:fixed;
@@ -164,6 +187,7 @@
     overflow-y:auto;
     overscroll-behavior:contain;
     scrollbar-width:none;
+    cursor:pointer;
   }
   .view-detail::-webkit-scrollbar{ display:none; }
   .view-detail.is-on{ display:grid; }
@@ -173,39 +197,38 @@
     height:100vh;
     box-sizing:border-box;
     padding:1rem;
-    cursor:pointer;
   }
-  .view-title{ margin:0 0 3.75rem; font:inherit; }
+  /* the project's logo, with its name right beside it */
+  .view-head{ display:flex; align-items:center; gap:0.9rem; margin-bottom:3.75rem; }
+  .view-title{ margin:0; font:inherit; }
+  .view-logo img{ width:auto; height:2.75rem; }
   .view-about{ max-width:27rem; margin:0 0 3.75rem; }
   .view-facts{ margin:0; }
-  .view-facts div{ display:grid; grid-template-columns:20% 20% 1fr; }
+  .view-facts div{ display:grid; grid-template-columns:20% 26% 1fr; overflow:hidden; }
+  .view-mask{ display:block; overflow:hidden; }
+  .view-line{ display:block; }
   .view-facts dt{ font-weight:inherit; }
   .view-facts dd{ margin:0; }
   /* one screen to a row, each as tall as the window, so a whole phone shows at a time */
   .view-column{
     display:grid;
-    justify-items:center;
+    justify-items:end;
     align-content:start;
     gap:1rem;
     padding:1rem 1rem 1rem 0;
   }
-  .view-shot{ width:calc((100vh - 2rem) * 658 / 1434); max-width:100%; margin:0; transform-origin:0 0; }
+  .view-shot{ width:calc((100vh - 2rem) * 658 / 1434); max-width:100%; margin:0; transform-origin:0 0; cursor:default; }
+  .view-shot.is-held{ visibility:hidden; }
   .view-shot img,
   .view-shot video{ display:block; width:100%; height:auto; aspect-ratio:658 / 1434; object-fit:cover; }
-  .view-back{
-    position:fixed;
-    top:0; left:0;
-    z-index:30;
-    margin:0.9rem 0 0 0.9rem;
-    pointer-events:none;
-    opacity:0;
-    transition:opacity 0.2s ease;
-  }
-  .view-back.is-on{ opacity:1; }
   /* playground.html and lab.html: stone, a white just dark enough for the white screens to
      stand out on, and the colour VIEW ALL fades to, so they come up out of it */
   body.playground,
   body.lab{ background:var(--stone); color:var(--ink); }
+  /* as tall as the window at least: the body clips what's below it, so a short one would cut
+     the grid off as it rises, and it would seem to come from just under its own row */
+  body.playground{ box-sizing:border-box; min-height:100vh; }
+  html.view-rising body{ overflow-y:hidden; }
   /* read by screen readers, not shown */
   .sr-only{
     position:absolute;

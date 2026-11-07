@@ -32,7 +32,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Jersey+10&family=VT323&family=Space+Grotesk:wght@400;500;700&family=Boogaloo&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="src/css/style.css?v=233">
+<link rel="stylesheet" href="src/css/style.css?v=253">
 <script>
 /* Arrived from another page of the site: mark <html> BEFORE the body renders so
    nothing on the page fades in again on the way back. */
@@ -62,44 +62,55 @@
   </header>
 
   <!-- PLAYGROUND's VIEW ALL lands here: each project's screens in a row, after
-       gilhuybrecht.com, named over the first and numbered. data-project ties a project's
+       gilhuybrecht.com, each numbered. data-project ties a project's
        tiles together, as hovering one dims every other project's. The videos are started
        by main.js, unless motion is reduced: then they stay on their posters. -->
   <main class="view-grid">
     <figure class="view-tile" data-project="solevault">
-      <figcaption><span>Sole Vault</span><span>1</span></figcaption>
-      <img src="assets/images/lab/solevault/pics/welcoming.png?v=1" width="658" height="1434" alt="Sole Vault welcome screen">
+      <figcaption><span></span><span class="view-number">[1]</span></figcaption>
+      <img src="assets/images/lab/solevault/pics/welcoming.png?v=2" width="658" height="1434" alt="Sole Vault welcome screen">
     </figure>
     <figure class="view-tile" data-project="solevault">
-      <figcaption><span></span><span>2</span></figcaption>
+      <figcaption><span></span><span class="view-number">[2]</span></figcaption>
       <video muted loop playsinline preload="auto" width="660" height="1434" poster="assets/images/lab/solevault/pics/news-gyakusou.png?v=1" src="assets/images/lab/solevault/video/news.mp4?v=2" aria-label="Sole Vault news screen, scrolling"></video>
     </figure>
     <figure class="view-tile" data-project="solevault">
-      <figcaption><span></span><span>3</span></figcaption>
+      <figcaption><span></span><span class="view-number">[3]</span></figcaption>
       <video muted loop playsinline preload="auto" width="658" height="1434" poster="assets/images/lab/solevault/pics/collection-top.png?v=1" src="assets/images/lab/solevault/video/collection.mp4?v=2" aria-label="Sole Vault collection screen, scrolling"></video>
     </figure>
     <figure class="view-tile" data-project="solevault">
-      <figcaption><span></span><span>4</span></figcaption>
-      <img src="assets/images/lab/solevault/pics/ai-chatbot.png?v=1" width="660" height="1434" alt="Sole Vault AI chatbot screen">
+      <figcaption><span></span><span class="view-number">[4]</span></figcaption>
+      <video muted loop playsinline preload="auto" width="660" height="1434" poster="assets/images/lab/solevault/pics/ai-chatbot.png?v=1" src="assets/images/lab/solevault/video/ai-chatbot.mp4?v=2" aria-label="Sole Vault AI assistant, a conversation running on"></video>
     </figure>
   </main>
 
-  <!-- A tile opens its project's page: this text, with the tiles' own pictures and videos
-       copied into the column by main.js, flying there from the grid. -->
+  <!-- A tile opens its project's page, over a frosted layer like home's pop-ups', blurrier: this
+       text, with the tiles' own pictures and videos copied into the column by main.js,
+       flying there from the grid. -->
+  <div class="view-frost" aria-hidden="true"></div>
   <section class="view-detail" data-project="solevault" aria-label="Sole Vault" aria-hidden="true" inert>
     <div class="view-info">
-      <h1 class="view-title">Sole Vault</h1>
+      <div class="view-head">
+        <span class="view-mask view-logo"><img class="view-line" src="assets/images/lab/solevault-logo.svg?v=1" alt=""></span>
+        <h1 class="view-title">Sole Vault</h1>
+      </div>
       <p class="view-about">The only app built for serious collectors. Track, manage, and grow your sneaker collection, all in one place.</p>
       <dl class="view-facts">
-        <div><span>1</span><dt>Type</dt><dd>UI/UX</dd></div>
-        <div><span>2</span><dt>Platform</dt><dd>Mobile app</dd></div>
-        <div><span>3</span><dt>Made in</dt><dd>Figma</dd></div>
+        <div><span>1</span><dt>Category</dt><dd>Academic projects</dd></div>
+        <div><span>2</span><dt>Type</dt><dd>UI/UX</dd></div>
+        <div><span>3</span><dt>Platform</dt><dd>Mobile app</dd></div>
+        <div><span>4</span><dt>Made in</dt><dd>Figma</dd></div>
+        <div><span>5</span><dt>Year</dt><dd>2025</dd></div>
       </dl>
     </div>
-    <div class="view-column"></div>
+    <!-- only here, not in the grid: these follow the tile data-with names (main.js) -->
+    <div class="view-column">
+      <figure class="view-shot" data-with="2"><img src="assets/images/lab/solevault/pics/news-air-jordan-6.png?v=1" width="658" height="1432" alt="Sole Vault news story on the pink Air Jordan 6"></figure>
+      <figure class="view-shot" data-with="2"><img src="assets/images/lab/solevault/pics/news-undefeated-converse.png?v=1" width="658" height="1432" alt="Sole Vault news story on Undefeated and Converse"></figure>
+      <figure class="view-shot" data-with="2"><img src="assets/images/lab/solevault/pics/news-list.png?v=1" width="656" height="1434" alt="Sole Vault list of news stories"></figure>
+    </div>
   </section>
-  <span class="view-back" aria-hidden="true">Back</span>
 
-  <script defer src="src/js/main.js?v=208"></script>
+  <script defer src="src/js/main.js?v=222"></script>
 </body>
 </html>

@@ -1203,24 +1203,24 @@
   });
 })();
 
-/* View all (playground.html): on opening, after gilhuybrecht.com, each tile shoots up from
-   below the window and eases a long way into place, brightening as it comes, the columns
-   setting off a moment apart so they arrive as a wave. It waits for the screens themselves,
-   or not for long. Hovering a tile dims every other project's. The videos play once the page
+/* View all (playground.html): on opening the tiles slide up from the bottom of the window,
+   solid and steady, slowing into place, one after another in a new mixed order each time,
+   never starting with the first. It waits for the screens themselves, or not for long. Hovering a tile dims every other project's. The videos play once the page
    is up; with reduced motion they stay on their posters and nothing rises.
 
-   Clicking a tile opens its project, as gilhuybrecht.com does: the grid dims, the project's
-   tiles tilt up out of it and fly to a big column on the right, and the text comes down in
-   on the left, staying put while the column scrolls. The column holds copies of the tiles'
-   media, so each flies from its tile's place, and back there on closing: Esc, the browser's
-   back, or a click on the left, where a small "Back" follows the cursor. */
+   Clicking a tile opens its project, as gilhuybrecht.com does: the other projects go soft
+   behind a frosted layer, the project's own tiles lift out of the grid, tilting as they fly
+   to a big column on the right, and the text rises line by line through masks on the left,
+   as the Playground list does, staying put while the column scrolls. The column holds copies
+   of the tiles' media, so each flies from its tile's place. On closing the text goes up out
+   of its masks first and then the screens fly back: Esc, the browser's back, or a click
+   anywhere but on a screen. */
 (function(){
   const tiles = Array.prototype.slice.call(document.querySelectorAll('.view-tile'));
   if (!tiles.length) return;
   const html = document.documentElement;
   const grid = tiles[0].parentElement;
-  const RISE_MS = 1200, BRIGHTEN_MS = 350, WAIT_MS = 1500;
-  const WAVE = [80, 60, 180, 100, 260, 0, 320];   // ms each column sets off after the first
+  const RISE_MS = 1050, RISE_STEP_MS = 105, WAIT_MS = 1500;
 
   function dim(project){
     tiles.forEach(function(tile){
@@ -1234,34 +1234,121 @@
   grid.addEventListener('mouseleave', function(){ dim(null); });
 
   const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const FLY_MS = 750, STAGGER_MS = 35, TEXT_AT_MS = 480, TEXT_MS = 500, TEXT_STEP_MS = 80;
-  const back = document.querySelector('.view-back');
+  const FLY_MS = 750, STAGGER_MS = 35, TEXT_AT_MS = 480, TEXT_MS = 800, TEXT_STEP_MS = 70, TEXT_OUT_MS = 320, TEXT_OUT_STEP_MS = 20;
   let open = null;      // the project on show
   let busy = false;
+  let leaveAfter = false;   // the browser's back, pressed in mid-flight
+  function leave(){ if (open && !busy) history.back(); }
 
   document.querySelectorAll('.view-detail').forEach(function(detail){
     const project = detail.getAttribute('data-project');
     const own = tiles.filter(tile => tile.getAttribute('data-project') === project);
     const column = detail.querySelector('.view-column');
-    const shots = own.map(function(tile){
+    // a copy of each tile's media, then any screens that are only here, after the tile they
+    // go with; those take no part in the flight, so they're held back until it's over
+    const extras = Array.prototype.slice.call(column.querySelectorAll('.view-shot'));
+    const shots = [];
+    own.forEach(function(tile, i){
       const shot = document.createElement('figure');
       shot.className = 'view-shot';
       shot.appendChild(tile.querySelector('img, video').cloneNode(true));
       column.appendChild(shot);
-      return shot;
+      shots.push({ el:shot, tile:tile });
+      extras.filter(extra => +extra.getAttribute('data-with') === i + 1).forEach(function(extra){
+        column.appendChild(extra);
+      });
     });
-    const texts = detail.querySelectorAll('.view-title, .view-about, .view-facts > div');
+    function hold(on){ extras.forEach(extra => extra.classList.toggle('is-held', on)); }
+    const blocks = detail.querySelectorAll('.view-title, .view-about');
+    const rows = detail.querySelectorAll('.view-facts > div');
+    const logo = detail.querySelector('.view-logo img');
+    let moving = [];
+
+    // a block of text as lines, each in a mask of its own, as they fall at this width; it
+    // goes back to plain text once still, so it can wrap again if the window changes
+    function split(block){
+      if (block.querySelector('.view-line')) return block.querySelectorAll('.view-line');
+      const text = block.textContent;
+      block.textContent = '';
+      const words = text.split(' ').map(function(word, i){
+        const span = document.createElement('span');
+        span.textContent = word;
+        if (i) block.appendChild(document.createTextNode(' '));
+        block.appendChild(span);
+        return span;
+      });
+      const lines = [];
+      words.forEach(function(word){
+        const last = lines[lines.length - 1];
+        if (last && last.top === word.offsetTop) last.words.push(word.textContent);
+        else lines.push({ top:word.offsetTop, words:[word.textContent] });
+      });
+      block.setAttribute('data-text', text);
+      block.textContent = '';
+      lines.forEach(function(line){
+        const mask = document.createElement('span'), inner = document.createElement('span');
+        mask.className = 'view-mask';
+        inner.className = 'view-line';
+        inner.textContent = line.words.join(' ');
+        mask.appendChild(inner);
+        block.appendChild(mask);
+      });
+      return block.querySelectorAll('.view-line');
+    }
+    function unsplit(){
+      blocks.forEach(function(block){
+        if (block.hasAttribute('data-text')) block.textContent = block.getAttribute('data-text');
+        block.removeAttribute('data-text');
+      });
+    }
+    // what moves together, top to bottom: each line, and each row of the facts
+    function groups(){
+      const out = [];
+      blocks.forEach(block => split(block).forEach(line => out.push([line])));
+      rows.forEach(row => out.push(Array.prototype.slice.call(row.children)));
+      out[0].push(logo);        // on the title's line
+      return out;
+    }
+    function stop(){
+      moving.forEach(a => a.cancel());
+      moving = [];
+    }
+    function textIn(){
+      groups().forEach(function(group, i){
+        group.forEach(function(el){
+          moving.push(el.animate([{ transform:'translateY(115%)' }, { transform:'none' }], {
+            duration:TEXT_MS, delay:TEXT_AT_MS + i * TEXT_STEP_MS, easing:'cubic-bezier(0.16, 1, 0.3, 1)', fill:'backwards'
+          }));
+        });
+      });
+      const these = moving;
+      Promise.all(these.map(a => a.finished)).then(function(){
+        if (moving === these){ moving = []; unsplit(); }
+      }, function(){});
+    }
+    function textOut(){
+      stop();
+      const all = groups();
+      all.forEach(function(group, i){
+        group.forEach(function(el){
+          moving.push(el.animate([{ transform:'none' }, { transform:'translateY(-115%)' }], {
+            duration:TEXT_OUT_MS, delay:(all.length - 1 - i) * TEXT_OUT_STEP_MS, easing:'cubic-bezier(0.7, 0, 0.84, 0)', fill:'both'
+          }));
+        });
+      });
+      return Promise.all(moving.map(a => a.finished));
+    }
 
     // each shot, from flat on its tile, tilted on the way, to flat in the column
     function fly(leaving){
       return Promise.all(shots.map(function(shot, i){
-        const to = shot.getBoundingClientRect();
-        const from = own[i].querySelector('img, video').getBoundingClientRect();
+        const to = shot.el.getBoundingClientRect();
+        const from = shot.tile.querySelector('img, video').getBoundingClientRect();
         const k = from.width / to.width, dx = from.left - to.left, dy = from.top - to.top;
         const at = (x, y, size, rx, ry, rz) => 'perspective(1400px) translate(' + x + 'px, ' + y + 'px) scale(' + size + ') rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) rotateZ(' + rz + 'deg)';
         const frames = [at(dx, dy, k, 0, 0, 0), at(dx * 0.45, dy * 0.45, k + (1 - k) * 0.55, 8, -16, -3), at(0, 0, 1, 0, 0, 0)];
         if (leaving) frames.reverse();
-        return shot.animate(frames.map(f => ({ transform:f })), {
+        return shot.el.animate(frames.map(f => ({ transform:f })), {
           duration:FLY_MS, delay:i * STAGGER_MS, easing:'cubic-bezier(0.6, 0, 0.2, 1)', fill:'both'
         }).finished;
       }));
@@ -1277,33 +1364,33 @@
       detail.inert = false;
       detail.setAttribute('aria-hidden', 'false');
       detail.scrollTop = 0;
-      shots.forEach(function(shot, i){
-        const video = shot.querySelector('video');
+      shots.forEach(function(shot){
+        const video = shot.el.querySelector('video');
         if (!video || calm) return;
-        video.currentTime = own[i].querySelector('video').currentTime;
+        video.currentTime = shot.tile.querySelector('video').currentTime;
         video.play().catch(function(){});
       });
       if (calm) return;
       busy = true;
-      texts.forEach(function(text, i){
-        text.animate([{ clipPath:'inset(0 0 100% 0)' }, { clipPath:'inset(0 0 0 0)' }], {
-          duration:TEXT_MS, delay:TEXT_AT_MS + i * TEXT_STEP_MS, easing:'cubic-bezier(0.16, 1, 0.3, 1)', fill:'backwards'
-        });
+      hold(true);
+      textIn();
+      fly(false).then(function(){
+        hold(false);
+        busy = false;
+        if (leaveAfter){ leaveAfter = false; hide(); }
       });
-      fly(false).then(function(){ busy = false; });
     }
     function hide(){
       if (busy || open !== detail) return;
       html.classList.remove('view-open');
-      back.classList.remove('is-on');
       function done(){
         detail.classList.remove('is-on');
         detail.inert = true;
         detail.setAttribute('aria-hidden', 'true');
         own.forEach(tile => tile.classList.remove('is-lifted'));
         shots.forEach(function(shot){
-          shot.getAnimations().forEach(a => a.cancel());
-          const video = shot.querySelector('video');
+          shot.el.getAnimations().forEach(a => a.cancel());
+          const video = shot.el.querySelector('video');
           if (video) video.pause();
         });
         open = null;
@@ -1311,9 +1398,14 @@
       }
       if (calm){ done(); return; }
       busy = true;
-      detail.querySelector('.view-info').animate([{ opacity:1 }, { opacity:0 }], { duration:200, fill:'forwards' });
-      fly(true).then(function(){
-        detail.querySelector('.view-info').getAnimations().forEach(a => a.cancel());
+      html.classList.add('view-leaving');
+      textOut().then(function(){
+        html.classList.remove('view-leaving');
+        hold(true);
+        return fly(true);
+      }).then(function(){
+        stop();
+        unsplit();
         done();
       });
     }
@@ -1326,28 +1418,34 @@
         if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); show(); }
       });
     });
-    const info = detail.querySelector('.view-info');
-    info.addEventListener('click', function(){ history.back(); });
-    info.addEventListener('pointermove', function(e){
-      back.style.transform = 'translate(' + e.clientX + 'px, ' + e.clientY + 'px)';
-      back.classList.add('is-on');
+    detail.addEventListener('click', function(e){
+      if (!e.target.closest('.view-shot')) leave();
     });
-    info.addEventListener('pointerleave', function(){ back.classList.remove('is-on'); });
   });
   document.addEventListener('keydown', function(e){
-    if (e.key === 'Escape' && open) history.back();
+    if (e.key === 'Escape') leave();
   });
-  window.addEventListener('popstate', function(){ if (open) open.close(); });
+  window.addEventListener('popstate', function(){
+    if (!open) return;
+    if (busy) leaveAfter = true;
+    else open.close();
+  });
 
   if (!html.classList.contains('view-intro')) return;
   function rise(){
-    tiles.forEach(function(tile, i){
-      const delay = WAVE[i % WAVE.length];
+    const order = tiles.slice();
+    for (let i = order.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    if (order[0] === tiles[0] && order.length > 1) order.push(order.shift());
+    html.classList.add('view-rising');
+    const rising = order.map(function(tile, i){
       const below = Math.max(innerHeight - tile.getBoundingClientRect().top, 80);
-      tile.animate([{ transform:'translateY(' + below + 'px)' }, { transform:'none' }],
-        { duration:RISE_MS, delay:delay, easing:'cubic-bezier(0.16, 1, 0.3, 1)', fill:'backwards' });
-      tile.animate([{ opacity:0.35 }, { opacity:1 }], { duration:BRIGHTEN_MS, delay:delay, fill:'backwards' });
+      return tile.animate([{ transform:'translateY(' + below + 'px)' }, { transform:'none' }],
+        { duration:RISE_MS, delay:i * RISE_STEP_MS, easing:'cubic-bezier(0.4, 0, 0.1, 1)', fill:'backwards' }).finished;
     });
+    Promise.all(rising).then(function(){ html.classList.remove('view-rising'); });
     html.classList.remove('view-intro');
     grid.querySelectorAll('video').forEach(function(video){ video.play().catch(function(){}); });
   }
