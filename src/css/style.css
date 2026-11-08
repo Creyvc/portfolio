@@ -155,11 +155,13 @@
   .view-tile{ cursor:pointer; }
   /* a project opened from its tile (main.js): the other projects go soft behind a frosted
      layer, .whois's tint and timing with more blur; its own tiles have left the grid */
-  html.view-open .view-grid{ pointer-events:none; }
+  html.view-open .view-grid,
+  html.view-going .view-grid{ pointer-events:none; }
   .view-tile.is-lifted{ visibility:hidden; }
   /* [CLOSE] stays away until the project's text has gone */
   html.view-open header,
-  html.view-leaving header{ opacity:0; pointer-events:none; }
+  html.view-leaving header,
+  html.view-going header{ opacity:0; pointer-events:none; }
   .view-frost{
     position:fixed;
     inset:0;
@@ -219,6 +221,27 @@
   }
   .view-shot{ width:calc((100vh - 2rem) * 658 / 1434); max-width:100%; margin:0; transform-origin:0 0; cursor:default; }
   .view-shot.is-held{ visibility:hidden; }
+  /* the little map of the column (main.js), as tall as there's room for under the text */
+  .view-map{
+    --gap:3px;
+    position:absolute;
+    left:1rem; bottom:1rem;
+    display:flex;
+    flex-direction:column;
+    gap:var(--gap);
+    height:46vh;
+    width:calc((46vh - (var(--screens) - 1) * var(--gap)) / var(--screens) * 658 / 1434);
+    cursor:default;
+  }
+  .view-thumb{ flex:1; min-height:0; padding:0; border:0; background:none; cursor:pointer; }
+  .view-thumb img{ display:block; width:100%; height:100%; object-fit:cover; }
+  .view-map-frame{
+    position:absolute;
+    top:0; left:-3px; right:-3px;
+    box-sizing:border-box;
+    border:1px solid var(--ink);
+    pointer-events:none;
+  }
   .view-shot img,
   .view-shot video{ display:block; width:100%; height:auto; aspect-ratio:658 / 1434; object-fit:cover; }
   /* playground.html and lab.html: stone, a white just dark enough for the white screens to

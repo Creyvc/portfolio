@@ -1203,6 +1203,29 @@
   });
 })();
 
+/* Back from View all (home, from playground.html's [CLOSE]): the way there run backwards, the
+   window fading in from the colour it left on and the header coming back down through its
+   masks. The head script has put it up there already. */
+(function(){
+  const html = document.documentElement;
+  if (!html.classList.contains('view-back')) return;
+  const cover = document.createElement('div');
+  cover.className = 'view-fade';
+  document.body.appendChild(cover);
+  cover.animate([{ opacity:1 }, { opacity:0 }], { duration:400, easing:'ease-in-out', fill:'forwards' }).finished.then(function(){
+    cover.remove();
+    const letters = Array.prototype.slice.call(document.querySelectorAll('header .home-ch'));
+    const landing = letters.map(function(letter){
+      return letter.animate([{ transform:'translateY(-115%)' }, { transform:'none' }],
+        { duration:800, easing:'cubic-bezier(0.16, 1, 0.3, 1)', fill:'both' });
+    });
+    Promise.all(landing.map(a => a.finished)).then(function(){
+      html.classList.remove('view-all', 'view-back');
+      landing.forEach(a => a.cancel());
+    });
+  });
+})();
+
 /* View all (playground.html): on opening the tiles slide up from the bottom of the window,
    solid and steady, slowing into place, one after another in a new mixed order each time,
    never starting with the first. It waits for the screens themselves, or not for long. Hovering a tile dims every other project's. The videos play once the page
@@ -1214,13 +1237,21 @@
    as the Playground list does, staying put while the column scrolls. The column holds copies
    of the tiles' media, so each flies from its tile's place. On closing the text goes up out
    of its masks first and then the screens fly back: Esc, the browser's back, or a click
-   anywhere but on a screen. */
+   anywhere but on a screen. At the bottom left, after cathydolle.com's case studies, a little
+   map of the column: a thumbnail of every screen, each one a way to it, and a frame that
+   follows the scroll, showing what's in view. It slides off to the left on closing.
+
+   Arriving with a project's name in the address (home's SOLE VAULT), the tiles rise as ever,
+   and once they've landed that project opens from them as if clicked.
+
+   [CLOSE] is the way in run backwards: the tiles drop off the bottom of the window in a mixed
+   order, and home takes it from there ("Back from View all"). */
 (function(){
   const tiles = Array.prototype.slice.call(document.querySelectorAll('.view-tile'));
   if (!tiles.length) return;
   const html = document.documentElement;
   const grid = tiles[0].parentElement;
-  const RISE_MS = 1050, RISE_STEP_MS = 105, WAIT_MS = 1500;
+  const RISE_MS = 1050, RISE_STEP_MS = 105, WAIT_MS = 1500, ASKED_AFTER_MS = 120;
 
   function dim(project){
     tiles.forEach(function(tile){
@@ -1234,7 +1265,40 @@
   grid.addEventListener('mouseleave', function(){ dim(null); });
 
   const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const FLY_MS = 750, STAGGER_MS = 35, TEXT_AT_MS = 480, TEXT_MS = 800, TEXT_STEP_MS = 70, TEXT_OUT_MS = 320, TEXT_OUT_STEP_MS = 20;
+  function mixed(){
+    const order = tiles.slice();
+    for (let i = order.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    return order;
+  }
+  const closer = document.querySelector('.close-btn');
+  if (closer) closer.addEventListener('click', function(e){
+    if (calm || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    if (html.classList.contains('view-going')) return;
+    html.classList.add('view-going', 'view-rising');
+    const falling = mixed().map(function(tile, i){
+      const below = Math.max(innerHeight - tile.getBoundingClientRect().top, 80);
+      return tile.animate([{ transform:'none' }, { transform:'translateY(' + below + 'px)' }],
+        { duration:RISE_MS, delay:i * RISE_STEP_MS, easing:'cubic-bezier(0.9, 0, 0.6, 1)', fill:'both' }).finished;
+    });
+    Promise.all(falling).then(function(){
+      try {
+        sessionStorage.setItem('viewBack', '1');
+        sessionStorage.setItem('pageTransition', '1');
+      } catch(err){}
+      window.location.href = closer.href;
+    });
+  });
+  // back again from the browser's memory of the page, tiles gone and all
+  window.addEventListener('pageshow', function(e){
+    if (!e.persisted || !html.classList.contains('view-going')) return;
+    html.classList.remove('view-going', 'view-rising');
+    tiles.forEach(tile => tile.getAnimations().forEach(a => a.cancel()));
+  });
+  const FLY_MS = 750, STAGGER_MS = 35, TEXT_AT_MS = 480, TEXT_MS = 800, TEXT_STEP_MS = 70, TEXT_OUT_MS = 320, TEXT_OUT_STEP_MS = 20, MAP_OUT_MS = 420;
   let open = null;      // the project on show
   let busy = false;
   let leaveAfter = false;   // the browser's back, pressed in mid-flight
@@ -1259,6 +1323,37 @@
       });
     });
     function hold(on){ extras.forEach(extra => extra.classList.toggle('is-held', on)); }
+
+    const map = document.createElement('div');
+    const frame = document.createElement('span');
+    const screens = Array.prototype.slice.call(column.querySelectorAll('.view-shot'));
+    map.className = 'view-map';
+    map.style.setProperty('--screens', screens.length);
+    frame.className = 'view-map-frame';
+    screens.forEach(function(screen, i){
+      const thumb = document.createElement('button');
+      const media = screen.firstElementChild;
+      const picture = document.createElement('img');
+      thumb.type = 'button';
+      thumb.className = 'view-thumb';
+      thumb.setAttribute('aria-label', 'Go to screen ' + (i + 1));
+      picture.src = media.poster || media.getAttribute('src');
+      picture.alt = '';
+      thumb.appendChild(picture);
+      thumb.addEventListener('click', function(){
+        detail.scrollTo({ top:screen.offsetTop - column.offsetTop - 16, behavior:calm ? 'auto' : 'smooth' });
+      });
+      map.appendChild(thumb);
+    });
+    map.appendChild(frame);
+    detail.querySelector('.view-info').appendChild(map);
+    function follow(){
+      const tall = map.offsetHeight / detail.scrollHeight;
+      frame.style.height = detail.clientHeight * tall + 'px';
+      frame.style.transform = 'translateY(' + detail.scrollTop * tall + 'px)';
+    }
+    detail.addEventListener('scroll', follow, { passive:true });
+    window.addEventListener('resize', follow);
     const blocks = detail.querySelectorAll('.view-title, .view-about');
     const rows = detail.querySelectorAll('.view-facts > div');
     const logo = detail.querySelector('.view-logo img');
@@ -1321,6 +1416,7 @@
           }));
         });
       });
+      moving.push(map.animate([{ opacity:0 }, { opacity:1 }], { duration:400, delay:TEXT_AT_MS, fill:'backwards' }));
       const these = moving;
       Promise.all(these.map(a => a.finished)).then(function(){
         if (moving === these){ moving = []; unsplit(); }
@@ -1336,7 +1432,15 @@
           }));
         });
       });
-      return Promise.all(moving.map(a => a.finished));
+      // and once the words are gone, the map leaves by the left edge of the window; only
+      // then do the pictures go (hide())
+      return Promise.all(moving.map(a => a.finished)).then(function(){
+        const slide = map.animate([{ transform:'none' }, { transform:'translateX(calc(-100% - 1.5rem))' }], {
+          duration:MAP_OUT_MS, easing:'cubic-bezier(0.7, 0, 0.84, 0)', fill:'both'
+        });
+        moving.push(slide);
+        return slide.finished;
+      });
     }
 
     // each shot, from flat on its tile, tilted on the way, to flat in the column
@@ -1364,6 +1468,7 @@
       detail.inert = false;
       detail.setAttribute('aria-hidden', 'false');
       detail.scrollTop = 0;
+      follow();
       shots.forEach(function(shot){
         const video = shot.el.querySelector('video');
         if (!video || calm) return;
@@ -1410,6 +1515,7 @@
       });
     }
     detail.close = hide;
+    detail.open = show;
     own.forEach(function(tile){
       tile.setAttribute('role', 'button');
       tile.setAttribute('tabindex', '0');
@@ -1419,7 +1525,7 @@
       });
     });
     detail.addEventListener('click', function(e){
-      if (!e.target.closest('.view-shot')) leave();
+      if (!e.target.closest('.view-shot, .view-map')) leave();
     });
   });
   document.addEventListener('keydown', function(e){
@@ -1431,13 +1537,20 @@
     else open.close();
   });
 
-  if (!html.classList.contains('view-intro')) return;
+  const asked = Array.prototype.find.call(document.querySelectorAll('.view-detail'), function(detail){
+    return '#' + detail.getAttribute('data-project') === location.hash;
+  });
+  // from the grid, so that closing lands on the grid and not back in the project
+  function openAsked(){
+    history.replaceState(null, '', location.pathname);
+    asked.open();
+  }
+  if (!html.classList.contains('view-intro')){
+    if (asked) openAsked();
+    return;
+  }
   function rise(){
-    const order = tiles.slice();
-    for (let i = order.length - 1; i > 0; i--){
-      const j = Math.floor(Math.random() * (i + 1));
-      [order[i], order[j]] = [order[j], order[i]];
-    }
+    const order = mixed();
     if (order[0] === tiles[0] && order.length > 1) order.push(order.shift());
     html.classList.add('view-rising');
     const rising = order.map(function(tile, i){
@@ -1445,7 +1558,10 @@
       return tile.animate([{ transform:'translateY(' + below + 'px)' }, { transform:'none' }],
         { duration:RISE_MS, delay:i * RISE_STEP_MS, easing:'cubic-bezier(0.4, 0, 0.1, 1)', fill:'backwards' }).finished;
     });
-    Promise.all(rising).then(function(){ html.classList.remove('view-rising'); });
+    Promise.all(rising).then(function(){
+      html.classList.remove('view-rising');
+      if (asked) setTimeout(openAsked, ASKED_AFTER_MS);
+    });
     html.classList.remove('view-intro');
     grid.querySelectorAll('video').forEach(function(video){ video.play().catch(function(){}); });
   }
@@ -1462,16 +1578,17 @@
   ]).then(rise);
 })();
 
-/* Home steps: after the menu on fromanother.love: people walking on frosted glass, seen
-   almost straight from below, so a body is only a low Λ of two thin legs from long-striding
-   feet, fading out just above the hips. Each is a jointed body walking in 3D, worked out
-   here in centimetres, and what shows is its shadow on the glass, cast at a slant by one
-   light: the higher a part of the body, the further it falls and the more it blurs and
-   pales. A bare foot strikes on the heel, rolls flat, peels up from the heel and leaves
-   off the toes; only what's on the glass prints, so a footprint comes and goes part by
-   part: heel, outer edge, ball, five toes. Legs have a calf and a thigh, knees are solved
-   from hip and ankle, the pelvis turns and sways, and the arms swing against the legs,
-   all of it melting away above the hips. Up to three walk at once, no two alike: each has their own pace, stride
+/* Home steps: after the menu on fromanother.love: people walking over a frosted glass
+   floor, watched from underneath it. Each is a jointed body walking (or now and then
+   running) in 3D, worked out here in centimetres, and seen in perspective from an eye below
+   the glass: what's pressed on the glass is full size, and the higher a part of the body,
+   the smaller it is, the nearer the middle of the window it draws, and the more the frost
+   blurs and pales it, so the legs rise from the feet as soft glowing columns towards a body
+   that's only a haze. A bare foot strikes on the heel, rolls flat, peels up from the heel
+   and leaves off the toes; only what's on the glass presses dark, a soft bean with no toes
+   or lines, coming and going part by part. Legs go thin and thick as legs do; knees are
+   solved from hip and ankle, the pelvis turns and sways, and the arms swing against the
+   legs. Up to three walk at once, no two alike: each has their own pace, stride
    and turn of the foot, no two of their steps fall quite the same, and they wander a little
    on their way across the window, at any angle, from beyond one edge to beyond another.
    Header letters go white over a shadow, read from what's just been drawn. They wait, out
@@ -1484,28 +1601,30 @@
   const gl = canvas.getContext('webgl2', { alpha:false, depth:false, stencil:false, antialias:false });
   if (!gl) return;
   const WALKERS = 3;
-  const LIMBS = 12;           // shins, thighs, feet, arms, hips, trunk, shoulders, head
-  const PX = 3.8;             // px to a centimetre, in a window 1440 wide
-  const SLANT = 0.6;          // how far a shadow falls for each unit of height
-  const LIGHT = 0.3;          // rad off straight up the window that it falls
-  const CYCLE_S = [0.96, 1.18];   // seconds for two steps, from one walker to another
-  const STRIDE = [165, 200];  // cm covered in those two steps
-  const STANCE = 0.62;        // how much of its cycle a foot spends down
-  const FLAT = 0.1;           // when the sole has rolled flat
-  const HEEL_OFF = 0.4;       // when the heel starts to leave
+  const LIMBS = 8;            // feet, arms, hips, trunk, shoulders, head (legs are drawn apart)
+  const PX = 3;               // px to a centimetre, in a window 1440 wide
+  const DEPTH = 140;          // cm the eye is below the glass
+  // two ways of going. cycle: seconds for two steps; stride: cm covered in them; stance: how
+  // much of its cycle a foot spends down; flat: when the sole has rolled flat; heelOff: when
+  // the heel starts to leave; strike: rad, the toes up as the foot lands; push: rad, the heel
+  // up as the toes leave; clear: cm the foot rises in mid-swing; kick: how early in the swing
+  // it's highest; lead: how far of a stride the foot lands ahead of the body; track: cm each
+  // foot falls to the side of the line; bob: cm the hips rise and fall (a runner's are
+  // lowest on a foot, not highest); lean: cm the chest is ahead of the hips; then the arms.
+  // A run has both feet off the glass between steps, lands nearer flat and under the body,
+  // and kicks the swinging heel up behind
+  const WALK = { cycle:[0.96, 1.18], stride:[165, 200], stance:0.62, flat:0.1, heelOff:0.4, strike:0.31,
+    push:0.8, clear:7, kick:1, lead:0.24, track:7, toeOut:[0.18, 0.32], hip:84, bob:3, lean:2, swing:24, hand:78 };
+  const RUN = { cycle:[0.68, 0.78], stride:[230, 280], stance:0.36, flat:0.05, heelOff:0.16, strike:0.1,
+    push:0.95, clear:36, kick:0.7, lead:0.14, track:4, toeOut:[0.08, 0.2], hip:80, bob:-5, lean:5, swing:34, hand:98 };
+  const RUNNERS = 0.3;        // how many of them run
   const FOOT = 30;            // cm, heel to toe
   const BALL = 0.68;          // where the ball of the foot is along it
   const ANKLE_UP = 8;
-  const STRIKE = 0.31;        // rad, the toes up as the heel lands
-  const PUSH = 0.8;           // rad, the heel up as the toes leave
-  const CLEAR = 7;            // cm the foot clears the glass by in mid-swing
-  const LEAD = 0.24;          // how far of a stride the heel lands ahead of the body
-  const TRACK = 7;            // cm each foot falls to the side of the line
-  const TOE_OUT = [0.18, 0.32];
   const THIGH = 46, SHIN = 46;
-  const KNEE = 0.5;           // from below, a bent knee only shows some of its bend
-  const HIP = 84, BOB = 3, HIP_WIDE = 9, TURN = 0.14, SWAY = 2.5;
-  const SHOULDER = 142, SHOULDER_WIDE = 19, HAND = 78, ARM_SWING = 24;
+  const KNEE = 1;             // how much of a knee's bend shows
+  const HIP_WIDE = 9, TURN = 0.14, SWAY = 2.5;
+  const SHOULDER = 142, SHOULDER_WIDE = 19;
   const REACH = 190;          // cm a body shows beyond its feet
 
   const VERTEX = `#version 300 es
@@ -1521,8 +1640,11 @@
     const vec3 HAZE = vec3(0.94, 0.52, 0.49);
     const vec3 RED = vec3(0.79, 0.07, 0.1);
     const vec3 DEEP = vec3(0.56, 0.03, 0.07);     // where the weight is
-    const float PENUMBRA = 0.1;     // how much blur each px of height brings
-    uniform vec4 uLimb[WALKERS * LIMBS * 3];  // its two ends on the glass; their heights and how solid; its form
+    const float PENUMBRA = 0.16;    // how much blur each px of height brings: frosted, so a lot
+    const float FROST = 2.5;        // cm of blur even on the glass
+    const float JOIN = 2.5;         // how softly the body's parts join: 1 adds them, higher nears the darkest
+    uniform vec4 uLimb[WALKERS * LIMBS * 3];  // its two ends on the glass; their heights, how solid and px to a cm; its form
+    uniform vec4 uLeg[WALKERS * 2 * 4];       // ankle and hip as seen; the curve's pull at the knee and px to a cm; at ankle, pull and hip how high (as blur) and how near (as size), and how solid at each end
     uniform vec4 uFoot[WALKERS * 2];          // the end of the heel and of the toes, on the glass
     uniform vec4 uRaised[WALKERS * 2];        // how high heel, ball and toes are, and which way is in
     uniform vec4 uBox[WALKERS];               // all of a body's shadow, to skip the rest of the window
@@ -1531,60 +1653,110 @@
     uniform float uRatio;                     // drawn pixels to a CSS pixel
     out vec4 colour;
 
-    // a limb's shadow: as wide as its form there, spread by its height, paler for being
-    // spread, and with more of an edge than a plain blur, as it has a body to it
+    float sq(float x){ return x * x; }   // pow() of a number below 0 is no number on some GPUs
+    // a limb's shadow, whole at both ends, as the body joins its parts: as wide as its form
+    // there, spread by its height and the frost, and paler for being spread
     float limb(vec2 p, vec4 ends, vec4 look, vec4 form){
       vec2 e = ends.zw - ends.xy;
       float past = dot(p - ends.xy, e) / max(dot(e, e), 1e-4);
       float along = clamp(past, 0.0, 1.0);
       vec2 gap = p - ends.xy - e * along;
-      float wide = mix(form.x, form.y, along) + form.z * exp(-pow((along - form.w) / 0.28, 2.0));
-      float blur = PENUMBRA * mix(look.x, look.y, along);
+      float wide = mix(form.x, form.y, along) + form.z * exp(-sq((along - form.w) / 0.28));
+      float height = mix(look.x, look.y, along);
+      float blur = PENUMBRA * height + FROST * look.w;
       float s2 = wide * wide + blur * blur;
-      // it comes in from its first end over its own blur, so that it melts into the limb
-      // before it there; added whole, a joint would show twice as dark
-      float start = smoothstep(-1.1, 1.1, past * length(e) * inversesqrt(s2));
-      return start * look.z * wide * inversesqrt(s2) * exp(-pow(dot(gap, gap) / (2.0 * s2), 1.15));
+      // darker the nearer the glass, as a leg is, so a lifted foot carries on from its ankle
+      float solid = look.z * (1.0 + 1.2 * exp(-height / (look.w * 5.0)));
+      return solid * wide * inversesqrt(s2) * exp(-dot(gap, gap) / (2.0 * s2));
     }
-    float blend(float a, float b, float k){
-      float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
-      return mix(b, a, h) - k * h * (1.0 - h);
+    // a leg is one curve from the ankle through the knee to the hip, thin and thick along it as
+    // a leg is: a slim ankle, the calf bulging below a narrower knee, the thigh filling out
+    // to the hip, so the knee bends rather than two pieces meeting there and doubling up. It's
+    // drawn in short pieces, each fading in at its start and out at its end over its own
+    // blur, the way the next fades in, so that between them they make exactly one whole
+    const vec4 SHIN_FORM = vec4(2.8, 4.4, 1.8, 0.62);
+    const vec4 THIGH_FORM = vec4(4.6, 8.0, 0.8, 0.55);
+    const int PIECES = 8;
+    float swell(vec4 form, float x){
+      return mix(form.x, form.y, x) + form.z * exp(-sq((x - form.w) / 0.25));
+    }
+    float bez(vec3 k, float t){ return mix(mix(k.x, k.y, t), mix(k.y, k.z, t), t); }
+    float leg(vec2 p, vec4 ends, vec4 bend, vec4 high, vec4 near){
+      float ink = 0.0;
+      vec2 a = ends.xy;
+      float lift = high.x;
+      for (int k = 1; k <= PIECES; k++){
+        float t0 = float(k - 1) / float(PIECES), t1 = float(k) / float(PIECES);
+        vec2 b = mix(mix(ends.xy, bend.xy, t1), mix(bend.xy, ends.zw, t1), t1);
+        float rise = bez(high.xyz, t1);
+        vec2 e = b - a;
+        float span = max(length(e), 1e-3);
+        float past = dot(p - a, e) / (span * span);
+        float along = clamp(past, 0.0, 1.0);
+        vec2 gap = p - a - e * along;
+        float t = mix(t0, t1, along);
+        float form = mix(swell(SHIN_FORM, clamp(t * 2.0, 0.0, 1.0)), swell(THIGH_FORM, clamp(t * 2.0 - 1.0, 0.0, 1.0)), smoothstep(0.42, 0.58, t));
+        float wide = bend.z * bez(near.xyz, t) * form;
+        float blur = PENUMBRA * mix(lift, rise, along) + FROST * bend.z;
+        float r = inversesqrt(wide * wide + blur * blur);
+        // whole at both ends: down into the foot and up into the hips
+        float part = k == 1 ? 1.0 : smoothstep(-1.1, 1.1, past * span * r);
+        if (k < PIECES) part -= smoothstep(-1.1, 1.1, (past - 1.0) * span * r);
+        // and darker the nearer the glass it comes, so it runs on into the foot's dark
+        float low = exp(-mix(lift, rise, along) / (bend.z * 5.0));
+        float solid = mix(high.w, near.w, smoothstep(0.2, 0.8, t)) * (1.0 + 1.2 * low);
+        ink += part * solid * wide * r * exp(-dot(gap, gap) * r * r / 2.0);
+        a = b;
+        lift = rise;
+      }
+      return ink;
     }
     float capsule(vec2 q, vec2 a, vec2 b, float r0, float r1){
       vec2 e = b - a;
       float t = clamp(dot(q - a, e) / dot(e, e), 0.0, 1.0);
       return length(q - a - e * t) - mix(r0, r1, t);
     }
-    // a footprint, measured in foot lengths from the heel, y running towards the big toe's
-    // side: what's down of it, each part fading as it lifts
+    const vec3 TOES[5] = vec3[5](vec3(1.08, 0.1, 0.048), vec3(1.085, -0.04, 0.029), vec3(1.05, -0.13, 0.026),
+      vec3(0.995, -0.21, 0.023), vec3(0.925, -0.27, 0.02));   // where each sits, and how big
+    // a foot pressed on frosted glass, after fromanother.love: no lines, only a soft dark
+    // bean, narrower at the heel and broader at the ball, and five little soft toes just
+    // beyond it, all one colour, fading part by part as it lifts, heel first and toes last. Measured in foot
+    // lengths from the heel, y running towards the big toe's side
     float sole(vec2 p, vec4 ends, vec4 raised, float size){
       vec2 axis = ends.zw - ends.xy;
       float span = max(dot(axis, axis), 1e-4);
       vec2 q = vec2(dot(p - ends.xy, axis) / span, dot(p - ends.xy, vec2(-axis.y, axis.x)) * inversesqrt(span) / size * raised.w);
-      if (q.x < -0.5 || q.x > 1.5 || abs(q.y) > 0.8) return 0.0;
-      // the heel, the outer edge where the arch lifts away inside it, and the ball
-      float heel = length((q - vec2(0.15, -0.012)) / vec2(0.15, 0.125)) * 0.125 - 0.125;
-      float edge = capsule(q, vec2(0.2, -0.035), vec2(0.6, -0.065), 0.078, 0.092);
-      float ball = capsule(q, vec2(0.64, -0.06), vec2(0.665, 0.055), 0.115, 0.118);
-      float main_ = blend(blend(heel, edge, 0.08), ball, 0.09);
+      // nothing past a foot and a half from the heel (measured on the window: a foot tipped up
+      // looks short, and a bound in its own lengths would cut straight across it)
+      vec2 off = p - (ends.xy + ends.zw) * 0.5;
+      if (dot(off, off) > sq(1.5 * size) || abs(q.y) > 0.9) return 0.0;
+      // curved like a foot: bowing out along the outer edge, heel and ball turned in, and
+      // narrowing at the arch on the inner side
+      float arc = 0.07 * (sq((q.x - 0.45) / 0.42) - 0.6);
+      vec2 qc = vec2(q.x, q.y - arc);
+      float bean = capsule(qc, vec2(0.14, 0.0), vec2(0.76, 0.0), 0.085, 0.14);
+      bean += 0.035 * exp(-sq((q.x - 0.46) / 0.14)) * smoothstep(-0.02, 0.06, qc.y);
       float x = clamp(q.x, 0.0, 1.0);
-      float height = x < 0.68 ? mix(raised.x, raised.y, x / 0.68) : raised.y;
-      float soft = 0.028 + 0.3 * height / size;
-      // the weight is on the heel and the ball, and least of all on that edge
-      float weight = 0.45 + 0.75 * exp(-pow((x - 0.14) / 0.14, 2.0)) + 0.75 * exp(-pow((x - 0.66) / 0.13, 2.0));
-      float print = (1.0 - smoothstep(-soft, soft, main_)) * (1.25 + 0.95 * weight * (1.0 - smoothstep(-0.11, 0.0, main_)));
-      print *= exp(-height / (size * 0.1));
-      // five toes, the big one leading
-      float toe = length((q - vec2(0.875, 0.09)) / vec2(0.075, 0.058)) * 0.058 - 0.058;
-      toe = min(toe, length(q - vec2(0.885, -0.012)) - 0.037);
-      toe = min(toe, length(q - vec2(0.865, -0.078)) - 0.034);
-      toe = min(toe, length(q - vec2(0.835, -0.135)) - 0.031);
-      toe = min(toe, length(q - vec2(0.795, -0.182)) - 0.028);
-      float tipSoft = 0.016 + 0.3 * raised.z / size;
-      float toes = (1.0 - smoothstep(-tipSoft, tipSoft, toe)) * 1.75 * exp(-raised.z / (size * 0.1));
-      // and the glass darkens just round it all, where the foot is nearly touching
-      float close = 1.0 - smoothstep(-0.02, 0.17, min(main_, toe));
-      return max(print, toes) + 0.3 * close * exp(-min(height, raised.z) / (size * 0.1));
+      float height = x < 0.68 ? mix(raised.x, raised.y, x / 0.68) : mix(raised.y, raised.z, (x - 0.68) / 0.32);
+      // one even colour all through, foot and toes alike: full inside, soft only at the edge
+      float soft = 0.1 + 0.35 * height / size;
+      float press = (1.0 - smoothstep(-soft * 0.4, soft * 1.6, bean)) * exp(-height / (size * 0.12));
+      // the toes, the big one leading, the rest getting smaller round the ball's edge, each
+      // apart from the next and the foot clear of them all; each brought up to the foot's own
+      // colour, which the small ones would otherwise never reach inside their soft edges
+      float tipSoft = 0.045 + 0.35 * raised.z / size;
+      float toes = 0.0, toe = 1.0;
+      for (int k = 0; k < 5; k++){
+        float d = length(q - TOES[k].xy) - TOES[k].z;
+        float full = 1.0 - smoothstep(-tipSoft * 0.4, tipSoft * 1.4, -TOES[k].z);
+        toes = max(toes, (1.0 - smoothstep(-tipSoft * 0.4, tipSoft * 1.4, d)) / full);
+        toe = min(toe, d);
+      }
+      // and they leave with the ball of the foot, never lingering on their own once it's up
+      toes *= exp(-max(raised.z, raised.y) / (size * 0.12));
+      // and the glass darkens softly round it, where the foot is nearly touching
+      float close = (1.0 - smoothstep(-0.05, 0.3, min(bean, toe))) * exp(-height / (size * 0.3));
+      return 1.05 * max(press, toes) + 0.25 * close;
     }
     float noise(vec2 p){ return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }
 
@@ -1594,17 +1766,27 @@
       for (int i = 0; i < WALKERS; i++){
         vec4 box = uBox[i];
         if (uSize[i] <= 0.0 || p.x < box.x || p.y < box.y || p.x > box.z || p.y > box.w) continue;
+        // one body, not pieces: wherever its parts meet, feet and legs, thighs, hips and trunk,
+        // added up they'd pile into dark knots and show their seams; instead they're joined
+        // softly, as one form, nearly the darkest of them there and no more. (max(): a
+        // rounding below 0 would be no number at all to pow())
+        float body = 0.0;
         for (int l = 0; l < LIMBS; l++){
           int at = (i * LIMBS + l) * 3;
-          ink += limb(p, uLimb[at], uLimb[at + 1], uLimb[at + 2]);
+          body += pow(max(limb(p, uLimb[at], uLimb[at + 1], uLimb[at + 2]), 0.0), JOIN);
         }
-        ink += sole(p, uFoot[i * 2], uRaised[i * 2], uSize[i]);
-        ink += sole(p, uFoot[i * 2 + 1], uRaised[i * 2 + 1], uSize[i]);
+        for (int l = 0; l < 2; l++){
+          int at = (i * 2 + l) * 4;
+          body += pow(max(leg(p, uLeg[at], uLeg[at + 1], uLeg[at + 2], uLeg[at + 3]), 0.0), JOIN);
+          body += pow(max(sole(p, uFoot[i * 2 + l], uRaised[i * 2 + l], uSize[i]), 0.0), JOIN);
+        }
+        ink += pow(body, 1.0 / JOIN);
       }
       vec3 c = mix(PAPER, HAZE, 1.0 - exp(-ink * 2.1));
       c = mix(c, RED, smoothstep(0.5, 1.5, ink));
       c = mix(c, DEEP, smoothstep(1.4, 2.7, ink));
-      colour = vec4(c + (noise(gl_FragCoord.xy) - 0.5) / 255.0, 1.0);
+      // a triangular dither of two noises, so the long soft gradients don't band into steps
+      colour = vec4(c + (noise(gl_FragCoord.xy) + noise(gl_FragCoord.xy + vec2(17.0, 59.0)) - 1.0) / 255.0, 1.0);
     }`;
 
   function compile(type, source){
@@ -1621,11 +1803,13 @@
   gl.useProgram(program);
   gl.bindVertexArray(gl.createVertexArray());
   const at = name => gl.getUniformLocation(program, name);
-  const u = { limb:at('uLimb'), foot:at('uFoot'), raised:at('uRaised'), box:at('uBox'), size:at('uSize'), height:at('uHeight'), ratio:at('uRatio') };
+  const u = { limb:at('uLimb'), leg:at('uLeg'), foot:at('uFoot'), raised:at('uRaised'), box:at('uBox'), size:at('uSize'), height:at('uHeight'), ratio:at('uRatio') };
 
   let strip = null;
+  // drawn at the screen's own pixels (a Retina screen's two to a CSS pixel), so nothing is
+  // stretched and soft from a smaller canvas
   function fit(){
-    const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+    const ratio = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.round(innerWidth * ratio);
     canvas.height = Math.round(innerHeight * ratio);
     gl.viewport(0, 0, canvas.width, canvas.height);
@@ -1651,29 +1835,32 @@
     const ahead = Math.min(...[0, 1].map(n => way[n] > 0 ? (size[n] - through[n]) / way[n] : -through[n] / (way[n] || 1e-6)));
     const behind = Math.min(...[0, 1].map(n => way[n] > 0 ? through[n] / way[n] : (through[n] - size[n]) / (way[n] || 1e-6)));
     const margin = REACH * px;
-    const lean = LIGHT + between(-0.15, 0.15);
+    const gait = Math.random() < RUNNERS ? RUN : WALK;
     return {
       from:from,
       px:px,
+      gait:gait,
       seed:between(0, 100),
-      stride:between(STRIDE[0], STRIDE[1]),
-      cycle:between(CYCLE_S[0], CYCLE_S[1]),
-      toeOut:between(TOE_OUT[0], TOE_OUT[1]),
+      stride:between(gait.stride[0], gait.stride[1]),
+      cycle:between(gait.cycle[0], gait.cycle[1]),
+      toeOut:between(gait.toeOut[0], gait.toeOut[1]),
       drift:between(6, 26),
       way:way,
       side:[-way[1], way[0]],
-      slant:[Math.sin(lean) * SLANT, -Math.cos(lean) * SLANT],
       start:[through[0] - way[0] * (behind + margin), through[1] - way[1] * (behind + margin)],
       length:behind + ahead + margin * 2
     };
   }
-  // from [along the line, to its side, height], in cm, to a shadow on the glass, in px
+  // how much smaller a thing this high looks to the eye below the glass
+  const near = height => DEPTH / (DEPTH + Math.max(0, height));
+  // from [along the line, to its side, height], in cm, to where the eye below the glass sees
+  // it, in px: the higher, the nearer the middle of the window
   function cast(w, p){
     const side = p[1] + w.drift * Math.sin(p[0] * 0.012 + w.seed);   // their wandering
-    return [
-      w.start[0] + (w.way[0] * p[0] + w.side[0] * side + w.slant[0] * p[2]) * w.px,
-      w.start[1] + (w.way[1] * p[0] + w.side[1] * side + w.slant[1] * p[2]) * w.px
-    ];
+    const x = w.start[0] + (w.way[0] * p[0] + w.side[0] * side) * w.px;
+    const y = w.start[1] + (w.way[1] * p[0] + w.side[1] * side) * w.px;
+    const s = near(p[2]);
+    return [innerWidth / 2 + (x - innerWidth / 2) * s, innerHeight / 2 + (y - innerHeight / 2) * s];
   }
   // the same small difference every time for a given step of a given walker, from -1 to 1
   function shake(w, n){
@@ -1683,25 +1870,27 @@
 
   // foot 0 or 1, its cycle having reached this far: heel, toes and ankle
   function foot(w, which, cycle){
+    const g = w.gait;
     const turn = cycle + which * 0.5;
     const k = Math.floor(turn), u = turn - k;
-    const plant = n => (n - which * 0.5 + LEAD) * w.stride + shake(w, n * 2 + which) * 3;
-    const track = n => TRACK + shake(w, n * 2 + which + 0.5) * 1.8;
-    const peelAlong = plant(k) + BALL * FOOT * (1 - Math.cos(PUSH));
-    const peelHeight = BALL * FOOT * Math.sin(PUSH);
+    const plant = n => (n - which * 0.5 + g.lead) * w.stride + shake(w, n * 2 + which) * 3;
+    const track = n => g.track + shake(w, n * 2 + which + 0.5) * 1.8;
+    const peelAlong = plant(k) + BALL * FOOT * (1 - Math.cos(g.push));
+    const peelHeight = BALL * FOOT * Math.sin(g.push);
     let along, height, pitch, wide = track(k);
-    if (u < FLAT){ along = plant(k); height = 0; pitch = STRIKE * (1 - smooth(u / FLAT)); }
-    else if (u < HEEL_OFF){ along = plant(k); height = 0; pitch = 0; }
-    else if (u < STANCE){
+    if (u < g.flat){ along = plant(k); height = 0; pitch = g.strike * (1 - smooth(u / g.flat)); }
+    else if (u < g.heelOff){ along = plant(k); height = 0; pitch = 0; }
+    else if (u < g.stance){
       // over the ball of the foot, which stays where it is
-      pitch = -PUSH * smooth((u - HEEL_OFF) / (STANCE - HEEL_OFF));
+      pitch = -g.push * smooth((u - g.heelOff) / (g.stance - g.heelOff));
       along = plant(k) + BALL * FOOT * (1 - Math.cos(pitch));
       height = BALL * FOOT * Math.sin(-pitch);
     } else {
-      const v = (u - STANCE) / (1 - STANCE);
-      along = mix(peelAlong, plant(k + 1), smooth(v));
-      height = peelHeight * (1 - v) * (1 - v) + CLEAR * Math.sin(Math.PI * v) * (1 - 0.4 * v);
-      pitch = mix(-PUSH, STRIKE, smooth(v));
+      // a runner's foot rises first, behind, and only then comes through
+      const v = (u - g.stance) / (1 - g.stance);
+      along = mix(peelAlong, plant(k + 1), smooth(Math.pow(v, 2 - g.kick)));
+      height = peelHeight * (1 - v) * (1 - v) + g.clear * Math.sin(Math.PI * Math.pow(v, g.kick)) * (1 - 0.4 * v);
+      pitch = mix(-g.push, g.strike, smooth(v));
       wide = mix(track(k), track(k + 1), smooth(v));
     }
     const out = which ? 1 : -1;
@@ -1728,60 +1917,82 @@
   }
 
   const limbs = new Float32Array(WALKERS * LIMBS * 12);
+  const legs = new Float32Array(WALKERS * 2 * 16);
   const soles = new Float32Array(WALKERS * 8);
   const raised = new Float32Array(WALKERS * 8);
   const boxes = new Float32Array(WALKERS * 4);
   const sizes = new Float32Array(WALKERS);
-  // the form of a limb, in cm: wide at each end, and what it swells by, and where
-  const CALF = [2.4, 3.6, 1.5, 0.4], THIGH_FORM = [3.6, 6, 0.8, 0.5], SMUDGE = [2.6, 2.6, 0, 0.5];
+  // the form of a limb, in cm: wide at each end, and what it swells by, and where (a leg's
+  // is in the shader)
+  const SMUDGE = [3.5, 4.5, 0, 0.5];      // as broad as the foot, which it is
   const HIPS = [7, 7, 0, 0.5], TRUNK = [8, 11, -1.5, 0.4], YOKE = [5, 5, 0, 0.5], ARM = [3, 2, 0.8, 0.25], HEAD = [5, 6, 1, 0.5];
   function place(w, i, now){
     const seconds = (now - w.from) / 1000;
     const cycle = seconds / w.cycle + 0.02 * Math.sin(seconds * 0.9 + w.seed);   // never quite even
     const along = cycle * w.stride;
     const swing = Math.PI * 2 * cycle;
-    const pelvis = [along, -SWAY * Math.sin(swing), HIP - BOB * Math.cos(swing * 2)];
+    const g = w.gait;
+    const pelvis = [along, -SWAY * Math.sin(swing), g.hip - g.bob * Math.cos(swing * 2)];
     const turn = TURN * Math.cos(swing);
-    const chest = [along + 5, pelvis[1] * 0.5, SHOULDER - BOB * Math.cos(swing * 2)];
+    const chest = [along + g.lean, pelvis[1] * 0.5, SHOULDER - (84 - g.hip) - g.bob * Math.cos(swing * 2)];
     let slot = i * LIMBS, left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
-    function stroke(a, b, form, solid){
-      const from = cast(w, a), to = cast(w, b);
-      limbs.set([from[0], from[1], to[0], to[1], a[2] * w.px, b[2] * w.px, solid, 0,
-        form[0] * w.px, form[1] * w.px, form[2] * w.px, form[3]], slot * 12);
-      slot++;
-      const spread = Math.max(a[2], b[2]) * w.px * 0.6 + 60;
+    function reach(from, to, height){
+      const spread = height * w.px * 0.6 + 60;
       left = Math.min(left, from[0] - spread, to[0] - spread);
       right = Math.max(right, from[0] + spread, to[0] + spread);
       top = Math.min(top, from[1] - spread, to[1] - spread);
       bottom = Math.max(bottom, from[1] + spread, to[1] + spread);
     }
+    // the further up, the smaller it looks, and its blur with it
+    function stroke(a, b, form, solid){
+      const from = cast(w, a), to = cast(w, b), sa = near(a[2]), sb = near(b[2]);
+      limbs.set([from[0], from[1], to[0], to[1], a[2] * w.px * sa, b[2] * w.px * sb, solid, w.px,
+        form[0] * w.px * sa, form[1] * w.px * sb, form[2] * w.px * (sa + sb) / 2, form[3]], slot * 12);
+      slot++;
+      reach(from, to, Math.max(a[2], b[2]));
+    }
     const hips = [], shoulders = [];
     [foot(w, 0, cycle), foot(w, 1, cycle)].forEach(function(f, n){
       const hip = [pelvis[0] + f.out * -HIP_WIDE * Math.sin(turn), pelvis[1] + f.out * HIP_WIDE, pelvis[2]];
+      // the curve's pull, set so that it passes through the knee, as seen, halfway along;
+      // how high (as blur) and how near (as size) go along it the same way
       const joint = knee(hip, f.ankle);
-      stroke(f.ankle, joint, CALF, 0.55);
-      stroke(joint, hip, THIGH_FORM, 0.44);
+      const from = cast(w, f.ankle), by = cast(w, joint), to = cast(w, hip);
+      const pull = (a, b, c) => 2 * b - (a + c) / 2;
+      const blur = p3 => p3[2] * w.px * near(p3[2]);
+      legs.set([from[0], from[1], to[0], to[1],
+        pull(from[0], by[0], to[0]), pull(from[1], by[1], to[1]), w.px, 0,
+        blur(f.ankle), pull(blur(f.ankle), blur(joint), blur(hip)), blur(hip), 0.55,
+        near(f.ankle[2]), pull(near(f.ankle[2]), near(joint[2]), near(hip[2])), near(hip[2]), 0.44], (i * 2 + n) * 16);
+      reach(from, to, hip[2]);
+      reach(by, by, joint[2]);
       // the foot off the glass: all that's left of it is this smudge
-      stroke(f.heel, f.toes, SMUDGE, 0.3);
-      const heel = cast(w, f.heel), toes = cast(w, f.toes);
+      stroke(f.heel, f.toes, SMUDGE, 0.35);
+      // the print is the whole foot laid flat on the glass under its ball, never the heel and
+      // toes where they are: rolling over the ball, the heel rises and the toes tip down,
+      // which would squeeze the print shorter, as if it folded in half. A foot bends at the
+      // ball and its heel just leaves the glass; only the heights say what's still down
+      const flat = by => [f.ball[0] + FOOT * (by - BALL), f.ball[1] + f.out * FOOT * (by - BALL) * w.toeOut, 0];
+      const heel = cast(w, flat(0)), toes = cast(w, flat(1));
       soles.set([heel[0], heel[1], toes[0], toes[1]], (i * 2 + n) * 4);
       raised.set([f.heel[2] * w.px, f.ball[2] * w.px, f.toes[2] * w.px, -f.out], (i * 2 + n) * 4);
       // each arm goes with the other leg, and the shoulders turn against the hips
       const shoulder = [chest[0] + f.out * SHOULDER_WIDE * Math.sin(turn), chest[1] + f.out * SHOULDER_WIDE, chest[2]];
-      stroke(shoulder, [chest[0] + f.out * ARM_SWING * Math.cos(swing), shoulder[1] + f.out * 3, HAND], ARM, 0.22);
+      stroke(shoulder, [chest[0] + f.out * g.swing * Math.cos(swing), shoulder[1] + f.out * 3, g.hand], ARM, 0.22);
       hips.push(hip);
       shoulders.push(shoulder);
     });
     stroke(hips[0], hips[1], HIPS, 0.26);
     stroke(pelvis, chest, TRUNK, 0.26);
     stroke(shoulders[0], shoulders[1], YOKE, 0.16);
-    stroke([chest[0], chest[1], chest[2] + 10], [chest[0] + 2, chest[1], chest[2] + 28], HEAD, 0.16);
+    stroke([chest[0], chest[1], chest[2] + 10], [chest[0], chest[1], chest[2] + 28], HEAD, 0.16);
     boxes.set([left, top, right, bottom], i * 4);
     sizes[i] = FOOT * w.px;
     return along * w.px > w.length;
   }
   function paint(){
     gl.uniform4fv(u.limb, limbs);
+    gl.uniform4fv(u.leg, legs);
     gl.uniform4fv(u.foot, soles);
     gl.uniform4fv(u.raised, raised);
     gl.uniform4fv(u.box, boxes);
