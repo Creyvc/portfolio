@@ -2324,8 +2324,9 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
 
 /* Embedded contact (contact.html?embed, inside home's CONTACT pop-up): a click
    on the empty space round the boxes, Esc, or the home page asking
-   ('pop-exit') plays the exit: the boxes draw in to the middle and shrink
-   away, outer ones first, and the progress ticks fade; then it tells the home
+   ('pop-exit') plays the exit: the boxes drop off the bottom of the window,
+   one after another from the left, and the progress ticks go the other way, up
+   off the top; then it tells the home
    page to close the pop-up ('pop-close'), which fades the blur out. Clicking a
    box still does that box's own thing. While the boxes' intro is still
    running, clicks do nothing at all; Esc still closes, straight away. */
@@ -2341,21 +2342,29 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
     leaving = true;
     if (!scroller || intro()){ close(); return; }   // nothing settled to animate yet
     const boxes = Array.prototype.slice.call(scroller.querySelectorAll('.contact-box'));
-    const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
-    const near = boxes.map(function(b){
-      const r = b.getBoundingClientRect();
-      return { dx:cx - (r.left + r.width / 2), dy:cy - (r.top + r.height / 2) };
+    const H = window.innerHeight, W = window.innerWidth;
+    const at = boxes.map(b => b.getBoundingClientRect());
+    // the boxes in view leave left to right, each a step behind the last; the ones
+    // scrolled out of view are hidden by the rail anyway, so they just go. `translate`
+    // rather than transform, so whatever transform a box already has stays put
+    const seen = at.map((r, i) => i).filter(i => at[i].right > 0 && at[i].left < W)
+      .sort((a, b) => at[a].left - at[b].left);
+    const DUR = 720, STEP = 60, EASE = 'cubic-bezier(0.7, 0, 0.3, 1)';
+    const runs = boxes.map(function(b, i){
+      const k = seen.indexOf(i);
+      return b.animate([{ translate:'0 0' }, { translate:'0 ' + Math.ceil(H - at[i].top + 40) + 'px' }], {
+        duration:k < 0 ? 0 : DUR, delay:k < 0 ? 0 : k * STEP, easing:EASE, fill:'forwards'
+      }).finished;
     });
-    // the boxes furthest out leave first, so the row closes in on the middle
-    const order = near.map((n, i) => i).sort((a, b) => Math.abs(near[b].dx) - Math.abs(near[a].dx));
-    const DUR = 620, STEP = 35;
-    const runs = order.map(function(i, k){
-      return boxes[i].animate([
-        { transform:'translate(' + near[i].dx.toFixed(1) + 'px,' + near[i].dy.toFixed(1) + 'px) scale(0.04)', opacity:0 }
-      ], { duration:DUR, delay:k * STEP, easing:'cubic-bezier(0.65, 0, 0.35, 1)', fill:'forwards' }).finished;
-    });
+    // and the ticks rise out by the top as the first box starts down (the bar's own
+    // translateY(-50%) centring is a transform, which `translate` adds to)
     const bar = document.getElementById('contactProgress');
-    if (bar) bar.animate([{ opacity:0 }], { duration:300, fill:'forwards' });
+    if (bar){
+      const top = bar.getBoundingClientRect().bottom + 40;
+      runs.push(bar.animate([{ translate:'0 0' }, { translate:'0 ' + -Math.ceil(top) + 'px' }], {
+        duration:DUR, easing:EASE, fill:'forwards'
+      }).finished);
+    }
     Promise.all(runs).then(close, close);
   }
 
