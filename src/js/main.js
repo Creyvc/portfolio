@@ -1552,6 +1552,11 @@
         video.currentTime = shot.tile.querySelector('video').currentTime;
         video.play().catch(function(){});
       });
+      // and any video that's only here, from its start
+      if (!calm) extras.forEach(function(extra){
+        const video = extra.querySelector('video');
+        if (video) video.play().catch(function(){});
+      });
       if (calm) return;
       busy = true;
       hold(true);
@@ -1584,6 +1589,10 @@
           shot.el.getAnimations().forEach(a => a.cancel());
           const video = shot.el.querySelector('video');
           if (video) video.pause();
+        });
+        extras.forEach(function(extra){
+          const video = extra.querySelector('video');
+          if (video){ video.pause(); video.currentTime = 0; }
         });
         open = null;
         busy = false;
