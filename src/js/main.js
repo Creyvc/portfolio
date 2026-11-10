@@ -2775,8 +2775,8 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
    decodes itself on a loop. Each letter churns through random glyphs and
    locks in, roughly left to right; the line holds with the odd letter
    glitching for a frame or two; then it scrambles back to noise and decodes
-   again. Hovering the words decrypts them there and then, from noise, and the
-   loop carries on from that. The real text stays in a screen-reader-only copy,
+   again. A letter the pointer passes over churns for a moment on its own and
+   locks back in, whatever the rest is doing. The real text stays in a screen-reader-only copy,
    and the churning copy is hidden from them. Reduced motion leaves the text as
    it is. */
 (function(){
@@ -2795,7 +2795,16 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
     real.textContent = text;
     const shown = document.createElement('span');
     shown.setAttribute('aria-hidden', 'true');
+    // a span a letter, so each can be hovered on its own
+    const cells = chars.map(function(c){
+      const cell = document.createElement('span');
+      cell.textContent = c;
+      shown.appendChild(cell);
+      return cell;
+    });
     el.append(real, shown);
+    const HOT_MS = 400;                     // how long a hovered letter churns
+    const hot = chars.map(() => 0);         // till when each one does
 
     let t = 0, phase = 'decode', lock = [], glitch = new Map();
     function plan(){
@@ -2805,20 +2814,25 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
     plan();
 
     function render(){
-      shown.textContent = chars.map(function(c, i){
-        if (c === ' ') return ' ';
-        if (phase === 'decode') return t >= lock[i] ? c : glyph();
-        if (phase === 'hold')   return glitch.has(i) ? glitch.get(i) : c;
-        return t >= lock[i] ? glyph() : c;           // 'encode': letters fall back to noise
-      }).join('');
+      const now = performance.now();
+      chars.forEach(function(c, i){
+        let show = c;
+        if (c === ' ') show = ' ';
+        else if (hot[i] > now) show = glyph();
+        else if (phase === 'decode') show = t >= lock[i] ? c : glyph();
+        else if (phase === 'hold') show = glitch.has(i) ? glitch.get(i) : c;
+        else show = t >= lock[i] ? glyph() : c;    // 'encode': letters fall back to noise
+        if (cells[i].textContent !== show) cells[i].textContent = show;
+      });
     }
 
-    // hovered: every letter back to noise and decoding again, at once
-    shown.addEventListener('mouseenter', function(){
-      glitch.clear();
-      phase = 'decode'; t = 0;
-      plan();
-      render();
+    // a letter hovered churns for a moment, then locks back in
+    cells.forEach(function(cell, i){
+      if (chars[i] === ' ') return;
+      cell.addEventListener('mouseenter', function(){
+        hot[i] = performance.now() + HOT_MS;
+        render();
+      });
     });
 
     setInterval(function(){
