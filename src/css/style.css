@@ -96,6 +96,14 @@
      window's edge. The page is dark under it before it starts, and the
      page's text turns light to read on it. */
   body.journey{ background:#121316; }
+  /* the way in (main.js, "Pixel field"): on home, this page's field building up over the
+     window, over everything, one canvas pixel a cell blown up unsmoothed as .pixel-bg is;
+     and here, arriving that way, nothing shown till the field has drawn that same frame, so
+     the browser holds home's last frame on screen meanwhile */
+  .journey-blocks{ position:fixed; top:0; left:0; z-index:10001; image-rendering:pixelated; pointer-events:none; }
+  html.journey-in body{ visibility:hidden; }
+  /* and home, back that way, likewise till it has drawn the frame the field stopped on */
+  html.journey-out body{ visibility:hidden; }
   .pixel-bg{
     position:fixed;
     top:0; left:0;

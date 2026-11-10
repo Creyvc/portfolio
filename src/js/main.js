@@ -2484,34 +2484,62 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
    colour for a moment. It steps at about 12 frames a second rather than
    gliding, which is what makes it read as glitching pixels. One canvas pixel
    per cell, scaled up unsmoothed by CSS (.pixel-bg). Reduced motion gets a
-   single still frame. */
+   single still frame.
+
+   And the way in (home): JOURNEY builds the field's own first frame up over the window, as
+   ABOUT's blocks build, each cell simply appearing in its own place and colour, from every
+   side and corner inward, outer ones first with a little randomness, till the window is
+   all field; then journey.html opens on that very frame (the same seed, handed over in
+   sessionStorage; its head script hides the page till it's drawn, html.journey-in) and
+   starts moving from there, so nothing jumps or changes on the way. And the way out, the
+   other way about: [CLOSE] stops the field on the frame it's at and home opens under that
+   very frame (handed over in sessionStorage, cell by cell; home's head script hides it till
+   it's drawn, html.journey-out), which leaves it cell by cell, the innermost first, back out
+   to the edges. Reduced motion: the links are just links. */
 (function(){
   const canvas = document.querySelector('.pixel-bg');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
+  const link = document.querySelector('a.home-nav[href="journey.html"]');
+  const html = document.documentElement;
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let back = null;
+  if (html.classList.contains('journey-out')){
+    try {
+      back = JSON.parse(sessionStorage.getItem('journeyOut'));
+      sessionStorage.removeItem('journeyOut');
+    } catch(e){}
+    if (calm || !back) html.classList.remove('journey-out');
+  }
+  if (!canvas && (!link || calm)) return;
 
   const CELL = 45;                 // css px per pixel, as on thibaud.film
   const STEP = 1000 / 12;          // ms per frame: stepped, not smooth
+  const IN_MS = 900, OUT_MS = 900, JITTER = 0.3;   // the way in from home, and back out
   const BASE = [18, 19, 22];       // the page's own near-black
   // the clouds' colours: greys, oxblood, brown, olive, navy, all kept dark
   const TINTS = [
     [62, 64, 70], [80, 82, 88], [40, 41, 46], [68, 26, 30],
     [66, 48, 32], [52, 53, 36], [34, 43, 64], [8, 8, 10]
   ];
-  const rand = (a, b) => a + Math.random() * (b - a);
-  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  // the field's start is drawn from a seed, so home and journey.html make the same one;
+  // everything after that is left to chance
+  function seeded(seed){
+    return function(){
+      seed = (seed + 0x6D2B79F5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  let random = Math.random;
+  const rand = (a, b) => a + random() * (b - a);
+  const pick = arr => arr[Math.floor(random() * arr.length)];
 
-  let cols = 0, rows = 0, img = null;
+  let cols = 0, rows = 0;
   let blobs = [], noise = null, glitches = [];
 
   function size(){
     cols = Math.ceil(window.innerWidth / CELL);
     rows = Math.ceil(window.innerHeight / CELL);
-    canvas.width = cols; canvas.height = rows;
-    canvas.style.width = cols * CELL + 'px';
-    canvas.style.height = rows * CELL + 'px';
-    img = ctx.createImageData(cols, rows);
     noise = new Float32Array(cols * rows).map(() => rand(-1, 1));
     if (!blobs.length) blobs = TINTS.map(function(c){
       return {
@@ -2524,6 +2552,12 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
         k: rand(0.7, 1)                      // how strongly it colours
       };
     });
+  }
+  // one canvas pixel a cell, shown a cell's size
+  function fit(el){
+    el.width = cols; el.height = rows;
+    el.style.width = cols * CELL + 'px';
+    el.style.height = rows * CELL + 'px';
   }
 
   function move(){
@@ -2565,7 +2599,9 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
     return [r + f, g + f, bl + f];
   }
 
-  function draw(){
+  // the field as it stands, cell by cell, into `img`; `only`, if given, says which cells to
+  // fill (the way in), the rest left clear
+  function paint(img, only){
     const d = img.data;
     for (let y = 0; y < rows; y++){
       let shift = 0;
@@ -2574,12 +2610,13 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
         if (gl.kind === 'shift' && y >= gl.y0 && y < gl.y1) shift = gl.dx;
       }
       for (let x = 0; x < cols; x++){
+        const o = (y * cols + x) * 4;
+        if (only && !only(x, y)){ d[o + 3] = 0; continue; }
         let c = colourAt(x - shift, y);
         for (let i = 0; i < glitches.length; i++){
           const gl = glitches[i];
           if (gl.kind === 'block' && x >= gl.x0 && x < gl.x0 + gl.w && y >= gl.y0 && y < gl.y0 + gl.h) c = gl.c;
         }
-        const o = (y * cols + x) * 4;
         // stepped to 6 levels a channel: no smooth gradients inside the grid
         d[o]     = Math.round(c[0] / 6) * 6;
         d[o + 1] = Math.round(c[1] / 6) * 6;
@@ -2587,27 +2624,161 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
         d[o + 3] = 255;
       }
     }
+  }
+
+  // each cell's turn: 0 at the window's edge, 1 at its middle, loosened a little so the
+  // front is ragged
+  function turns(){
+    const W = window.innerWidth, H = window.innerHeight;
+    const turn = new Float32Array(cols * rows);
+    for (let y = 0; y < rows; y++){
+      for (let x = 0; x < cols; x++){
+        const mx = Math.min((x + 0.5) * CELL, W), my = Math.min((y + 0.5) * CELL, H);
+        const inward = Math.min(mx, W - mx, my, H - my) / (Math.min(W, H) / 2);
+        turn[y * cols + x] = Math.min(inward, 1) * (1 - JITTER) + Math.random() * JITTER;
+      }
+    }
+    return turn;
+  }
+
+  // home, back from journey.html by its [CLOSE]: under the frame it stopped on, which leaves
+  // from the middle out
+  if (!canvas && back){
+    cols = back.cols; rows = back.rows;
+    const cover = document.createElement('canvas');
+    cover.className = 'journey-blocks';
+    cover.setAttribute('aria-hidden', 'true');
+    fit(cover);
+    document.body.appendChild(cover);
+    const cctx = cover.getContext('2d'), img = cctx.createImageData(cols, rows), d = img.data;
+    const cells = atob(back.cells), turn = turns();
+    function show(level){
+      for (let i = 0; i < cols * rows; i++){
+        d[i * 4] = cells.charCodeAt(i * 3);
+        d[i * 4 + 1] = cells.charCodeAt(i * 3 + 1);
+        d[i * 4 + 2] = cells.charCodeAt(i * 3 + 2);
+        d[i * 4 + 3] = turn[i] <= level ? 255 : 0;
+      }
+      cctx.putImageData(img, 0, 0);
+    }
+    show(1);
+    html.classList.remove('journey-out');
+    const begin = performance.now();
+    (function frame(now){
+      const t = Math.min((now - begin) / OUT_MS, 1);
+      show(1 - t);
+      if (t < 1) requestAnimationFrame(frame); else cover.remove();
+    })(begin);
+  }
+
+  // home: JOURNEY builds the field's first frame up over the window, then goes
+  if (!canvas){
+    let going = null;
+    link.addEventListener('click', function(e){
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      if (going) return;
+      const seed = 1 + Math.floor(Math.random() * 2147483646);
+      random = seeded(seed);
+      blobs = [];
+      size();
+      random = Math.random;
+      going = document.createElement('canvas');
+      going.className = 'journey-blocks';
+      going.setAttribute('aria-hidden', 'true');
+      fit(going);
+      document.body.appendChild(going);
+      const ctx = going.getContext('2d'), img = ctx.createImageData(cols, rows);
+      const turn = turns();
+      const start = performance.now();
+      (function frame(now){
+        const level = Math.min((now - start) / IN_MS, 1);
+        paint(img, (x, y) => turn[y * cols + x] <= level);
+        ctx.putImageData(img, 0, 0);
+        if (level < 1){ requestAnimationFrame(frame); return; }
+        try {
+          sessionStorage.setItem('journeyIn', String(seed));
+          sessionStorage.setItem('pageTransition', '1');
+        } catch(err){}
+        window.location.href = link.href;
+      })(start);
+    });
+    // back again from the browser's memory of home, cells and all
+    window.addEventListener('pageshow', function(e){
+      if (!e.persisted || !going) return;
+      going.remove();
+      going = null;
+    });
+    return;
+  }
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  let img = null;
+  function start(){
+    size();
+    fit(canvas);
+    img = ctx.createImageData(cols, rows);
+  }
+  function draw(){
+    paint(img);
     ctx.putImageData(img, 0, 0);
   }
 
-  size();
+  // arrived by home's JOURNEY: the same seed, so the same first frame home ended on
+  const seed = +html.getAttribute('data-journey-seed');
+  if (seed) random = seeded(seed);
+  start();
+  random = Math.random;
   draw();
-  window.addEventListener('resize', function(){ size(); draw(); });
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  html.classList.remove('journey-in');
+  window.addEventListener('resize', function(){ start(); draw(); });
+  if (calm) return;
 
-  let last = 0;
+  let last = performance.now(), leaving = false;
   (function tick(now){
+    if (leaving) return;
     if (now - last >= STEP){ last = now; move(); draw(); }
     requestAnimationFrame(tick);
-  })(0);
+  })(last);
+
+  // [CLOSE]: the field stops where it is, and that frame goes to home, three bytes a cell
+  const closer = document.querySelector('.close-btn');
+  if (closer) closer.addEventListener('click', function(e){
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    leaving = true;
+    let cells = '';
+    for (let i = 0; i < cols * rows; i++){
+      cells += String.fromCharCode(img.data[i * 4], img.data[i * 4 + 1], img.data[i * 4 + 2]);
+    }
+    try {
+      sessionStorage.setItem('journeyOut', JSON.stringify({ cols:cols, rows:rows, cells:btoa(cells) }));
+      sessionStorage.setItem('pageTransition', '1');
+    } catch(err){}
+    window.location.href = closer.href;
+  });
+  // back again from the browser's memory of this page: moving again
+  window.addEventListener('pageshow', function(e){
+    if (!e.persisted || !leaving) return;
+    leaving = false;
+    last = performance.now();
+    requestAnimationFrame(function tick(now){
+      if (leaving) return;
+      if (now - last >= STEP){ last = now; move(); draw(); }
+      requestAnimationFrame(tick);
+    });
+  });
 })();
 
 /* Decrypting text ([data-decrypt], journey.html's COMING SOON): the line
    decodes itself on a loop. Each letter churns through random glyphs and
    locks in, roughly left to right; the line holds with the odd letter
    glitching for a frame or two; then it scrambles back to noise and decodes
-   again. The real text stays in a screen-reader-only copy, and the churning
-   copy is hidden from them. Reduced motion leaves the text as it is. */
+   again. Hovering the words decrypts them there and then, from noise, and the
+   loop carries on from that. The real text stays in a screen-reader-only copy,
+   and the churning copy is hidden from them. Reduced motion leaves the text as
+   it is. */
 (function(){
   const els = document.querySelectorAll('[data-decrypt]');
   if (!els.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -2641,6 +2812,14 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
         return t >= lock[i] ? glyph() : c;           // 'encode': letters fall back to noise
       }).join('');
     }
+
+    // hovered: every letter back to noise and decoding again, at once
+    shown.addEventListener('mouseenter', function(){
+      glitch.clear();
+      phase = 'decode'; t = 0;
+      plan();
+      render();
+    });
 
     setInterval(function(){
       t += TICK;

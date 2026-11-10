@@ -36,7 +36,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Vuthy Cheam","url":"https://vuthycheam.com/"}
 </script>
-<link rel="stylesheet" href="src/css/style.css?v=260">
+<link rel="stylesheet" href="src/css/style.css?v=265">
 <link rel="prefetch" href="contact.html">
 <script>
 /* Arrived from another page of the site: mark <html> BEFORE the body renders so
@@ -48,6 +48,14 @@
   } catch(e){ return; }
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   document.documentElement.className += ' pt pt-open';
+})();
+</script>
+<script>
+/* Back from the Journey page by its [CLOSE]: hidden till main.js has covered it with the frame
+   the pixel field stopped on, which then leaves it ("Pixel field"). */
+(function(){
+  try { if (!sessionStorage.getItem('journeyOut')) return; } catch(e){ return; }
+  document.documentElement.className += ' journey-out';
 })();
 </script>
 <script>
@@ -144,6 +152,6 @@
     </div>
   </section>
 
-  <script src="src/js/main.js?v=271"></script>
+  <script src="src/js/main.js?v=277"></script>
 </body>
 </html> 
