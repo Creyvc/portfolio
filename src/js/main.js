@@ -1265,6 +1265,69 @@
   grid.addEventListener('mouseleave', function(){ dim(null); });
 
   const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Pixel loading, after olivierlarose.com's image pixel loading: a picture or video comes in
+  // as big square blocks of its own colours, at once, and after `wait` sharpens a step at a
+  // time to the real thing. A canvas over the media does it (the picture shrunk to one pixel
+  // a block, then blown back up unsmoothed), redrawn each step, so a video plays on under it,
+  // and taken away at the end. Cropped as object-fit:cover crops the media under it.
+  const PIXEL_BLOCKS = [44, 26, 15, 8, 4, 2], PIXEL_STEP_MS = 110;
+  function pixelIn(media, wait){
+    if (calm) return;
+    if (media.pixelStop) media.pixelStop();
+    const host = media.parentElement;
+    const w = media.offsetWidth, h = media.offsetHeight;
+    if (!w || !h) return;
+    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    const veil = document.createElement('canvas'), small = document.createElement('canvas');
+    veil.className = 'pixel-veil';
+    veil.width = Math.round(w * ratio);
+    veil.height = Math.round(h * ratio);
+    veil.style.left = media.offsetLeft + 'px';
+    veil.style.top = media.offsetTop + 'px';
+    veil.style.width = w + 'px';
+    veil.style.height = h + 'px';
+    host.appendChild(veil);
+    const ink = veil.getContext('2d'), shrink = small.getContext('2d');
+    ink.fillStyle = getComputedStyle(document.body).backgroundColor || '#FDFDFD';
+    ink.fillRect(0, 0, veil.width, veil.height);
+    let step = 0, timer = 0, stopped = false;
+    function ready(){
+      return media.tagName === 'IMG' ? media.complete && media.naturalWidth > 0 : media.readyState >= 2;
+    }
+    function draw(block){
+      const nw = media.naturalWidth || media.videoWidth, nh = media.naturalHeight || media.videoHeight;
+      const k = Math.max(w / nw, h / nh), sw = w / k, sh = h / k;
+      const cols = Math.ceil(w / block), rows = Math.ceil(h / block);
+      small.width = cols;
+      small.height = rows;
+      shrink.drawImage(media, (nw - sw) / 2, (nh - sh) / 2, sw, sh, 0, 0, cols, rows);
+      ink.imageSmoothingEnabled = false;
+      ink.drawImage(small, 0, 0, cols, rows, 0, 0, cols * block * ratio, rows * block * ratio);
+    }
+    function stop(){
+      stopped = true;
+      clearTimeout(timer);
+      veil.remove();
+      if (media.pixelStop === stop) media.pixelStop = null;
+    }
+    function next(){
+      if (stopped) return;
+      if (step >= PIXEL_BLOCKS.length){ stop(); return; }
+      draw(PIXEL_BLOCKS[step++]);
+      timer = setTimeout(next, PIXEL_STEP_MS);
+    }
+    function start(){
+      if (stopped) return;
+      draw(PIXEL_BLOCKS[step++]);
+      timer = setTimeout(next, Math.max(wait || 0, PIXEL_STEP_MS));
+    }
+    media.pixelStop = stop;
+    // not loaded yet: plain paper until it is, then the blocks
+    if (ready()) start();
+    else media.addEventListener(media.tagName === 'IMG' ? 'load' : 'canplay', start, { once:true });
+  }
+
   function mixed(){
     const order = tiles.slice();
     for (let i = order.length - 1; i > 0; i--){
@@ -1323,6 +1386,20 @@
       });
     });
     function hold(on){ extras.forEach(extra => extra.classList.toggle('is-held', on)); }
+    // every screen comes in as pixels, once each time the project opens: the ones flying in
+    // as they land, the rest as they first scroll into view
+    const seen = new Set();
+    function wake(){
+      if (open !== detail) return;
+      column.querySelectorAll('.view-shot').forEach(function(screen){
+        if (seen.has(screen) || screen.classList.contains('is-held')) return;
+        const r = screen.getBoundingClientRect();
+        if (r.top >= innerHeight || r.bottom <= 0) return;
+        seen.add(screen);
+        pixelIn(screen.firstElementChild, 0);
+      });
+    }
+    detail.addEventListener('scroll', wake, { passive:true });
 
     const map = document.createElement('div');
     const frame = document.createElement('span');
@@ -1478,9 +1555,14 @@
       if (calm) return;
       busy = true;
       hold(true);
+      shots.forEach(function(shot, i){
+        seen.add(shot.el);
+        pixelIn(shot.el.firstElementChild, i * STAGGER_MS + FLY_MS * 0.4);
+      });
       textIn();
       fly(false).then(function(){
         hold(false);
+        wake();
         busy = false;
         if (leaveAfter){ leaveAfter = false; hide(); }
       });
@@ -1493,6 +1575,11 @@
         detail.inert = true;
         detail.setAttribute('aria-hidden', 'true');
         own.forEach(tile => tile.classList.remove('is-lifted'));
+        seen.clear();
+        column.querySelectorAll('.view-shot').forEach(function(screen){
+          const media = screen.firstElementChild;
+          if (media.pixelStop) media.pixelStop();
+        });
         shots.forEach(function(shot){
           shot.el.getAnimations().forEach(a => a.cancel());
           const video = shot.el.querySelector('video');
@@ -1555,6 +1642,8 @@
     html.classList.add('view-rising');
     const rising = order.map(function(tile, i){
       const below = Math.max(innerHeight - tile.getBoundingClientRect().top, 80);
+      // in as pixels from the start, sharpening as it comes in to land
+      pixelIn(tile.querySelector('img, video'), i * RISE_STEP_MS + RISE_MS * 0.45);
       return tile.animate([{ transform:'translateY(' + below + 'px)' }, { transform:'none' }],
         { duration:RISE_MS, delay:i * RISE_STEP_MS, easing:'cubic-bezier(0.4, 0, 0.1, 1)', fill:'backwards' }).finished;
     });
@@ -2343,6 +2432,15 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
     if (!scroller || intro()){ close(); return; }   // nothing settled to animate yet
     const boxes = Array.prototype.slice.call(scroller.querySelectorAll('.contact-box'));
     const H = window.innerHeight, W = window.innerWidth;
+    // the rail scrolls sideways, so it clips up and down too, and the boxes would be cut
+    // off just under the row: its clip is stretched down to the window's bottom edge
+    // first, as much height as bottom padding (border-box), so the boxes stay put
+    const rail = scroller.getBoundingClientRect(), more = Math.max(0, H - rail.bottom);
+    const pad = parseFloat(getComputedStyle(scroller).paddingBottom) || 0;
+    scroller.style.transition = 'none';
+    scroller.style.height = (rail.height + more) + 'px';
+    scroller.style.paddingBottom = (pad + more) + 'px';
+    scroller.style.marginBottom = -more + 'px';
     const at = boxes.map(b => b.getBoundingClientRect());
     // the boxes in view leave left to right, each a step behind the last; the ones
     // scrolled out of view are hidden by the rail anyway, so they just go. `translate`

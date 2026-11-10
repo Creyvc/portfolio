@@ -125,7 +125,10 @@
     gap:1.5rem 0.8rem;
     padding:1.5rem 1rem 2rem;
   }
-  .view-tile{ margin:0; transition:opacity 0.3s ease; }
+  .view-tile{ position:relative; margin:0; transition:opacity 0.3s ease; }
+  /* a picture or video coming in as pixels (main.js, "View all"): a canvas laid over it, at
+     its place and size, gone once it's sharp */
+  .pixel-veil{ position:absolute; display:block; pointer-events:none; }
   .view-tile.is-dim{ opacity:0.25; }
   /* until they rise (main.js). Not by opacity: the tiles' own fade, there for the dimming,
      would run as this comes off, keeping them unseen for the first of the way up */
@@ -219,7 +222,7 @@
     gap:1rem;
     padding:1rem 1rem 1rem 0;
   }
-  .view-shot{ width:calc((100vh - 2rem) * 658 / 1434); max-width:100%; margin:0; transform-origin:0 0; cursor:default; }
+  .view-shot{ position:relative; width:calc((100vh - 2rem) * 658 / 1434); max-width:100%; margin:0; transform-origin:0 0; cursor:default; }
   .view-shot.is-held{ visibility:hidden; }
   /* the little map of the column (main.js), as tall as there's room for under the text */
   .view-map{
