@@ -2154,9 +2154,7 @@
    stands, wherever the header's spacing has put it, so the word reads as turning
    into CLOSE (the swap itself is CSS, on aria-expanded); one OPEN PROJECT and one
    box of logos serve every project, gliding to the hovered line rather than
-   masking out and in again, the logo also fading in huge behind it all, with
-   the text turning light where it crosses it (a copy of the list, kept in step
-   here and cut to the logo's shape in CSS), with a short wait on leaving a line so the gap
+   masking out and in again, with a short wait on leaving a line so the gap
    between two lines doesn't count as leaving; panel.exit sends the words up out
    of their masks before the blur fades. VIEW ALL leaves in style, and so do the
    projects, which have no pages yet and go to the same place: the words and the header
@@ -2168,12 +2166,6 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
   const opener = document.querySelector('[aria-controls="' + panel.id + '"]');
   if (!opener) return;
   const list = panel.querySelector('.play-list');
-  const ghost = document.createElement('div');
-  ghost.className = 'play-ghost';
-  ghost.setAttribute('aria-hidden', 'true');
-  ghost.inert = true;
-  ghost.appendChild(list.cloneNode(true));
-  panel.appendChild(ghost);
   const movers = panel.querySelectorAll('.play-open, .play-logos');
   const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const EXIT_MS = 620;      // the last word's delay and travel
@@ -2198,7 +2190,6 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
       el.style.transform = 'translateY(' + y + 'px)';
     });
   }
-  // everything here is in the list and its copy alike
   function showProject(name){
     panel.querySelectorAll('.is-project').forEach(function(row){
       row.classList.toggle('is-active', row.getAttribute('data-logo') === name);
@@ -2206,13 +2197,9 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
     panel.querySelectorAll('.play-open').forEach(function(el){
       el.classList.toggle('is-on', name !== null);
     });
-    panel.querySelectorAll('.play-logo, .play-mark').forEach(function(img){
+    panel.querySelectorAll('.play-logo').forEach(function(img){
       img.classList.toggle('is-on', img.getAttribute('data-name') === name);
     });
-    const mark = panel.querySelector('.play-mark.is-on');
-    // no logo: the mask stays as it was while the copy fades away
-    if (mark) ghost.style.webkitMaskImage = ghost.style.maskImage = 'url("' + mark.src + '")';
-    ghost.classList.toggle('is-on', !!mark);
   }
   function show(row){
     clearTimeout(leaving);
