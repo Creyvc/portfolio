@@ -168,7 +168,8 @@
   .view-tile video{ display:block; width:100%; height:auto; aspect-ratio:658 / 1434; object-fit:cover; }
   .view-tile{ cursor:pointer; }
   /* a project opened from its tile (main.js): the other projects go soft behind a frosted
-     layer, .whois's tint and timing with more blur; its own tiles have left the grid */
+     layer, .whois's timing with a heavier tint and much more blur, so the project's text
+     reads clearly over the screens behind it; its own tiles have left the grid */
   html.view-open .view-grid,
   html.view-going .view-grid{ pointer-events:none; }
   .view-tile.is-lifted{ visibility:hidden; }
@@ -180,9 +181,9 @@
     position:fixed;
     inset:0;
     z-index:19;
-    background:rgba(253,253,253,0.5);
-    -webkit-backdrop-filter:blur(7px);
-    backdrop-filter:blur(7px);
+    background:rgba(253,253,253,0.6);
+    -webkit-backdrop-filter:blur(20px);
+    backdrop-filter:blur(20px);
     opacity:0;
     visibility:hidden;
     pointer-events:none;
@@ -528,6 +529,9 @@
     width:auto;
     transform:translateY(150%);    /* clear of the box from where it sits */
   }
+  /* WORK's lines are 3rem, half as big again, and so is the logo with them */
+  .work-pop .play-logos{ width:13.5rem; height:3rem; }
+  .work-pop .play-logo{ top:0.43rem; height:2.1rem; }
   .play-pop.is-open .play-logo{ transition:transform 0.5s cubic-bezier(0.33, 1, 0.68, 1); }
   .play-pop.is-open .play-logo.is-on{ transform:none; }
   /* VIEW ALL (main.js): the header goes up out of masks as the list does, then this

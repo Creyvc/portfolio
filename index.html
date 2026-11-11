@@ -36,7 +36,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Vuthy Cheam","url":"https://vuthycheam.com/"}
 </script>
-<link rel="stylesheet" href="src/css/style.css?v=266">
+<link rel="stylesheet" href="src/css/style.css?v=267">
 <link rel="prefetch" href="contact.html">
 <script>
 /* Arrived from another page of the site: mark <html> BEFORE the body renders so
@@ -119,13 +119,18 @@
     <iframe class="contact-frame" title="Contact" data-src="contact.html?embed"></iframe>
   </section>
 
-  <!-- WORK opens this in place, PLAYGROUND's pop-up below at WORK's size, with only its
-       two lines for now (main.js). lab.html stays the link's target for a new tab or
-       no JS. -->
+  <!-- WORK opens this in place, PLAYGROUND's pop-up below at WORK's size (main.js).
+       lab.html stays the link's target for a new tab or no JS. Tokenz has no page yet,
+       so it goes there too. -->
   <section class="whois play-pop work-pop" id="work-pop" aria-label="Work" aria-hidden="true" inert>
     <div class="play-list" role="navigation" aria-label="Work">
       <button class="play-item" type="button" style="--i:0"><span class="play-mask"><span class="play-word">CLOSE,</span></span></button>
       <a class="play-item" href="lab.html" style="--i:1"><span class="play-mask"><span class="play-word">VIEW ALL</span></span></a>
+      <a class="play-item is-project" href="lab.html" data-logo="tokenz" style="--i:2"><span class="play-mask"><span class="play-word">TOKENZ<span class="play-kind" aria-hidden="true">[AI]</span></span></span></a>
+      <span class="play-mask play-open" aria-hidden="true"><span class="play-word">OPEN PROJECT</span></span>
+      <span class="play-logos" aria-hidden="true">
+        <img class="play-logo" data-name="tokenz" src="assets/images/lab/tokenz-logo.svg?v=1" alt="">
+      </span>
     </div>
   </section>
 
@@ -152,6 +157,6 @@
     </div>
   </section>
 
-  <script src="src/js/main.js?v=281"></script>
+  <script src="src/js/main.js?v=282"></script>
 </body>
 </html> 

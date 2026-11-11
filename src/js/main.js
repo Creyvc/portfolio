@@ -1329,13 +1329,44 @@
     else media.addEventListener(media.tagName === 'IMG' ? 'load' : 'canplay', start, { once:true });
   }
 
-  function mixed(){
-    const order = tiles.slice();
+  function mixed(list){
+    const order = list.slice();
     for (let i = order.length - 1; i > 0; i--){
       const j = Math.floor(Math.random() * (i + 1));
       [order[i], order[j]] = [order[j], order[i]];
     }
     return order;
+  }
+  // the tiles moving in and out go a column at a time, all of a column's tiles together, as one
+  function columns(){
+    const lefts = [], cols = [];
+    tiles.forEach(function(tile){
+      let c = lefts.indexOf(tile.offsetLeft);
+      if (c < 0){ c = lefts.push(tile.offsetLeft) - 1; cols.push([]); }
+      cols[c].push(tile);
+    });
+    return cols;
+  }
+  // how far a column goes down to be out of the window: as far as its top tile has to
+  function drop(column){
+    return Math.max(80, Math.max.apply(null, column.map(function(tile){
+      return innerHeight - tile.getBoundingClientRect().top;
+    })));
+  }
+  // while they move, each row stacks over the rows below it, so a tile from the second row
+  // on passes under the first row's on its way up (or down), never over them
+  function stackRows(){
+    const tops = [];
+    tiles.forEach(function(tile){
+      if (tops.indexOf(tile.offsetTop) < 0) tops.push(tile.offsetTop);
+    });
+    tops.sort(function(a, b){ return a - b; });
+    tiles.forEach(function(tile){
+      tile.style.zIndex = tops.length - tops.indexOf(tile.offsetTop);
+    });
+  }
+  function unstackRows(){
+    tiles.forEach(function(tile){ tile.style.zIndex = ''; });
   }
   const closer = document.querySelector('.close-btn');
   if (closer) closer.addEventListener('click', function(e){
@@ -1343,10 +1374,14 @@
     e.preventDefault();
     if (html.classList.contains('view-going')) return;
     html.classList.add('view-going', 'view-rising');
-    const falling = mixed().map(function(tile, i){
-      const below = Math.max(innerHeight - tile.getBoundingClientRect().top, 80);
-      return tile.animate([{ transform:'none' }, { transform:'translateY(' + below + 'px)' }],
-        { duration:RISE_MS, delay:i * RISE_STEP_MS, easing:'cubic-bezier(0.9, 0, 0.6, 1)', fill:'both' }).finished;
+    stackRows();
+    const falling = [];
+    mixed(columns()).forEach(function(column, i){
+      const below = drop(column);
+      column.forEach(function(tile){
+        falling.push(tile.animate([{ transform:'none' }, { transform:'translateY(' + below + 'px)' }],
+          { duration:RISE_MS, delay:i * RISE_STEP_MS, easing:'cubic-bezier(0.9, 0, 0.6, 1)', fill:'both' }).finished);
+      });
     });
     Promise.all(falling).then(function(){
       try {
@@ -1361,6 +1396,7 @@
     if (!e.persisted || !html.classList.contains('view-going')) return;
     html.classList.remove('view-going', 'view-rising');
     tiles.forEach(tile => tile.getAnimations().forEach(a => a.cancel()));
+    unstackRows();
   });
   const FLY_MS = 750, STAGGER_MS = 35, TEXT_AT_MS = 480, TEXT_MS = 800, TEXT_STEP_MS = 70, TEXT_OUT_MS = 320, TEXT_OUT_STEP_MS = 20, MAP_OUT_MS = 420, FROST_OUT_MS = 500;   // .view-frost's fade
   let open = null;      // the project on show
@@ -1650,18 +1686,23 @@
     return;
   }
   function rise(){
-    const order = mixed();
-    if (order[0] === tiles[0] && order.length > 1) order.push(order.shift());
+    const order = mixed(columns());
+    if (order[0].indexOf(tiles[0]) >= 0 && order.length > 1) order.push(order.shift());
     html.classList.add('view-rising');
-    const rising = order.map(function(tile, i){
-      const below = Math.max(innerHeight - tile.getBoundingClientRect().top, 80);
-      // in as pixels from the start, sharpening as it comes in to land
-      pixelIn(tile.querySelector('img, video'), i * RISE_STEP_MS + RISE_MS * 0.45);
-      return tile.animate([{ transform:'translateY(' + below + 'px)' }, { transform:'none' }],
-        { duration:RISE_MS, delay:i * RISE_STEP_MS, easing:'cubic-bezier(0.4, 0, 0.1, 1)', fill:'backwards' }).finished;
+    stackRows();
+    const rising = [];
+    order.forEach(function(column, i){
+      const below = drop(column);
+      column.forEach(function(tile){
+        // in as pixels from the start, sharpening as it comes in to land
+        pixelIn(tile.querySelector('img, video'), i * RISE_STEP_MS + RISE_MS * 0.45);
+        rising.push(tile.animate([{ transform:'translateY(' + below + 'px)' }, { transform:'none' }],
+          { duration:RISE_MS, delay:i * RISE_STEP_MS, easing:'cubic-bezier(0.4, 0, 0.1, 1)', fill:'backwards' }).finished);
+      });
     });
     Promise.all(rising).then(function(){
       html.classList.remove('view-rising');
+      unstackRows();
       if (asked) setTimeout(openAsked, ASKED_AFTER_MS);
     });
     html.classList.remove('view-intro');
@@ -2172,8 +2213,7 @@
    of their masks before the blur fades. VIEW ALL leaves in style, and so do the
    projects, which have no pages yet and go to the same place: the words and the header
    go up out of their masks, the window fades to stone, and the page, stone itself,
-   comes up from there. Work's has no projects yet, so
-   what's for them just never runs. Reduced motion: no exit
+   comes up from there. Reduced motion: no exit
    to wait for, and no fade. */
 document.querySelectorAll('.play-pop').forEach(function(panel){
   const opener = document.querySelector('[aria-controls="' + panel.id + '"]');
