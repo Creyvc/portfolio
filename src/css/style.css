@@ -545,6 +545,33 @@
   }
   html.view-all .time-badge .dot{ opacity:0; transition:opacity 0.3s ease; }
   .view-fade{ position:fixed; inset:0; z-index:10000; background:var(--stone); pointer-events:none; }
+
+  /* ===== Preloader (home) =====
+     After ning-h.com's, in the header's small type: black over everything, set by the head
+     script on a fresh arrival (html.preload), and run by main.js. The words wait below their
+     masks; the count's box is as wide as [ 100% ], so nothing shifts as it counts. While it's
+     up the header waits above masks of its own, to come down once the black has gone. */
+  .preloader{ display:none; }
+  html.preload .preloader{
+    position:fixed; inset:0; z-index:10001;
+    display:flex; justify-content:center; align-items:center; gap:4rem;
+    background:#0B0B0B; color:var(--paper);
+    font-family:var(--sans);
+    font-size:0.8125rem;
+    font-weight:500;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  .pre-item{ display:block; overflow:hidden; padding-bottom:0.12em; margin-bottom:-0.12em; }
+  .pre-mid{ width:9ch; text-align:center; }
+  .pre-word{ display:block; transform:translateY(115%); }
+  html.preload .home-name,
+  html.preload .home-nav,
+  html.preload .time-badge{ clip-path:inset(0 -0.1em -0.15em -0.1em); }
+  html.preload header .home-ch,
+  html.preload #bkk-time,
+  html.preload .time-badge .dot{ transform:translateY(-115%); }
   .play-pop.is-leaving .play-word{
     transform:translateY(-115%);
     transition:transform 0.45s cubic-bezier(0.7, 0, 0.84, 0);

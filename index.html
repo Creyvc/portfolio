@@ -36,7 +36,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Vuthy Cheam","url":"https://vuthycheam.com/"}
 </script>
-<link rel="stylesheet" href="src/css/style.css?v=267">
+<link rel="stylesheet" href="src/css/style.css?v=269">
 <link rel="prefetch" href="contact.html">
 <script>
 /* Arrived from another page of the site: mark <html> BEFORE the body renders so
@@ -69,8 +69,27 @@
   document.documentElement.className += ' view-all view-back';
 })();
 </script>
+<script>
+/* A fresh arrival at home (not from another page of the site, nor with reduced motion): the
+   black preloader covers the window before the body renders (main.js, "Preloader"). */
+(function(){
+  const html = document.documentElement;
+  if (/\b(pt-open|view-back|journey-out)\b/.test(html.className)) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  html.className += ' preload';
+})();
+</script>
 </head>
 <body class="home loaded">
+
+  <!-- the preloader, after ning-h.com's: on black, the name, a count to 100 and the year rise
+       through masks, the name and the year slide out to the window's sides as it counts, the
+       words go up and out, and the black slides up off the page (main.js, "Preloader") -->
+  <div class="preloader" aria-hidden="true">
+    <span class="pre-item pre-left"><span class="pre-word">VUTHY CHEAM</span></span>
+    <span class="pre-item pre-mid"><span class="pre-word">[ <span class="pre-count">00</span>% ]</span></span>
+    <span class="pre-item pre-right"><span class="pre-word">PORTFOLIO</span></span>
+  </div>
 
   <!-- shadows of people walking on frosted glass (main.js, "Home steps") -->
   <canvas class="home-steps" aria-hidden="true"></canvas>
@@ -157,6 +176,6 @@
     </div>
   </section>
 
-  <script src="src/js/main.js?v=282"></script>
+  <script src="src/js/main.js?v=285"></script>
 </body>
 </html> 

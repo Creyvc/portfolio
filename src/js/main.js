@@ -1226,6 +1226,100 @@
   });
 })();
 
+/* Preloader (home): after ning-h.com's. On black, a second in, the name, the count and the
+   year rise through their masks; the count runs to 100 on ning-h.com's own halting curve
+   while the name and the year slide out to the header's sides on it too. Then the words go
+   up and out, the black slides up off the window, and once it has gone the header slides down in through
+   its masks. A second visit in the same tab counts from 75, quicker, as theirs does. Only on
+   a fresh arrival without reduced motion: the head script decides, by html.preload. */
+(function(){
+  const html = document.documentElement;
+  const pre = document.querySelector('.preloader');
+  if (!pre) return;
+  if (!html.classList.contains('preload')){ pre.remove(); return; }
+  const OUT = 'cubic-bezier(0.16, 1, 0.3, 1)';   // expo out
+  const SIDE = 16;                                // the header's own side padding
+  let from = 0, COUNT_MS = 3000;
+  try {
+    if (sessionStorage.getItem('visited')){ from = 75; COUNT_MS = 2000; }
+    sessionStorage.setItem('visited', '1');
+  } catch(e){}
+  const RISE_AT = 1000, SLIDE_AT = 1400, OUT_AT = SLIDE_AT + COUNT_MS + 100;
+  const LIFT_AT = OUT_AT + 300, LIFT_MS = 1100, HEADER_AT = LIFT_AT + LIFT_MS;
+
+  // ning-h.com's curve (a GSAP CustomEase path): quick, a long stall past half, a second surge
+  const PATH = [
+    [0, 0, 0, 0, 0.13, 0.34, 0.238, 0.442],
+    [0.238, 0.442, 0.305, 0.506, 0.322, 0.514, 0.396, 0.54],
+    [0.396, 0.54, 0.478, 0.568, 0.468, 0.56, 0.522, 0.584],
+    [0.522, 0.584, 0.572, 0.606, 0.61, 0.719, 0.714, 0.826],
+    [0.714, 0.826, 0.798, 0.912, 1, 1, 1, 1]
+  ];
+  function bez(a, b, c, d, t){ const u = 1 - t; return u * u * u * a + 3 * u * u * t * b + 3 * u * t * t * c + t * t * t * d; }
+  function ease(x){
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    const s = PATH.find(function(p){ return x <= p[6]; });
+    let lo = 0, hi = 1, t = 0.5;
+    for (let i = 0; i < 24; i++){
+      t = (lo + hi) / 2;
+      if (bez(s[0], s[2], s[4], s[6], t) < x) lo = t; else hi = t;
+    }
+    return bez(s[1], s[3], s[5], s[7], t);
+  }
+  // the slide as keyframes sampled off the curve, so it stays on the compositor
+  function slide(el, dx){
+    const frames = [];
+    for (let i = 0; i <= 60; i++) frames.push({ transform:'translateX(' + ease(i / 60) * dx + 'px)', offset:i / 60 });
+    el.animate(frames, { duration:COUNT_MS, delay:SLIDE_AT, easing:'linear', fill:'both' });
+  }
+
+  const count = pre.querySelector('.pre-count');
+  const left = pre.querySelector('.pre-left'), right = pre.querySelector('.pre-right');
+  function show(n){ count.textContent = n < 10 ? '0' + n : n; }
+  show(from);
+  pre.querySelectorAll('.pre-word').forEach(function(word){
+    word.animate([{ transform:'translateY(115%)' }, { transform:'none' }],
+      { duration:1000, delay:RISE_AT, easing:OUT, fill:'both' });
+    word.animate([{ transform:'none' }, { transform:'translateY(-115%)' }],
+      { duration:1000, delay:OUT_AT, easing:OUT, fill:'forwards' });
+  });
+  slide(left, SIDE - left.getBoundingClientRect().left);
+  slide(right, innerWidth - SIDE - right.getBoundingClientRect().right);
+
+  const start = performance.now();
+  (function tick(now){
+    const p = Math.min(1, Math.max(0, (now - start - RISE_AT) / COUNT_MS));
+    show(Math.round(from + (100 - from) * ease(p)));
+    if (p < 1) requestAnimationFrame(tick);
+  })(start);
+
+  pre.animate([{ transform:'none' }, { transform:'translateY(-100%)' }],
+    { duration:LIFT_MS, delay:LIFT_AT, easing:'cubic-bezier(0.76, 0, 0.24, 1)', fill:'forwards' })
+    .finished.then(function(){ pre.remove(); });
+
+  // the header, item by item, its letters (the time and its dot) down from above their masks;
+  // gathered only now, as the letters are split once the fonts are in
+  setTimeout(function(){
+    const rising = [];
+    document.querySelectorAll('header .home-name, header .home-nav, header .time-badge').forEach(function(item, i){
+      const parts = item.classList.contains('time-badge')
+        ? item.querySelectorAll('#bkk-time, .dot')
+        : item.querySelectorAll('.home-ch');
+      parts.forEach(function(part){
+        rising.push(part.animate([{ transform:'translateY(-115%)' }, { transform:'none' }],
+          { duration:1000, delay:i * 40, easing:OUT, fill:'both' }).finished);
+      });
+    });
+    Promise.all(rising).then(function(){
+      html.classList.remove('preload');
+      document.querySelectorAll('header .home-ch, #bkk-time, .time-badge .dot').forEach(function(part){
+        part.getAnimations().forEach(function(a){ a.cancel(); });
+      });
+    });
+  }, HEADER_AT);
+})();
+
 /* View all (playground.html): on opening the tiles slide up from the bottom of the window,
    solid and steady, slowing into place, one after another in a new mixed order each time,
    never starting with the first. It waits for the screens themselves, or not for long. Hovering a tile dims every other project's. The videos play once the page

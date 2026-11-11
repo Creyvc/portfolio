@@ -89,10 +89,14 @@ markup, so a shared change has to be made in every file.
 - **Home background**: none since 2026-11-05. The owner removed the grainient (and its
   per-letter white/ink text tinting); home is plain paper and every piece of text, the
   lockup words and logo included, is solid ink. grainient.js now only drives contact's Instagram box.
-- **No preloader**: two were built and both removed by the owner — a hellohello.is-style one
-  (slides, stock clips, count) and, on 2026-11-06, a W A S D-driven gear-shifter console after
-  Reijo's "Speed." render (ray-marched in `shifter.js`, now deleted). Home opens straight onto
-  the page. Don't add a preloader back unless asked.
+- **Preloader** (home, added 2026-11-11 at the owner's request, after ning-h.com's): black
+  (#0B0B0B) over everything, VUTHY CHEAM · [ 00% ] · PORTFOLIO in the header's small type
+  rising through masks, the count running on ning-h.com's halting curve while the name and
+  PORTFOLIO slide out to 16px from the sides, then the words go up and out, the black slides
+  up, and only once it has gone the header slides down in from above its masks. Shown only on a fresh arrival (head script sets `html.preload`;
+  not after in-site navigation, View all's [CLOSE], Journey's [CLOSE], or reduced motion); a
+  second visit in the tab counts from 75. main.js "Preloader". Two earlier ones were built
+  and removed by the owner (a hellohello.is-style one, and a W A S D gear-shifter console).
 - **No lockup** (2026-11-05): the owner removed the bottom-centre WHO IS / CONTACT · JOURNEY /
   WORK/LAB lockup (and its intro) after removing its logo. Home is now just a header line: the name (top
   left) with "WORK," (lab.html; comma included) and "PLAYGROUND," (plain text, no page yet; a size down at 2rem, capitals topping out level with the rest) 4rem after it (WORK, big: Space Grotesk 500 3rem, capitals topping out at 16px like the rest) 4rem after it, and JOURNEY, ABOUT, CONTACT, then the time (top right). JOURNEY is a plain link to
