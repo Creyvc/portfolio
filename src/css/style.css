@@ -133,13 +133,16 @@
     gap:1.5rem 0.8rem;
     padding:1.5rem 1rem 2rem;
   }
-  .view-tile{ position:relative; margin:0; transition:opacity 0.3s ease; }
+  .view-tile{ position:relative; margin:0; }
   /* a picture or video coming in as pixels (main.js, "View all"): a canvas laid over it, at
      its place and size, gone once it's sharp */
   .pixel-veil{ position:absolute; display:block; pointer-events:none; }
-  .view-tile.is-dim{ opacity:0.25; }
-  /* until they rise (main.js). Not by opacity: the tiles' own fade, there for the dimming,
-     would run as this comes off, keeping them unseen for the first of the way up */
+  /* hovering a project, every other project's screens go a little darker */
+  .view-tile img,
+  .view-tile video{ transition:filter 0.3s ease; }
+  .view-tile.is-dim img,
+  .view-tile.is-dim video{ filter:brightness(0.6); }
+  /* until they rise (main.js); by visibility, so nothing fades in on the way up */
   html.view-intro .view-grid{ visibility:hidden; }
   /* all the words here are in the home header's small type */
   .view-tile figcaption,

@@ -32,7 +32,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Jersey+10&family=VT323&family=Space+Grotesk:wght@400;500;700&family=Boogaloo&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="src/css/style.css?v=265">
+<link rel="stylesheet" href="src/css/style.css?v=266">
 <script>
 /* Arrived from another page of the site: mark <html> BEFORE the body renders so
    nothing on the page fades in again on the way back. */
@@ -62,12 +62,16 @@
   </header>
 
   <!-- PLAYGROUND's VIEW ALL lands here: each project's screens in a row, after
-       gilhuybrecht.com, the first named for its project and the rest numbered. data-project ties a project's
+       gilhuybrecht.com, the first a poster named for its project, then its screens numbered from 1. data-project ties a project's
        tiles together, as hovering one dims every other project's. The videos are started
        by main.js, unless motion is reduced: then they stay on their posters. -->
   <main class="view-grid">
     <figure class="view-tile" data-project="solevault">
       <figcaption><span>Sole Vault</span></figcaption>
+      <img src="assets/images/lab/solevault/pics/poster.png?v=1" width="660" height="1434" alt="Sole Vault poster: the vault is open, with two phones showing its news and collection screens">
+    </figure>
+    <figure class="view-tile" data-project="solevault">
+      <figcaption><span></span><span class="view-number">[1]</span></figcaption>
       <img src="assets/images/lab/solevault/pics/welcoming.png?v=2" width="658" height="1434" alt="Sole Vault welcome screen">
     </figure>
     <figure class="view-tile" data-project="solevault">
@@ -84,6 +88,10 @@
     </figure>
     <figure class="view-tile" data-project="gair">
       <figcaption><span>GAir</span></figcaption>
+      <img src="assets/images/lab/gair/pics/poster.png?v=1" width="660" height="1434" alt="GAir poster: your perfect trip, AI-crafted in minutes, with two phones showing its hotel and trip planner screens">
+    </figure>
+    <figure class="view-tile" data-project="gair">
+      <figcaption><span></span><span class="view-number">[1]</span></figcaption>
       <video muted loop playsinline preload="auto" width="660" height="1434" poster="assets/images/lab/gair/pics/welcoming.png?v=1" src="assets/images/lab/gair/video/onboarding.mp4?v=1" aria-label="GAir welcome screens, sliding from one to the next"></video>
     </figure>
     <figure class="view-tile" data-project="gair">
@@ -125,9 +133,9 @@
     </div>
     <!-- only here, not in the grid: these follow the tile data-with names (main.js) -->
     <div class="view-column">
-      <figure class="view-shot" data-with="2"><img src="assets/images/lab/solevault/pics/news-air-jordan-6.png?v=1" width="658" height="1432" alt="Sole Vault news story on the pink Air Jordan 6"></figure>
-      <figure class="view-shot" data-with="2"><img src="assets/images/lab/solevault/pics/news-undefeated-converse.png?v=1" width="658" height="1432" alt="Sole Vault news story on Undefeated and Converse"></figure>
-      <figure class="view-shot" data-with="2"><img src="assets/images/lab/solevault/pics/news-list.png?v=1" width="656" height="1434" alt="Sole Vault list of news stories"></figure>
+      <figure class="view-shot" data-with="3"><img src="assets/images/lab/solevault/pics/news-air-jordan-6.png?v=1" width="658" height="1432" alt="Sole Vault news story on the pink Air Jordan 6"></figure>
+      <figure class="view-shot" data-with="3"><img src="assets/images/lab/solevault/pics/news-undefeated-converse.png?v=1" width="658" height="1432" alt="Sole Vault news story on Undefeated and Converse"></figure>
+      <figure class="view-shot" data-with="3"><img src="assets/images/lab/solevault/pics/news-list.png?v=1" width="656" height="1434" alt="Sole Vault list of news stories"></figure>
     </div>
   </section>
   <section class="view-detail" data-project="gair" aria-label="GAir" aria-hidden="true" inert>
@@ -148,11 +156,11 @@
     <!-- only here, not in the grid, after the last tile: the seat map (its video started and
          stopped with the project, by main.js) and the explore screen -->
     <div class="view-column">
-      <figure class="view-shot" data-with="5"><video muted loop playsinline preload="metadata" width="660" height="1434" poster="assets/images/lab/gair/pics/seat-map.png?v=1" src="assets/images/lab/gair/video/seat-map.mp4?v=1" aria-label="GAir seat map, the selected seat and its price changing"></video></figure>
-      <figure class="view-shot" data-with="5"><img src="assets/images/lab/gair/pics/explore.png?v=1" width="660" height="1434" alt="GAir explore screen, with what's new"></figure>
+      <figure class="view-shot" data-with="6"><video muted loop playsinline preload="metadata" width="660" height="1434" poster="assets/images/lab/gair/pics/seat-map.png?v=1" src="assets/images/lab/gair/video/seat-map.mp4?v=1" aria-label="GAir seat map, the selected seat and its price changing"></video></figure>
+      <figure class="view-shot" data-with="6"><img src="assets/images/lab/gair/pics/explore.png?v=1" width="660" height="1434" alt="GAir explore screen, with what's new"></figure>
     </div>
   </section>
 
-  <script defer src="src/js/main.js?v=279"></script>
+  <script defer src="src/js/main.js?v=281"></script>
 </body>
 </html>

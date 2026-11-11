@@ -1236,10 +1236,11 @@
    to a big column on the right, and the text rises line by line through masks on the left,
    as the Playground list does, staying put while the column scrolls. The column holds copies
    of the tiles' media, so each flies from its tile's place. On closing the text goes up out
-   of its masks first and then the screens fly back: Esc, the browser's back, or a click
-   anywhere but on a screen. At the bottom left, after cathydolle.com's case studies, a little
-   map of the column: a thumbnail of every screen, each one a way to it, and a frame that
-   follows the scroll, showing what's in view. It slides off to the left on closing.
+   of its masks first, then the map below goes, then the frost lifts, and only then do the
+   screens fly back: Esc, the browser's back, or a click anywhere but on a screen. At the
+   bottom left, after cathydolle.com's case studies, a little map of the column: a thumbnail
+   of every screen, each one a way to it, and a frame that follows the scroll, showing what's
+   in view. It slides off to the left on closing.
 
    Arriving with a project's name in the address (home's SOLE VAULT), the tiles rise as ever,
    and once they've landed that project opens from them as if clicked.
@@ -1361,7 +1362,7 @@
     html.classList.remove('view-going', 'view-rising');
     tiles.forEach(tile => tile.getAnimations().forEach(a => a.cancel()));
   });
-  const FLY_MS = 750, STAGGER_MS = 35, TEXT_AT_MS = 480, TEXT_MS = 800, TEXT_STEP_MS = 70, TEXT_OUT_MS = 320, TEXT_OUT_STEP_MS = 20, MAP_OUT_MS = 420;
+  const FLY_MS = 750, STAGGER_MS = 35, TEXT_AT_MS = 480, TEXT_MS = 800, TEXT_STEP_MS = 70, TEXT_OUT_MS = 320, TEXT_OUT_STEP_MS = 20, MAP_OUT_MS = 420, FROST_OUT_MS = 500;   // .view-frost's fade
   let open = null;      // the project on show
   let busy = false;
   let leaveAfter = false;   // the browser's back, pressed in mid-flight
@@ -1574,7 +1575,6 @@
     }
     function hide(){
       if (busy || open !== detail) return;
-      html.classList.remove('view-open');
       function done(){
         detail.classList.remove('is-on');
         detail.inert = true;
@@ -1597,10 +1597,14 @@
         open = null;
         busy = false;
       }
-      if (calm){ done(); return; }
+      if (calm){ html.classList.remove('view-open'); done(); return; }
       busy = true;
       html.classList.add('view-leaving');
       textOut().then(function(){
+        // the words and the map gone, the frost lifts, and the screens wait for it
+        html.classList.remove('view-open');
+        return new Promise(function(lifted){ setTimeout(lifted, FROST_OUT_MS); });
+      }).then(function(){
         html.classList.remove('view-leaving');
         hold(true);
         return fly(true);
