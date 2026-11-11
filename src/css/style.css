@@ -187,7 +187,7 @@
     opacity:0;
     visibility:hidden;
     pointer-events:none;
-    transition:opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.5s;
+    transition:opacity 1.05s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 1.05s;
   }
   html.view-open .view-frost{
     opacity:1;
@@ -215,9 +215,11 @@
     box-sizing:border-box;
     padding:1rem;
   }
-  /* the project's logo, with its name right beside it */
-  .view-head{ display:flex; align-items:center; gap:0.9rem; margin-bottom:3.75rem; }
-  .view-title{ margin:0; font:inherit; }
+  /* the project's logo, with its name right beside it, sat on the logo's bottom line */
+  .view-head{ display:flex; align-items:flex-end; gap:0.9rem; margin-bottom:3.75rem; }
+  /* pulled down by the room its line keeps under the letters (4.9px at 13px, measured), so
+     the capitals stand on the logo's bottom edge */
+  .view-title{ margin:0 0 -0.375em; font:inherit; }
   .view-logo img{ width:auto; height:2.75rem; }
   .view-about{ max-width:27rem; margin:0 0 3.75rem; }
   .view-facts{ margin:0; }

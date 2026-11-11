@@ -1330,8 +1330,9 @@
    to a big column on the right, and the text rises line by line through masks on the left,
    as the Playground list does, staying put while the column scrolls. The column holds copies
    of the tiles' media, so each flies from its tile's place. On closing the text goes up out
-   of its masks first, then the map below goes, then the frost lifts, and only then do the
-   screens fly back: Esc, the browser's back, or a click anywhere but on a screen. At the
+   of its masks, the map below slides away just behind it, and as they go the frost lifts and
+   the screens fly back, all overlapping, as one movement: Esc, the browser's back, or a click anywhere but on a screen; once
+   they're all home, [CLOSE] slides back down from above the window. At the
    bottom left, after cathydolle.com's case studies, a little map of the column: a thumbnail
    of every screen, each one a way to it, and a frame that follows the scroll, showing what's
    in view. It slides off to the left on closing.
@@ -1492,11 +1493,20 @@
     tiles.forEach(tile => tile.getAnimations().forEach(a => a.cancel()));
     unstackRows();
   });
-  const FLY_MS = 750, STAGGER_MS = 35, TEXT_AT_MS = 480, TEXT_MS = 800, TEXT_STEP_MS = 70, TEXT_OUT_MS = 320, TEXT_OUT_STEP_MS = 20, MAP_OUT_MS = 420, FROST_OUT_MS = 500;   // .view-frost's fade
+  const FLY_MS = 750, STAGGER_MS = 35, TEXT_AT_MS = 480, TEXT_MS = 800, TEXT_STEP_MS = 70, TEXT_OUT_MS = 480, TEXT_OUT_STEP_MS = 30, MAP_OUT_MS = 620;
+  // closing, overlapped: the map follows the words out this soon, and the frost starts to lift
+  // and the screens to fly back this soon, while the words are still going
+  const MAP_OUT_AT_MS = 180, BACK_AT_MS = 360, EXTRAS_OUT_MS = 460, FLY_BACK_MS = 1120;
   let open = null;      // the project on show
   let busy = false;
-  let leaveAfter = false;   // the browser's back, pressed in mid-flight
-  function leave(){ if (open && !busy) history.back(); }
+  let closing = false;      // asked to close, by a click, Esc or the browser's back
+  let leaveAfter = false;   // asked in mid-flight: closes the moment it has landed
+  // one way back per project, however many clicks, or the page itself would be left
+  function leave(){
+    if (!open || closing) return;
+    closing = true;
+    history.back();
+  }
 
   document.querySelectorAll('.view-detail').forEach(function(detail){
     const project = detail.getAttribute('data-project');
@@ -1640,15 +1650,10 @@
           }));
         });
       });
-      // and once the words are gone, the map leaves by the left edge of the window; only
-      // then do the pictures go (hide())
-      return Promise.all(moving.map(a => a.finished)).then(function(){
-        const slide = map.animate([{ transform:'none' }, { transform:'translateX(calc(-100% - 1.5rem))' }], {
-          duration:MAP_OUT_MS, easing:'cubic-bezier(0.7, 0, 0.84, 0)', fill:'both'
-        });
-        moving.push(slide);
-        return slide.finished;
-      });
+      // and just behind the words, the map leaves by the left edge of the window
+      moving.push(map.animate([{ transform:'none' }, { transform:'translateX(calc(-100% - 1.5rem))' }], {
+        duration:MAP_OUT_MS, delay:MAP_OUT_AT_MS, easing:'cubic-bezier(0.7, 0, 0.84, 0)', fill:'both'
+      }));
     }
 
     // each shot, from flat on its tile, tilted on the way, to flat in the column
@@ -1661,7 +1666,7 @@
         const frames = [at(dx, dy, k, 0, 0, 0), at(dx * 0.45, dy * 0.45, k + (1 - k) * 0.55, 8, -16, -3), at(0, 0, 1, 0, 0, 0)];
         if (leaving) frames.reverse();
         return shot.el.animate(frames.map(f => ({ transform:f })), {
-          duration:FLY_MS, delay:i * STAGGER_MS, easing:'cubic-bezier(0.6, 0, 0.2, 1)', fill:'both'
+          duration:leaving ? FLY_BACK_MS : FLY_MS, delay:i * STAGGER_MS, easing:'cubic-bezier(0.6, 0, 0.2, 1)', fill:'both'
         }).finished;
       }));
     }
@@ -1680,8 +1685,11 @@
       shots.forEach(function(shot){
         const video = shot.el.querySelector('video');
         if (!video || calm) return;
-        video.currentTime = shot.tile.querySelector('video').currentTime;
+        const own = shot.tile.querySelector('video');
+        video.currentTime = own.currentTime;
         video.play().catch(function(){});
+        // the tile is hidden while its copy is out: no need to keep decoding it
+        own.pause();
       });
       // and any video that's only here, from its start
       if (!calm) extras.forEach(function(extra){
@@ -1719,6 +1727,8 @@
           shot.el.getAnimations().forEach(a => a.cancel());
           const video = shot.el.querySelector('video');
           if (video) video.pause();
+          // the tile, cued to the frame its copy landed on, plays on from there
+          if (video && !calm) shot.tile.querySelector('video').play().catch(function(){});
         });
         extras.forEach(function(extra){
           const video = extra.querySelector('video');
@@ -1726,23 +1736,44 @@
         });
         open = null;
         busy = false;
+        closing = false;
       }
       if (calm){ html.classList.remove('view-open'); done(); return; }
       busy = true;
+      closing = true;
       html.classList.add('view-leaving');
-      textOut().then(function(){
-        // the words and the map gone, the frost lifts, and the screens wait for it
-        html.classList.remove('view-open');
-        return new Promise(function(lifted){ setTimeout(lifted, FROST_OUT_MS); });
-      }).then(function(){
-        html.classList.remove('view-leaving');
-        hold(true);
-        return fly(true);
-      }).then(function(){
-        stop();
-        unsplit();
-        done();
+      // the screens hold still on their way home, so the flight is only moving pictures, not
+      // decoding videos under a tilt and over the blur as well; each tile, hidden, is cued to
+      // its copy's frame meanwhile, so the handover on landing is seamless
+      shots.forEach(function(shot){
+        const video = shot.el.querySelector('video');
+        if (!video) return;
+        video.pause();
+        shot.tile.querySelector('video').currentTime = video.currentTime;
       });
+      extras.forEach(function(extra){
+        const video = extra.querySelector('video');
+        if (video) video.pause();
+      });
+      textOut();
+      // while the words are still going: the frost lifts, the screens that are only here fade
+      // rather than vanish, and the rest fly home over the lifting frost
+      setTimeout(function(){
+        html.classList.remove('view-open');
+        extras.forEach(function(extra){
+          moving.push(extra.animate([{ opacity:1 }, { opacity:0 }],
+            { duration:EXTRAS_OUT_MS, easing:'ease-out', fill:'forwards' }));
+        });
+        fly(true).then(function(){
+          stop();
+          unsplit();
+          done();
+          // all home, [CLOSE] comes back last, sliding down from above the window
+          html.classList.remove('view-leaving');
+          if (closer) closer.animate([{ transform:'translateY(-110%)' }, { transform:'none' }],
+            { duration:700, easing:'cubic-bezier(0.16, 1, 0.3, 1)' });
+        });
+      }, BACK_AT_MS);
     }
     detail.close = hide;
     detail.open = show;
@@ -1763,6 +1794,7 @@
   });
   window.addEventListener('popstate', function(){
     if (!open) return;
+    closing = true;
     if (busy) leaveAfter = true;
     else open.close();
   });
