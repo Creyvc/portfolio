@@ -3031,28 +3031,28 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
    up out of their masks with the first of the scroll, item by item from the left, and the
    walkers' glass zooms out, drawn wider and wider across the whole window, so there's never an
    edge, the walkers shrinking towards the middle, till, short of the bottom, their shadows have faded
-   to nothing and it's pure white. All of it runs on one smoothed scroll, so it's always in
+   to nothing and it's pure white; scrolling a little further, the quote comes up in the
+   middle, line by line through masks. All of it runs on one smoothed scroll, so it's always in
    step, either way, at any speed: scrolling back up, the glass zooms in and the header comes
-   down with the last of it. Once the walkers have gone, a hairline draws across the middle of
-   the window from left to right, its x-axis, and stays over the white; back up, it's gone before
-   they come back. With reduced motion it
+   down with the last of it. With reduced motion it
    follows the scroll exactly. A reload starts at the top. */
 (function(){
   const stage = document.querySelector('.home-stage');
   const steps = document.querySelector('.home-steps');
   const header = document.querySelector('header');
   const cue = document.querySelector('.home-scroll');
-  const axis = document.querySelector('.home-axis');
+  const quote = document.querySelector('.home-quote');
   if (!stage || !steps || !header) return;
   const html = document.documentElement;
   const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const HEAD = 0.12;                   // of the way down, the header's gone by
-  const CUE = 0.05;                    // and the scroll cue, sooner
-  const AXIS_FROM = 0.62, AXIS_TO = 0.92;   // of the way down, the x-axis draws out between
+  // each step at the same distance down the page as ever, now that the page (.home-stage, 270vh)
+  // runs on past the quote: these are of the way down it
+  const HEAD = 0.089;                  // of the way down, the header's gone by
+  const CUE = 0.036;                   // and the scroll cue, sooner
   const SMALLEST = 0.12;               // how big the glass shows, all the way down
-  // one after the other, never together: the walkers zoom out and fade to nothing, and only
-  // then does the x-axis draw out (so back up, it's gone before they come back)
-  const FADE_FROM = 0.3, FADE_TO = 0.6;    // of the way down, the shadows fade out between
+  const FADE_FROM = 0.225, FADE_TO = 0.45; // of the way down, the shadows fade out between
+  const QUOTE_FROM = 0.51, QUOTE_TO = 0.675; // and, a little further on, the quote comes up between,
+                                            // to stay for the rest of the way
   const FOLLOW = 0.22;                 // seconds to cover ~63% of the way to the scroll, at any frame rate
   const ease = t => -(Math.cos(Math.PI * t) - 1) / 2;
   const clamp01 = t => Math.min(1, Math.max(0, t));
@@ -3068,7 +3068,7 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
     html.classList.toggle('home-scrolled', shown > 0);
     header.style.setProperty('--up', ease(clamp01(shown / HEAD)).toFixed(4));
     if (cue) cue.style.setProperty('--cue', ease(clamp01(shown / CUE)).toFixed(4));
-    if (axis) axis.style.setProperty('--axis', ease(clamp01((shown - AXIS_FROM) / (AXIS_TO - AXIS_FROM))).toFixed(4));
+    if (quote) quote.style.setProperty('--q', ease(clamp01((shown - QUOTE_FROM) / (QUOTE_TO - QUOTE_FROM))).toFixed(4));
     if (!steps.view) return;
     // zooming out evenly to the eye: the size falls away geometrically
     steps.view.zoom = Math.pow(SMALLEST, ease(clamp01(shown / FADE_TO)));

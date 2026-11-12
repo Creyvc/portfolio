@@ -36,7 +36,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Vuthy Cheam","url":"https://vuthycheam.com/"}
 </script>
-<link rel="stylesheet" href="src/css/style.css?v=292">
+<link rel="stylesheet" href="src/css/style.css?v=296">
 <link rel="prefetch" href="contact.html">
 <script>
 /* Arrived from another page of the site: mark <html> BEFORE the body renders so
@@ -114,9 +114,13 @@
        there's nothing but white (main.js, "Home scroll"); the stage is only there to give the
        page its scroll -->
   <div class="home-stage" aria-hidden="true"></div>
-  <!-- scrolling on, a hairline draws across the middle of the window from left to right, its
-       x-axis (main.js, "Home scroll") -->
-  <div class="home-axis" aria-hidden="true"></div>
+  <!-- scrolled on past the walkers, once there's nothing but white: the quote, each line up
+       through a mask of its own (main.js, "Home scroll", sets --q) -->
+  <p class="home-quote">
+    <span class="home-quote-mask"><span class="home-quote-line" style="--i:0">Turning Insight and Intelligence</span></span>
+    <span class="home-quote-mask"><span class="home-quote-line" style="--i:1">Into Refined Digital Experiences.</span></span>
+    <span class="home-quote-mask"><span class="home-quote-line" style="--i:2">From Infrastructure to Interface.</span></span>
+  </p>
   <!-- the scroll cue at the window's foot: SCROLL over a hairline a dash keeps running down;
        it goes down out of its mask with the first of the scroll (main.js, "Home scroll") -->
   <div class="home-scroll" aria-hidden="true">
@@ -189,6 +193,6 @@
     </div>
   </section>
 
-  <script src="src/js/main.js?v=314"></script>
+  <script src="src/js/main.js?v=318"></script>
 </body>
 </html> 
