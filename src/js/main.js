@@ -1350,7 +1350,7 @@
   if (!tiles.length) return;
   const html = document.documentElement;
   const grid = tiles[0].parentElement;
-  const RISE_MS = 700, RISE_STEP_MS = 65, FALL_MS = 1050, FALL_STEP_MS = 105, WAIT_MS = 1500, ASKED_AFTER_MS = 120;
+  const RISE_MS = 700, RISE_STEP_MS = 65, WAIT_MS = 1500, ASKED_AFTER_MS = 120;
 
   function dim(project){
     tiles.forEach(function(tile){
@@ -1416,7 +1416,7 @@
       const below = drop(column);
       column.forEach(function(tile){
         falling.push(tile.animate([{ transform:'none' }, { transform:'translateY(' + below + 'px)' }],
-          { duration:FALL_MS, delay:i * FALL_STEP_MS, easing:'cubic-bezier(0.9, 0, 0.6, 1)', fill:'both' }).finished);
+          { duration:RISE_MS, delay:i * RISE_STEP_MS, easing:'cubic-bezier(0.9, 0, 0.6, 1)', fill:'both' }).finished);
       });
     });
     Promise.all(falling).then(function(){
