@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Jersey+10&family=VT323&family=Space+Grotesk:wght@400;500;700&family=Boogaloo&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="src/css/style.css?v=266">
+<link rel="stylesheet" href="src/css/style.css?v=275">
 <script>
 /* Arrived from another page of the site: mark <html> BEFORE the body renders so
    nothing on the page fades in again on the way back. */
@@ -50,6 +50,17 @@
 /* Opened inside the home page's CONTACT pop-up (contact.html?embed): no page
    background of its own, so the blurred home page shows round the boxes. */
 if (/[?&]embed\b/.test(location.search)) document.documentElement.className += ' embed';
+</script>
+<script>
+/* The boxes' intro (main.js, "Contact boxes intro") starts once main.js has run, and on a first
+   visit that's a moment after the page first paints: keep the boxes hidden till then, so they
+   never show settled first. Let go after 4s whatever happens, in case main.js never comes. */
+(function(){
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const html = document.documentElement;
+  html.className += ' contact-wait';
+  setTimeout(function(){ html.classList.remove('contact-wait'); }, 4000);
+})();
 </script>
 </head>
 <body class="loaded">
@@ -106,6 +117,6 @@ if (/[?&]embed\b/.test(location.search)) document.documentElement.className += '
 
   <!-- the Instagram box's moving gradient (same engine as the home background) -->
   <script defer src="src/js/grainient.js?v=12"></script>
-  <script defer src="src/js/main.js?v=290"></script>
+  <script defer src="src/js/main.js?v=293"></script>
 </body>
 </html>

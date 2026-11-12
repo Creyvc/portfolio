@@ -134,9 +134,6 @@
     padding:1.5rem 1rem 2rem;
   }
   .view-tile{ position:relative; margin:0; }
-  /* a picture or video coming in as pixels (main.js, "View all"): a canvas laid over it, at
-     its place and size, gone once it's sharp */
-  .pixel-veil{ position:absolute; display:block; pointer-events:none; }
   /* hovering a project, every other project's screens go a little darker */
   .view-tile img,
   .view-tile video{ transition:filter 0.3s ease; }
@@ -761,6 +758,9 @@
      and touch, and this stops the browser's own scrolling (trackpad, keys).
      The intro still sets scrollLeft itself, which overflow:hidden allows. */
   .contact-boxes.is-intro{ overflow:hidden; touch-action:none; }
+  /* till main.js has the intro's first frame up (contact.html's head script) */
+  html.contact-wait .contact-boxes,
+  html.contact-wait .contact-progress{ visibility:hidden; }
   /* Every box, the info one included, resolves out of ink — that is what makes
      them read as one dot to begin with. The info box was excluded from this for
      a while because its labels and values appeared to change colour as the ink

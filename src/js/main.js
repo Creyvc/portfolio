@@ -471,9 +471,11 @@
     (function(){
       const scroller = document.querySelector('.contact-boxes');
       if (!scroller) return;
+      // the boxes are hidden from the first paint till the intro has them (contact.html's head)
+      function unwait(){ document.documentElement.classList.remove('contact-wait'); }
       const boxes = Array.prototype.slice.call(scroller.querySelectorAll('.contact-box'));
-      if (boxes.length < 2) return;
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (boxes.length < 2){ unwait(); return; }
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches){ unwait(); return; }
 
       const DOT   = 12;     // square dot, px
       // THUMB and GAP trade against each other: the column has to stay inside the
@@ -524,7 +526,7 @@
         const r = b.getBoundingClientRect();
         return { x: r.left + r.width/2 - cx, y: r.top + r.height/2 - cy, w: r.width, h: r.height };
       });
-      if (nat.some(n => !n.w || !n.h)) return;   // not laid out yet; leave the page alone
+      if (nat.some(n => !n.w || !n.h)){ unwait(); return; }   // not laid out yet; leave the page alone
 
       // Pitch down the column, derived rather than fixed. The column has to fit
       // between the grid's two horizontal rules at 33% and 67%, and that band is
@@ -628,6 +630,7 @@
 
       scroller.classList.add('is-intro');
       render(0);                      // dot state is up before the first paint
+      unwait();
 
       function run(){
         const start = performance.now();
@@ -1347,7 +1350,7 @@
   if (!tiles.length) return;
   const html = document.documentElement;
   const grid = tiles[0].parentElement;
-  const RISE_MS = 1050, RISE_STEP_MS = 105, WAIT_MS = 1500, ASKED_AFTER_MS = 120;
+  const RISE_MS = 700, RISE_STEP_MS = 65, FALL_MS = 1050, FALL_STEP_MS = 105, WAIT_MS = 1500, ASKED_AFTER_MS = 120;
 
   function dim(project){
     tiles.forEach(function(tile){
@@ -1361,68 +1364,6 @@
   grid.addEventListener('mouseleave', function(){ dim(null); });
 
   const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // Pixel loading, after olivierlarose.com's image pixel loading: a picture or video comes in
-  // as big square blocks of its own colours, at once, and after `wait` sharpens a step at a
-  // time to the real thing. A canvas over the media does it (the picture shrunk to one pixel
-  // a block, then blown back up unsmoothed), redrawn each step, so a video plays on under it,
-  // and taken away at the end. Cropped as object-fit:cover crops the media under it.
-  const PIXEL_BLOCKS = [44, 26, 15, 8, 4, 2], PIXEL_STEP_MS = 110;
-  function pixelIn(media, wait){
-    if (calm) return;
-    if (media.pixelStop) media.pixelStop();
-    const host = media.parentElement;
-    const w = media.offsetWidth, h = media.offsetHeight;
-    if (!w || !h) return;
-    const ratio = Math.min(window.devicePixelRatio || 1, 2);
-    const veil = document.createElement('canvas'), small = document.createElement('canvas');
-    veil.className = 'pixel-veil';
-    veil.width = Math.round(w * ratio);
-    veil.height = Math.round(h * ratio);
-    veil.style.left = media.offsetLeft + 'px';
-    veil.style.top = media.offsetTop + 'px';
-    veil.style.width = w + 'px';
-    veil.style.height = h + 'px';
-    host.appendChild(veil);
-    const ink = veil.getContext('2d'), shrink = small.getContext('2d');
-    ink.fillStyle = getComputedStyle(document.body).backgroundColor || '#FDFDFD';
-    ink.fillRect(0, 0, veil.width, veil.height);
-    let step = 0, timer = 0, stopped = false;
-    function ready(){
-      return media.tagName === 'IMG' ? media.complete && media.naturalWidth > 0 : media.readyState >= 2;
-    }
-    function draw(block){
-      const nw = media.naturalWidth || media.videoWidth, nh = media.naturalHeight || media.videoHeight;
-      const k = Math.max(w / nw, h / nh), sw = w / k, sh = h / k;
-      const cols = Math.ceil(w / block), rows = Math.ceil(h / block);
-      small.width = cols;
-      small.height = rows;
-      shrink.drawImage(media, (nw - sw) / 2, (nh - sh) / 2, sw, sh, 0, 0, cols, rows);
-      ink.imageSmoothingEnabled = false;
-      ink.drawImage(small, 0, 0, cols, rows, 0, 0, cols * block * ratio, rows * block * ratio);
-    }
-    function stop(){
-      stopped = true;
-      clearTimeout(timer);
-      veil.remove();
-      if (media.pixelStop === stop) media.pixelStop = null;
-    }
-    function next(){
-      if (stopped) return;
-      if (step >= PIXEL_BLOCKS.length){ stop(); return; }
-      draw(PIXEL_BLOCKS[step++]);
-      timer = setTimeout(next, PIXEL_STEP_MS);
-    }
-    function start(){
-      if (stopped) return;
-      draw(PIXEL_BLOCKS[step++]);
-      timer = setTimeout(next, Math.max(wait || 0, PIXEL_STEP_MS));
-    }
-    media.pixelStop = stop;
-    // not loaded yet: plain paper until it is, then the blocks
-    if (ready()) start();
-    else media.addEventListener(media.tagName === 'IMG' ? 'load' : 'canplay', start, { once:true });
-  }
 
   function mixed(list){
     const order = list.slice();
@@ -1475,7 +1416,7 @@
       const below = drop(column);
       column.forEach(function(tile){
         falling.push(tile.animate([{ transform:'none' }, { transform:'translateY(' + below + 'px)' }],
-          { duration:RISE_MS, delay:i * RISE_STEP_MS, easing:'cubic-bezier(0.9, 0, 0.6, 1)', fill:'both' }).finished);
+          { duration:FALL_MS, delay:i * FALL_STEP_MS, easing:'cubic-bezier(0.9, 0, 0.6, 1)', fill:'both' }).finished);
       });
     });
     Promise.all(falling).then(function(){
@@ -1527,20 +1468,6 @@
       });
     });
     function hold(on){ extras.forEach(extra => extra.classList.toggle('is-held', on)); }
-    // every screen comes in as pixels, once each time the project opens: the ones flying in
-    // as they land, the rest as they first scroll into view
-    const seen = new Set();
-    function wake(){
-      if (open !== detail) return;
-      column.querySelectorAll('.view-shot').forEach(function(screen){
-        if (seen.has(screen) || screen.classList.contains('is-held')) return;
-        const r = screen.getBoundingClientRect();
-        if (r.top >= innerHeight || r.bottom <= 0) return;
-        seen.add(screen);
-        pixelIn(screen.firstElementChild, 0);
-      });
-    }
-    detail.addEventListener('scroll', wake, { passive:true });
 
     const map = document.createElement('div');
     const frame = document.createElement('span');
@@ -1699,14 +1626,9 @@
       if (calm) return;
       busy = true;
       hold(true);
-      shots.forEach(function(shot, i){
-        seen.add(shot.el);
-        pixelIn(shot.el.firstElementChild, i * STAGGER_MS + FLY_MS * 0.4);
-      });
       textIn();
       fly(false).then(function(){
         hold(false);
-        wake();
         busy = false;
         if (leaveAfter){ leaveAfter = false; hide(); }
       });
@@ -1718,11 +1640,6 @@
         detail.inert = true;
         detail.setAttribute('aria-hidden', 'true');
         own.forEach(tile => tile.classList.remove('is-lifted'));
-        seen.clear();
-        column.querySelectorAll('.view-shot').forEach(function(screen){
-          const media = screen.firstElementChild;
-          if (media.pixelStop) media.pixelStop();
-        });
         shots.forEach(function(shot){
           shot.el.getAnimations().forEach(a => a.cancel());
           const video = shot.el.querySelector('video');
@@ -1820,8 +1737,6 @@
     order.forEach(function(column, i){
       const below = drop(column);
       column.forEach(function(tile){
-        // in as pixels from the start, sharpening as it comes in to land
-        pixelIn(tile.querySelector('img, video'), i * RISE_STEP_MS + RISE_MS * 0.45);
         rising.push(tile.animate([{ transform:'translateY(' + below + 'px)' }, { transform:'none' }],
           { duration:RISE_MS, delay:i * RISE_STEP_MS, easing:'cubic-bezier(0.4, 0, 0.1, 1)', fill:'backwards' }).finished);
       });
