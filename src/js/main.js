@@ -661,8 +661,12 @@
       if (!scroller) return;
       const boxes = Array.prototype.slice.call(scroller.querySelectorAll('.contact-box'));
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const GLIDE = 0.12;                        // seconds for the glide to cover ~63% of the way
-      const SETTLE_AFTER = 160;                  // ms of quiet before the nearest box is pulled in
+      // Long enough that a mouse wheel's notches run together into one glide rather than
+      // stepping (0.12 did), and the settle softer still, after a quiet long enough that a
+      // trackpad's momentum has died away first, so the two never tug against each other.
+      const GLIDE = 0.28;                        // seconds for the glide to cover ~63% of the way
+      const SETTLE_GLIDE = 0.4;                  // the same, gliding into the middle on a box
+      const SETTLE_AFTER = 260;                  // ms of quiet before the nearest box is pulled in
 
       function maxScroll(){ return scroller.scrollWidth - scroller.clientWidth; }
       function clampLeft(v){ return Math.max(0, Math.min(maxScroll(), v)); }
@@ -700,7 +704,7 @@
         if (holdBox) target = centreOf(holdBox) + (pos - scroller.scrollLeft);
         const dt = last ? Math.min((now - last) / 1000, 0.05) : 1 / 60;
         last = now;
-        pos = reduce ? target : pos + (target - pos) * (1 - Math.exp(-dt / GLIDE));
+        pos = reduce ? target : pos + (target - pos) * (1 - Math.exp(-dt / (holdBox ? SETTLE_GLIDE : GLIDE)));
         if (Math.abs(target - pos) < 0.5) pos = target;
         scroller.scrollLeft = pos;
         if (pos !== target){ raf = requestAnimationFrame(glide); return; }
