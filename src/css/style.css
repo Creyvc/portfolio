@@ -140,7 +140,7 @@
   .view-tile img,
   .view-tile video{ transition:filter 0.3s ease, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
   .view-tile.is-hot img,
-  .view-tile.is-hot video{ transform:scale(1.04); }
+  .view-tile.is-hot video{ transform:scale(1.025); }
   @media (prefers-reduced-motion: reduce){
     .view-tile.is-hot img,
     .view-tile.is-hot video{ transform:none; }
