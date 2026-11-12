@@ -1437,7 +1437,7 @@
   const FLY_MS = 750, STAGGER_MS = 35, TEXT_AT_MS = 480, TEXT_MS = 800, TEXT_STEP_MS = 70, TEXT_OUT_MS = 480, TEXT_OUT_STEP_MS = 30, MAP_OUT_MS = 620;
   // closing, overlapped: the map follows the words out this soon, and the frost starts to lift
   // and the screens to fly back this soon, while the words are still going
-  const MAP_OUT_AT_MS = 180, BACK_AT_MS = 360, EXTRAS_OUT_MS = 460, FLY_BACK_MS = 1120;
+  const HEAD_UP_AFTER = 80, MAP_OUT_AT_MS = 180, BACK_AT_MS = 360, EXTRAS_OUT_MS = 460, FLY_BACK_MS = 1120;
   let open = null;      // the project on show
   let busy = false;
   let closing = false;      // asked to close, by a click, Esc or the browser's back
@@ -1499,6 +1499,9 @@
     }
     detail.addEventListener('scroll', follow, { passive:true });
     window.addEventListener('resize', follow);
+    // scrolled down the project, its logo and name go up out of their masks (the CSS moves them)
+    function headUp(){ detail.classList.toggle('is-head-up', detail.scrollTop > HEAD_UP_AFTER); }
+    detail.addEventListener('scroll', headUp, { passive:true });
     const blocks = detail.querySelectorAll('.view-title, .view-about');
     const rows = detail.querySelectorAll('.view-facts > div');
     const logo = detail.querySelector('.view-logo img');
@@ -1570,6 +1573,7 @@
     function textOut(){
       stop();
       const all = groups();
+      if (detail.classList.contains('is-head-up')) all.shift();   // the logo and name are up already
       all.forEach(function(group, i){
         group.forEach(function(el){
           moving.push(el.animate([{ transform:'none' }, { transform:'translateY(-115%)' }], {
@@ -1636,7 +1640,7 @@
     function hide(){
       if (busy || open !== detail) return;
       function done(){
-        detail.classList.remove('is-on');
+        detail.classList.remove('is-on', 'is-head-up');
         detail.inert = true;
         detail.setAttribute('aria-hidden', 'true');
         own.forEach(tile => tile.classList.remove('is-lifted'));
@@ -2946,4 +2950,75 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
     }, TICK);
     render();
   });
+})();
+
+/* Home scroll (home): the page is still at the top. Scrolling down, the header's letters go
+   up out of their masks at once (html.home-scrolled; the CSS has the move) as the walkers
+   zoom out, and once the header has gone, black closes in from every edge till only a box in
+   the middle is left, the top and bottom coming in slower than the sides. Scrolling back up
+   undoes it all, the other way round: the black goes out, and only once it's gone, back at
+   the top, does the header come down. The zoom and the black trail the scroll a little, so they glide; with
+   reduced motion they follow it exactly. A reload starts at the top. */
+(function(){
+  const frame = document.querySelector('.home-frame');
+  if (!frame) return;
+  const html = document.documentElement;
+  const steps = document.querySelector('.home-steps');
+  const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const STARTED = 8;                   // px scrolled that counts as starting
+  const HEADER_MS = calm ? 0 : 1000;   // the header going up (the CSS's 1.1s, all but its tail)
+  const ZOOM = -0.45;                  // the walkers' change of size, all the way down
+  const FADE = 18;                     // % of the canvas its edges fade over, all the way down
+  const WIDE = 0.3, TALL = 0.6;        // the box left at the end, of the window
+  const FOLLOW = 0.1;                  // of the way to the scroll, a frame
+  const ease = t => -(Math.cos(Math.PI * t) - 1) / 2;
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.scrollTo(0, 0);
+  let zoom = -1, black = -1, upAt = 0, raf = 0;
+  function aim(){
+    const room = html.scrollHeight - innerHeight;
+    return room > 0 ? Math.min(1, Math.max(0, scrollY / room)) : 0;
+  }
+  function paint(){
+    const w = innerWidth, h = innerHeight, p = black;
+    // the sides on the eased scroll, the top and bottom lagging behind on its square
+    const side = w * (1 - WIDE) / 2 * ease(p);
+    const end = h * (1 - TALL) / 2 * ease(p * p);
+    const l = side.toFixed(1), r = (w - side).toFixed(1), t = end.toFixed(1), b = (h - end).toFixed(1);
+    frame.style.clipPath = p <= 0 ? '' : 'polygon(evenodd, 0 0, ' + w + 'px 0, ' + w + 'px ' + h + 'px, 0 ' + h + 'px, 0 0, ' +
+      l + 'px ' + t + 'px, ' + l + 'px ' + b + 'px, ' + r + 'px ' + b + 'px, ' + r + 'px ' + t + 'px, ' + l + 'px ' + t + 'px)';
+    if (steps){
+      steps.style.transform = zoom <= 0 ? '' : 'scale(' + (1 + ZOOM * ease(zoom)).toFixed(4) + ')';
+      steps.style.setProperty('--fade', (FADE * ease(zoom)).toFixed(2) + '%');
+    }
+  }
+  function glide(from, to){
+    if (calm || from < 0) return to;
+    const next = from + (to - from) * FOLLOW;
+    return Math.abs(to - next) < 0.0005 ? to : next;
+  }
+  function tick(){
+    raf = 0;
+    const to = aim();
+    // the black waits for the header to be gone, and back at the top, the header waits for
+    // the black to be gone
+    const hidden = html.classList.contains('home-scrolled');
+    const atTop = scrollY <= STARTED;
+    const open = hidden && performance.now() - upAt >= HEADER_MS;
+    const blackTo = open && !atTop ? to : 0;
+    zoom = glide(zoom, to);
+    black = glide(black, blackTo);
+    paint();
+    if (hidden && atTop && black <= 0) html.classList.remove('home-scrolled');
+    if (zoom !== to || black !== blackTo || (!open && to > 0)) raf = requestAnimationFrame(tick);
+  }
+  window.addEventListener('scroll', function(){
+    if (scrollY > STARTED && !html.classList.contains('home-scrolled')){
+      upAt = performance.now();
+      html.classList.add('home-scrolled');
+    }
+    if (!raf) raf = requestAnimationFrame(tick);
+  }, { passive:true });
+  window.addEventListener('resize', paint);
+  tick();
 })();

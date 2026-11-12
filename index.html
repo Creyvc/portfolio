@@ -36,7 +36,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Vuthy Cheam","url":"https://vuthycheam.com/"}
 </script>
-<link rel="stylesheet" href="src/css/style.css?v=275">
+<link rel="stylesheet" href="src/css/style.css?v=280">
 <link rel="prefetch" href="contact.html">
 <script>
 /* Arrived from another page of the site: mark <html> BEFORE the body renders so
@@ -110,6 +110,12 @@
   <section class="hero">
   </section>
 
+  <!-- scrolling home: the header goes up out of its masks, the walkers zoom in, and black
+       closes in from every edge, top and bottom slower than the sides (main.js, "Home
+       scroll"); the stage is only there to give the page its scroll -->
+  <div class="home-frame" aria-hidden="true"></div>
+  <div class="home-stage" aria-hidden="true"></div>
+
   <!-- ABOUT opens this in place rather than leaving the page (main.js);
        about.html stays the link's target for a new tab or no JS. After
        cathydolle.com's about: the whole page goes soft behind a frosted layer
@@ -176,6 +182,6 @@
     </div>
   </section>
 
-  <script src="src/js/main.js?v=294"></script>
+  <script src="src/js/main.js?v=300"></script>
 </body>
 </html> 

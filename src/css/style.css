@@ -218,6 +218,11 @@
      the capitals stand on the logo's bottom edge */
   .view-title{ margin:0 0 -0.375em; font:inherit; }
   .view-logo img{ width:auto; height:2.75rem; }
+  /* scrolled down the project, its logo and name go up out of their masks, and come back
+     down at the top (main.js, "View all") */
+  .view-head .view-line{ transition:transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+  .view-detail.is-head-up .view-head .view-line{ transform:translateY(-115%); }
+  @media (prefers-reduced-motion: reduce){ .view-head .view-line{ transition:none; } }
   .view-about{ max-width:27rem; margin:0 0 3.75rem; }
   .view-facts{ margin:0; }
   .view-facts div{ display:grid; grid-template-columns:20% 26% 1fr; overflow:hidden; }
@@ -687,6 +692,43 @@
      letters go white as a shadow crosses them. PLAYGROUND and CONTACT hide them */
   .home-steps{ position:fixed; inset:0; z-index:1; width:100%; height:100%; pointer-events:none; transition:opacity 0.3s ease; }
   html.steps-off .home-steps{ opacity:0; }
+
+  /* ===== Home scroll =====
+     Scrolling home (main.js): the header's letters go up out of their masks as soon as it
+     starts, as VIEW ALL sends them (1.1s, main.js's HEADER_MS waits on it), and come back down
+     at the top; the walkers zoom out (main.js scales them); and once the header's gone, black
+     closes in from the edges, over the walkers and under the header, its clip leaving a hole
+     that main.js narrows. The stage is the scroll. */
+  .home-steps{ transform-origin:50% 50%; will-change:transform; }
+  /* zoomed out, the canvas's own edges would cut the shadows off sharp: they fade out over
+     --fade, which main.js widens with the zoom */
+  html.home-scrolled .home-steps{
+    -webkit-mask-image:linear-gradient(to right, transparent, #000 var(--fade, 0%), #000 calc(100% - var(--fade, 0%)), transparent), linear-gradient(to bottom, transparent, #000 var(--fade, 0%), #000 calc(100% - var(--fade, 0%)), transparent);
+    -webkit-mask-composite:source-in;
+    mask-image:linear-gradient(to right, transparent, #000 var(--fade, 0%), #000 calc(100% - var(--fade, 0%)), transparent), linear-gradient(to bottom, transparent, #000 var(--fade, 0%), #000 calc(100% - var(--fade, 0%)), transparent);
+    mask-composite:intersect;
+  }
+  .home-frame{ position:fixed; inset:0; z-index:2; background:#0B0B0B; pointer-events:none; clip-path:inset(50%); }
+  .home-stage{ height:120vh; }
+  html.home-scrolled .home-name,
+  html.home-scrolled .home-nav,
+  html.home-scrolled .time-badge{ clip-path:inset(0 -0.1em -0.15em -0.1em); pointer-events:none; }
+  header .home-ch,
+  #bkk-time,
+  .time-badge .dot{ transition:transform 1.1s cubic-bezier(0.16, 1, 0.3, 1); }
+  html.home-scrolled header .home-ch,
+  html.home-scrolled #bkk-time,
+  html.home-scrolled .time-badge .dot{ transform:translateY(-115%); }
+  /* the dot is too small for its own height to take it out of the mask */
+  html.home-scrolled .time-badge .dot{ transform:translateY(-1.5rem); }
+  /* html,body's overflow-x:hidden made body a scroller of its own, and its overscroll-behavior
+     then kept the wheel from ever reaching the page: on home only html clips */
+  body.home{ overflow:visible; }
+  html:has(body.home){ scrollbar-width:none; }
+  html:has(body.home)::-webkit-scrollbar{ display:none; }
+  /* nothing scrolls under a pop-up or the preloader */
+  html.whois-open:has(body.home),
+  html.preload{ overflow:hidden; }
 
   .hero{
     position:sticky; top:0;
