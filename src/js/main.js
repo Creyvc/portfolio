@@ -1356,9 +1356,21 @@
   const grid = tiles[0].parentElement;
   const RISE_MS = 700, RISE_STEP_MS = 65, WAIT_MS = 1500, ASKED_AFTER_MS = 120;
 
+  // each tile's picture or video in a frame of its own, so hovering can zoom it inside that
+  // frame without the tile growing
+  tiles.forEach(function(tile){
+    const media = tile.querySelector('img, video');
+    const frame = document.createElement('span');
+    frame.className = 'view-media';
+    media.parentNode.insertBefore(frame, media);
+    frame.appendChild(media);
+  });
+  // hovering a project: every other project's screens go darker, and its own zoom in a little
   function dim(project){
     tiles.forEach(function(tile){
-      tile.classList.toggle('is-dim', !!project && tile.getAttribute('data-project') !== project);
+      const own = tile.getAttribute('data-project') === project;
+      tile.classList.toggle('is-dim', !!project && !own);
+      tile.classList.toggle('is-hot', !!project && own);
     });
   }
   grid.addEventListener('mouseover', function(e){
@@ -1595,7 +1607,8 @@
     function fly(leaving){
       return Promise.all(shots.map(function(shot, i){
         const to = shot.el.getBoundingClientRect();
-        const from = shot.tile.querySelector('img, video').getBoundingClientRect();
+        // its frame, not the picture, which may be zoomed in it by a hover
+        const from = shot.tile.querySelector('.view-media').getBoundingClientRect();
         const k = from.width / to.width, dx = from.left - to.left, dy = from.top - to.top;
         const at = (x, y, size, rx, ry, rz) => 'perspective(1400px) translate(' + x + 'px, ' + y + 'px) scale(' + size + ') rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) rotateZ(' + rz + 'deg)';
         const frames = [at(dx, dy, k, 0, 0, 0), at(dx * 0.45, dy * 0.45, k + (1 - k) * 0.55, 8, -16, -3), at(0, 0, 1, 0, 0, 0)];
@@ -1611,6 +1624,7 @@
       dim(null);
       history.pushState({ project:project }, '', '#' + project);
       own.forEach(tile => tile.classList.add('is-lifted'));
+      dim(null);                // no hover zoom left on the tiles the screens land back on
       html.classList.add('view-open');
       detail.classList.add('is-on');
       detail.inert = false;
@@ -2993,21 +3007,29 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
 /* Home scroll (home): the page is still at the top. Scrolling down, the header's letters go
    up out of their masks with the first of the scroll, item by item from the left, and the
    walkers' glass zooms out, drawn wider and wider across the whole window, so there's never an
-   edge, the walkers shrinking towards the middle, till at the bottom their shadows have faded
+   edge, the walkers shrinking towards the middle, till, short of the bottom, their shadows have faded
    to nothing and it's pure white. All of it runs on one smoothed scroll, so it's always in
    step, either way, at any speed: scrolling back up, the glass zooms in and the header comes
-   down with the last of it. With reduced motion it follows the scroll exactly. A reload
-   starts at the top. */
+   down with the last of it. Once the walkers have gone, a hairline draws across the middle of
+   the window from left to right, its x-axis, and stays over the white; back up, it's gone before
+   they come back. With reduced motion it
+   follows the scroll exactly. A reload starts at the top. */
 (function(){
   const stage = document.querySelector('.home-stage');
   const steps = document.querySelector('.home-steps');
   const header = document.querySelector('header');
+  const cue = document.querySelector('.home-scroll');
+  const axis = document.querySelector('.home-axis');
   if (!stage || !steps || !header) return;
   const html = document.documentElement;
   const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const HEAD = 0.12;                   // of the way down, the header's gone by
+  const CUE = 0.05;                    // and the scroll cue, sooner
+  const AXIS_FROM = 0.62, AXIS_TO = 0.92;   // of the way down, the x-axis draws out between
   const SMALLEST = 0.12;               // how big the glass shows, all the way down
-  const FADE_FROM = 0.55;              // of the way down, where the shadows start to fade
+  // one after the other, never together: the walkers zoom out and fade to nothing, and only
+  // then does the x-axis draw out (so back up, it's gone before they come back)
+  const FADE_FROM = 0.3, FADE_TO = 0.6;    // of the way down, the shadows fade out between
   const FOLLOW = 0.22;                 // seconds to cover ~63% of the way to the scroll, at any frame rate
   const ease = t => -(Math.cos(Math.PI * t) - 1) / 2;
   const clamp01 = t => Math.min(1, Math.max(0, t));
@@ -3022,10 +3044,12 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
   function apply(){
     html.classList.toggle('home-scrolled', shown > 0);
     header.style.setProperty('--up', ease(clamp01(shown / HEAD)).toFixed(4));
+    if (cue) cue.style.setProperty('--cue', ease(clamp01(shown / CUE)).toFixed(4));
+    if (axis) axis.style.setProperty('--axis', ease(clamp01((shown - AXIS_FROM) / (AXIS_TO - AXIS_FROM))).toFixed(4));
     if (!steps.view) return;
     // zooming out evenly to the eye: the size falls away geometrically
-    steps.view.zoom = Math.pow(SMALLEST, ease(shown));
-    steps.view.ink = 1 - ease(clamp01((shown - FADE_FROM) / (1 - FADE_FROM)));
+    steps.view.zoom = Math.pow(SMALLEST, ease(clamp01(shown / FADE_TO)));
+    steps.view.ink = 1 - ease(clamp01((shown - FADE_FROM) / (FADE_TO - FADE_FROM)));
   }
   function tick(now){
     raf = 0;

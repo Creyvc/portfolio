@@ -36,7 +36,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Vuthy Cheam","url":"https://vuthycheam.com/"}
 </script>
-<link rel="stylesheet" href="src/css/style.css?v=283">
+<link rel="stylesheet" href="src/css/style.css?v=289">
 <link rel="prefetch" href="contact.html">
 <script>
 /* Arrived from another page of the site: mark <html> BEFORE the body renders so
@@ -114,6 +114,14 @@
        there's nothing but white (main.js, "Home scroll"); the stage is only there to give the
        page its scroll -->
   <div class="home-stage" aria-hidden="true"></div>
+  <!-- scrolling on, a hairline draws across the middle of the window from left to right, its
+       x-axis (main.js, "Home scroll") -->
+  <div class="home-axis" aria-hidden="true"></div>
+  <!-- the scroll cue at the window's foot: SCROLL over a hairline a dash keeps running down;
+       it goes down out of its mask with the first of the scroll (main.js, "Home scroll") -->
+  <div class="home-scroll" aria-hidden="true">
+    <span class="home-scroll-in"><span class="home-scroll-word">SCROLL</span><span class="home-scroll-line"></span></span>
+  </div>
 
   <!-- ABOUT opens this in place rather than leaving the page (main.js);
        about.html stays the link's target for a new tab or no JS. After
@@ -181,6 +189,6 @@
     </div>
   </section>
 
-  <script src="src/js/main.js?v=305"></script>
+  <script src="src/js/main.js?v=310"></script>
 </body>
 </html> 

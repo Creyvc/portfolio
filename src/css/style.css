@@ -134,9 +134,17 @@
     padding:1.5rem 1rem 2rem;
   }
   .view-tile{ position:relative; margin:0; }
-  /* hovering a project, every other project's screens go a little darker */
+  /* hovering a project, every other project's screens go a little darker, and its own zoom in
+     a little, inside frames of their own (main.js wraps them), so the tiles keep their size */
+  .view-media{ display:block; overflow:hidden; }
   .view-tile img,
-  .view-tile video{ transition:filter 0.3s ease; }
+  .view-tile video{ transition:filter 0.3s ease, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+  .view-tile.is-hot img,
+  .view-tile.is-hot video{ transform:scale(1.04); }
+  @media (prefers-reduced-motion: reduce){
+    .view-tile.is-hot img,
+    .view-tile.is-hot video{ transform:none; }
+  }
   .view-tile.is-dim img,
   .view-tile.is-dim video{ filter:brightness(0.6); }
   /* until they rise (main.js); by visibility, so nothing fades in on the way up */
@@ -699,6 +707,55 @@
      out till there's only white (main.js draws them so), all on the one smoothed scroll. The
      stage is the scroll. */
   .home-stage{ height:200vh; }
+  /* the x-axis: a hairline across the middle of the window, drawn from its left edge to its
+     right by the scroll (main.js sets --axis, 0 to 1), over the walkers and under the header */
+  .home-axis{
+    position:fixed; left:0; top:50%; z-index:3;
+    width:100%; height:1px; margin-top:-0.5px;
+    background:var(--ink);
+    transform:scaleX(var(--axis, 0));
+    transform-origin:0 50%;
+    pointer-events:none;
+  }
+  /* the scroll cue: SCROLL over a hairline a dash keeps running down, at the foot of the window over
+     the walkers; it comes up into its mask once the header is in (after the preloader), and
+     goes down out of it with the first of the scroll (main.js sets --cue, 0 to 1) */
+  .home-scroll{
+    position:fixed; left:50%; bottom:1.25rem; z-index:3;
+    transform:translateX(-50%);
+    overflow:hidden;
+    pointer-events:none;
+    font-family:var(--sans); font-size:0.8125rem; font-weight:500; letter-spacing:0.03em; text-transform:uppercase;
+    color:var(--ink);
+  }
+  .home-scroll-in{
+    display:flex; flex-direction:column; align-items:center; gap:0.5rem;
+    transform:translateY(calc(var(--cue, 0) * 110%));
+    transition:transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.2s;
+  }
+  html.preload .home-scroll-in{ transform:translateY(110%); }
+  html.home-scrolled .home-scroll-in{ transition:none; }
+  .home-scroll-line{
+    position:relative;
+    width:1px; height:2.5rem;
+    overflow:hidden;
+    background:rgba(23, 24, 28, 0.15);
+  }
+  .home-scroll-line::after{
+    content:''; position:absolute; left:0; top:0;
+    width:100%; height:45%;
+    background:currentColor;
+    transform:translateY(-100%);
+    animation:home-dash 1.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+  @keyframes home-dash{
+    0%{ transform:translateY(-100%); }
+    70%, 100%{ transform:translateY(225%); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .home-scroll-line::after{ animation:none; transform:none; }
+    .home-scroll-in{ transition:none; }
+  }
   html.home-scrolled .home-name,
   html.home-scrolled .home-nav,
   html.home-scrolled .time-badge{ clip-path:inset(0 -0.1em -0.15em -0.1em); pointer-events:none; }
