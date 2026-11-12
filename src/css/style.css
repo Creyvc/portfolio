@@ -1,6 +1,7 @@
   :root{
     --paper:#FDFDFD;
     --stone:#FDFDFD; --ink:#17181C; --accent:#B4371F;
+    --glitch-red:#E8352B; --glitch-blue:#2D5BFF;
     --sans:ui-monospace, 'SF Mono', 'JetBrains Mono', 'IBM Plex Mono', Menlo, Consolas, monospace;
     --header-h: 3.25rem;
   }
@@ -584,6 +585,7 @@
   html.preload header .home-ch,
   html.preload #bkk-time,
   html.preload .time-badge .dot{ transform:translateY(-115%); }
+  html.preload .time-badge .dot{ transform:translateY(-1.5rem); }
   .play-pop.is-leaving .play-word{
     transform:translateY(-115%);
     transition:transform 0.45s cubic-bezier(0.7, 0, 0.84, 0);
@@ -1232,4 +1234,11 @@
   .reveal-1{ transition-delay:40ms; }
 
   .reveal-4{ transition-delay:380ms; }
+
+  /* ===== Glitch colours =====
+     Hovered, a decrypting letter's glyphs now and then come up red or blue as they churn
+     (main.js: the header scramble, the work list's, and [data-decrypt]'s); !important over the
+     white the walkers' shadows give the header's letters */
+  .glitch-red{ color:var(--glitch-red) !important; }
+  .glitch-blue{ color:var(--glitch-blue) !important; }
 

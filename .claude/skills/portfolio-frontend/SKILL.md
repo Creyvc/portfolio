@@ -89,11 +89,13 @@ markup, so a shared change has to be made in every file.
 - **Home background**: none since 2026-11-05. The owner removed the grainient (and its
   per-letter white/ink text tinting); home is plain paper and every piece of text, the
   lockup words and logo included, is solid ink. grainient.js now only drives contact's Instagram box.
-- **Preloader** (home, added 2026-11-11 at the owner's request, after ning-h.com's): black
-  (#0B0B0B) over everything, VUTHY CHEAM · [ 00% ] · PORTFOLIO in the header's small type
-  rising through masks, the count running on ning-h.com's halting curve while the name and
-  PORTFOLIO slide out to 16px from the sides, then the words go up and out, the black slides
-  up, and only once it has gone the header slides down in from above its masks. Shown only on a fresh arrival (head script sets `html.preload`;
+- **Preloader** (home, added 2026-11-11 at the owner's request, after ning-h.com's): white
+  (the page's paper, ink words, since 2026-11-12; it was black) over everything, VUTHY CHEAM ·
+  [ 00% ] · PORTFOLIO in the header's small type rising through masks, the count running on
+  ning-h.com's halting curve while the name and PORTFOLIO slide out to 16px from the sides,
+  then the words go up and out and the sheet is simply removed (no slide: the owner asked
+  for none), the header slides down in from above its masks, and only then do the walkers
+  set off, in from beyond the edges (they're held while `html.preload` lacks `pre-done`). Shown only on a fresh arrival (head script sets `html.preload`;
   not after in-site navigation, View all's [CLOSE], Journey's [CLOSE], or reduced motion); a
   second visit in the tab counts from 75. main.js "Preloader". Two earlier ones were built
   and removed by the owner (a hellohello.is-style one, and a W A S D gear-shifter console).

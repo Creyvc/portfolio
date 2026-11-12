@@ -990,6 +990,13 @@
   const GLYPHS = '01<>[]{}/\\|=+*-#%&$ABCDEFGHKMNXZ';
   const STEPS = 14;
   const TICK_MS = 40;
+  // now and then a churning glyph comes up red or blue (.glitch-red / .glitch-blue)
+  function tint(ch, off){
+    const r = off ? 1 : Math.random();
+    ch.classList.toggle('glitch-red', r < GLITCH / 2);
+    ch.classList.toggle('glitch-blue', r >= GLITCH / 2 && r < GLITCH);
+  }
+  const GLITCH = 0.22;                 // the chance a glyph comes up in colour
 
   function scramble(ch){
     if (ch._scr) return;               // let a run finish rather than restart it
@@ -997,10 +1004,12 @@
     ch._scr = setInterval(function(){
       step++;
       ch.textContent = GLYPHS[(Math.random() * GLYPHS.length) | 0];
+      tint(ch);
       if (step >= STEPS){
         clearInterval(ch._scr);
         ch._scr = null;
         ch.textContent = ch._letter;
+        tint(ch, true);
       }
     }, TICK_MS);
   }
@@ -1079,7 +1088,9 @@
   const STEPS = 14;
   const TICK_MS = 40;
 
-  function scramble(el){
+  const GLITCH = 0.22;                  // hovered, the chance a glyph comes up red or blue
+  const esc = c => c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '&' ? '&amp;' : c;
+  function scramble(el, hovered){
     if (!el || el._animating) return;   // don't restart mid-animation (prevents glitch)
     const original = el.textContent;
     el._animating = true;
@@ -1093,9 +1104,14 @@
       let out = '';
       for (let i = 0; i < total; i++){
         const c = chars[i];
-        out += (i < revealed || c === ' ' || c === ' ' || c === '·') ? c : GLYPHS[(Math.random() * GLYPHS.length) | 0];
+        if (i < revealed || c === ' ' || c === ' ' || c === '·'){ out += esc(c); continue; }
+        const g = esc(GLYPHS[(Math.random() * GLYPHS.length) | 0]);
+        // hovered, now and then a glyph comes up red or blue
+        const r = hovered ? Math.random() : 1;
+        out += r < GLITCH / 2 ? '<span class="glitch-red">' + g + '</span>'
+          : r < GLITCH ? '<span class="glitch-blue">' + g + '</span>' : g;
       }
-      el.textContent = out;
+      el.innerHTML = out;
       if (step >= STEPS){
         clearInterval(el._scr);
         el.textContent = original;
@@ -1109,9 +1125,9 @@
     const kind = row.querySelector('.work-kind');
     const meta = row.querySelector('.work-meta');
     row.addEventListener('mouseenter', function(){
-      scramble(name);
-      scramble(kind);
-      scramble(meta);
+      scramble(name, true);
+      scramble(kind, true);
+      scramble(meta, true);
     });
   });
 
@@ -1236,7 +1252,7 @@
 /* Preloader (home): after ning-h.com's. On white, a second in, the name, the count and the
    year rise through their masks; the count runs to 100 on ning-h.com's own halting curve
    while the name and the year slide out to the header's sides on it too. Then the words go
-   up and out, the white slides up off the window, and once it has gone the header slides down in through
+   up and out, the white simply goes (it's the page's own white), the header slides down in through
    its masks. A second visit in the same tab counts from 75, quicker, as theirs does. Only on
    a fresh arrival without reduced motion: the head script decides, by html.preload. */
 (function(){
@@ -1252,7 +1268,7 @@
     sessionStorage.setItem('visited', '1');
   } catch(e){}
   const RISE_AT = 1000, SLIDE_AT = 1400, OUT_AT = SLIDE_AT + COUNT_MS + 100;
-  const LIFT_AT = OUT_AT + 300, LIFT_MS = 1100, HEADER_AT = LIFT_AT + LIFT_MS;
+  const HEADER_AT = OUT_AT + 700;      // the words have gone up: no sheet to lift, the header comes
 
   // ning-h.com's curve (a GSAP CustomEase path): quick, a long stall past half, a second surge
   const PATH = [
@@ -1301,25 +1317,26 @@
     if (p < 1) requestAnimationFrame(tick);
   })(start);
 
-  pre.animate([{ transform:'none' }, { transform:'translateY(-100%)' }],
-    { duration:LIFT_MS, delay:LIFT_AT, easing:'cubic-bezier(0.76, 0, 0.24, 1)', fill:'forwards' })
-    .finished.then(function(){ pre.remove(); });
-
   // the header, item by item, its letters (the time and its dot) down from above their masks;
-  // gathered only now, as the letters are split once the fonts are in
+  // gathered only now, as the letters are split once the fonts are in. The preloader is white
+  // on the white page, so it just goes, nothing sliding, and the walkers set off (pre-done)
   setTimeout(function(){
+    pre.remove();
+    html.classList.add('pre-done');
     const rising = [];
     document.querySelectorAll('header .home-name, header .home-nav, header .time-badge').forEach(function(item, i){
       const parts = item.classList.contains('time-badge')
         ? item.querySelectorAll('#bkk-time, .dot')
         : item.querySelectorAll('.home-ch');
       parts.forEach(function(part){
-        rising.push(part.animate([{ transform:'translateY(-115%)' }, { transform:'none' }],
+        // the dot's too small for its own height to hide it above the mask
+        const above = part.classList.contains('dot') ? 'translateY(-1.5rem)' : 'translateY(-115%)';
+        rising.push(part.animate([{ transform:above }, { transform:'none' }],
           { duration:1000, delay:i * 40, easing:OUT, fill:'both' }).finished);
       });
     });
     Promise.all(rising).then(function(){
-      html.classList.remove('preload');
+      html.classList.remove('preload', 'pre-done');
       document.querySelectorAll('header .home-ch, #bkk-time, .time-badge .dot').forEach(function(part){
         part.getAnimations().forEach(function(a){ a.cancel(); });
       });
@@ -2273,6 +2290,8 @@
     const passed = Math.min(now - last, 100);
     last = now;
     if (html.classList.contains('steps-off')) return;
+    // not through the preloader: they set off once it has gone, in from beyond the edges
+    if (html.classList.contains('preload') && !html.classList.contains('pre-done')) return;
     clock += passed;
     // one who set off across glass zoomed further out than it now shows has far to go, out of
     // sight: once out of sight, start again, across the glass as it shows now
@@ -2967,6 +2986,10 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
       const now = performance.now();
       chars.forEach(function(c, i){
         let show = c;
+        // a hovered letter's glyphs now and then come up red or blue; nothing else's
+        const r = hot[i] > now && c !== ' ' ? Math.random() : 1;
+        cells[i].classList.toggle('glitch-red', r < 0.11);
+        cells[i].classList.toggle('glitch-blue', r >= 0.11 && r < 0.22);
         if (c === ' ') show = ' ';
         else if (hot[i] > now) show = glyph();
         else if (phase === 'decode') show = t >= lock[i] ? c : glyph();
