@@ -551,15 +551,15 @@
   .view-fade{ position:fixed; inset:0; z-index:10000; background:var(--stone); pointer-events:none; }
 
   /* ===== Preloader (home) =====
-     After ning-h.com's, in the header's small type: black over everything, set by the head
+     After ning-h.com's, in the header's small type: white over everything, ink words, set by the head
      script on a fresh arrival (html.preload), and run by main.js. The words wait below their
      masks; the count's box is as wide as [ 100% ], so nothing shifts as it counts. While it's
-     up the header waits above masks of its own, to come down once the black has gone. */
+     up the header waits above masks of its own, to come down once the white has gone. */
   .preloader{ display:none; }
   html.preload .preloader{
     position:fixed; inset:0; z-index:10001;
     display:flex; justify-content:center; align-items:center; gap:4rem;
-    background:#0B0B0B; color:var(--paper);
+    background:var(--paper); color:var(--ink);
     font-family:var(--sans);
     font-size:0.8125rem;
     font-weight:500;
@@ -694,33 +694,21 @@
   html.steps-off .home-steps{ opacity:0; }
 
   /* ===== Home scroll =====
-     Scrolling home (main.js): the header's letters go up out of their masks as soon as it
-     starts, as VIEW ALL sends them (1.1s, main.js's HEADER_MS waits on it), and come back down
-     at the top; the walkers zoom out (main.js scales them); and once the header's gone, black
-     closes in from the edges, over the walkers and under the header, its clip leaving a hole
-     that main.js narrows. The stage is the scroll. */
-  .home-steps{ transform-origin:50% 50%; will-change:transform; }
-  /* zoomed out, the canvas's own edges would cut the shadows off sharp: they fade out over
-     --fade, which main.js widens with the zoom */
-  html.home-scrolled .home-steps{
-    -webkit-mask-image:linear-gradient(to right, transparent, #000 var(--fade, 0%), #000 calc(100% - var(--fade, 0%)), transparent), linear-gradient(to bottom, transparent, #000 var(--fade, 0%), #000 calc(100% - var(--fade, 0%)), transparent);
-    -webkit-mask-composite:source-in;
-    mask-image:linear-gradient(to right, transparent, #000 var(--fade, 0%), #000 calc(100% - var(--fade, 0%)), transparent), linear-gradient(to bottom, transparent, #000 var(--fade, 0%), #000 calc(100% - var(--fade, 0%)), transparent);
-    mask-composite:intersect;
-  }
-  .home-frame{ position:fixed; inset:0; z-index:2; background:#0B0B0B; pointer-events:none; clip-path:inset(50%); }
-  .home-stage{ height:120vh; }
+     Scrolling home (main.js): the header's letters go up out of their masks with the first
+     of the scroll, item by item, and come back down with the last of it, as the walkers zoom
+     out till there's only white (main.js draws them so), all on the one smoothed scroll. The
+     stage is the scroll. */
+  .home-stage{ height:200vh; }
   html.home-scrolled .home-name,
   html.home-scrolled .home-nav,
   html.home-scrolled .time-badge{ clip-path:inset(0 -0.1em -0.15em -0.1em); pointer-events:none; }
-  header .home-ch,
-  #bkk-time,
-  .time-badge .dot{ transition:transform 1.1s cubic-bezier(0.16, 1, 0.3, 1); }
+  /* how far up, run by the scroll itself (main.js sets --up on the header, 0 to 1), each item
+     a little behind the one before it (--i, left to right), so it's never out of step */
+  html.home-scrolled header > *{ --k:clamp(0, var(--up, 0) * 1.6 - var(--i, 0) * 0.1, 1); }
   html.home-scrolled header .home-ch,
-  html.home-scrolled #bkk-time,
-  html.home-scrolled .time-badge .dot{ transform:translateY(-115%); }
+  html.home-scrolled #bkk-time{ transform:translateY(calc(-115% * var(--k))); transition:none; }
   /* the dot is too small for its own height to take it out of the mask */
-  html.home-scrolled .time-badge .dot{ transform:translateY(-1.5rem); }
+  html.home-scrolled .time-badge .dot{ transform:translateY(calc(-1.5rem * var(--k))); transition:none; }
   /* html,body's overflow-x:hidden made body a scroller of its own, and its overscroll-behavior
      then kept the wheel from ever reaching the page: on home only html clips */
   body.home{ overflow:visible; }

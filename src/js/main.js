@@ -1233,10 +1233,10 @@
   });
 })();
 
-/* Preloader (home): after ning-h.com's. On black, a second in, the name, the count and the
+/* Preloader (home): after ning-h.com's. On white, a second in, the name, the count and the
    year rise through their masks; the count runs to 100 on ning-h.com's own halting curve
    while the name and the year slide out to the header's sides on it too. Then the words go
-   up and out, the black slides up off the window, and once it has gone the header slides down in through
+   up and out, the white slides up off the window, and once it has gone the header slides down in through
    its masks. A second visit in the same tab counts from 75, quicker, as theirs does. Only on
    a fresh arrival without reduced motion: the head script decides, by html.preload. */
 (function(){
@@ -1843,6 +1843,9 @@
     uniform float uSize[WALKERS];             // a foot's length, 0 for nobody there
     uniform float uHeight;                    // the window, in drawn pixels
     uniform float uRatio;                     // drawn pixels to a CSS pixel
+    uniform vec2 uMid;                        // the middle of the window, in CSS px
+    uniform float uZoom;                      // how big the glass shows (Home scroll zooms out)
+    uniform float uInk;                       // how much of the shadows shows (gone as it does)
     out vec4 colour;
 
     float sq(float x){ return x * x; }   // pow() of a number below 0 is no number on some GPUs
@@ -1954,6 +1957,7 @@
 
     void main(){
       vec2 p = vec2(gl_FragCoord.x, uHeight - gl_FragCoord.y) / uRatio;
+      p = uMid + (p - uMid) / uZoom;
       float ink = 0.0;
       for (int i = 0; i < WALKERS; i++){
         vec4 box = uBox[i];
@@ -1974,6 +1978,7 @@
         }
         ink += pow(body, 1.0 / JOIN);
       }
+      ink *= uInk;
       vec3 c = mix(PAPER, HAZE, 1.0 - exp(-ink * 2.1));
       c = mix(c, RED, smoothstep(0.5, 1.5, ink));
       c = mix(c, DEEP, smoothstep(1.4, 2.7, ink));
@@ -1995,7 +2000,9 @@
   gl.useProgram(program);
   gl.bindVertexArray(gl.createVertexArray());
   const at = name => gl.getUniformLocation(program, name);
-  const u = { limb:at('uLimb'), leg:at('uLeg'), foot:at('uFoot'), raised:at('uRaised'), box:at('uBox'), size:at('uSize'), height:at('uHeight'), ratio:at('uRatio') };
+  const u = { limb:at('uLimb'), leg:at('uLeg'), foot:at('uFoot'), raised:at('uRaised'), box:at('uBox'), size:at('uSize'), height:at('uHeight'), ratio:at('uRatio'), mid:at('uMid'), zoom:at('uZoom'), ink:at('uInk') };
+  // how much of the glass shows and how dark its shadows are: Home scroll sets these
+  canvas.view = { zoom:1, ink:1 };
 
   let strip = null;
   // drawn at the screen's own pixels (a Retina screen's two to a CSS pixel), so nothing is
@@ -2007,6 +2014,7 @@
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.uniform1f(u.height, canvas.height);
     gl.uniform1f(u.ratio, ratio);
+    gl.uniform2f(u.mid, innerWidth / 2, innerHeight / 2);
     strip = null;
   }
 
@@ -2022,14 +2030,19 @@
     const px = PX * between(0.9, 1.1) * innerWidth / 1440;
     const angle = between(0, Math.PI * 2);
     const way = [Math.cos(angle), Math.sin(angle)];
-    const through = [between(0.1, 0.9) * innerWidth, between(0.15, 0.9) * innerHeight];
-    const size = [innerWidth, innerHeight];
-    const ahead = Math.min(...[0, 1].map(n => way[n] > 0 ? (size[n] - through[n]) / way[n] : -through[n] / (way[n] || 1e-6)));
-    const behind = Math.min(...[0, 1].map(n => way[n] > 0 ? through[n] / way[n] : (through[n] - size[n]) / (way[n] || 1e-6)));
+    // the glass as much of it shows now (zoomed out, more than the window), so they always
+    // come in from beyond what's seen
+    const z = canvas.view.zoom, size = [innerWidth / z, innerHeight / z];
+    const lo = [(innerWidth - size[0]) / 2, (innerHeight - size[1]) / 2];
+    const rel = [between(0.1, 0.9) * size[0], between(0.15, 0.9) * size[1]];
+    const through = [lo[0] + rel[0], lo[1] + rel[1]];
+    const ahead = Math.min(...[0, 1].map(n => way[n] > 0 ? (size[n] - rel[n]) / way[n] : -rel[n] / (way[n] || 1e-6)));
+    const behind = Math.min(...[0, 1].map(n => way[n] > 0 ? rel[n] / way[n] : (rel[n] - size[n]) / (way[n] || 1e-6)));
     const margin = REACH * px;
     const gait = Math.random() < RUNNERS ? RUN : WALK;
     return {
       from:from,
+      zoom:z,
       px:px,
       gait:gait,
       seed:between(0, 100),
@@ -2051,7 +2064,10 @@
     const side = p[1] + w.drift * Math.sin(p[0] * 0.012 + w.seed);   // their wandering
     const x = w.start[0] + (w.way[0] * p[0] + w.side[0] * side) * w.px;
     const y = w.start[1] + (w.way[1] * p[0] + w.side[1] * side) * w.px;
-    const s = near(p[2]);
+    // zoomed out (Home scroll), a walker is far out on the glass, and the full pull to the
+    // middle would stretch the body out towards it: the pull goes with the zoom, so a body
+    // keeps its shape at any zoom and only gets smaller
+    const s = 1 - canvas.view.zoom * (1 - near(p[2]));
     return [innerWidth / 2 + (x - innerWidth / 2) * s, innerHeight / 2 + (y - innerHeight / 2) * s];
   }
   // the same small difference every time for a given step of a given walker, from -1 to 1
@@ -2189,6 +2205,8 @@
     gl.uniform4fv(u.raised, raised);
     gl.uniform4fv(u.box, boxes);
     gl.uniform1fv(u.size, sizes);
+    gl.uniform1f(u.zoom, canvas.view.zoom);
+    gl.uniform1f(u.ink, canvas.view.ink);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 
@@ -2227,6 +2245,12 @@
     return;
   }
   window.addEventListener('resize', fit);
+  // whether any of a body's shadow is on the glass as much of it shows at zoom z
+  function seen(i, z){
+    const mx = innerWidth / 2, my = innerHeight / 2;
+    const b = boxes.subarray ? boxes.subarray(i * 4, i * 4 + 4) : boxes.slice(i * 4, i * 4 + 4);
+    return !(b[2] < mx - mx / z || b[0] > mx + mx / z || b[3] < my - my / z || b[1] > my + my / z);
+  }
   // their own clock, stopped while they're hidden, so they carry on from where they were;
   // a long gap between frames (a hidden tab) doesn't count either
   let clock = begun, last = begun, tick = 0, reached = false;
@@ -2236,13 +2260,23 @@
     last = now;
     if (html.classList.contains('steps-off')) return;
     clock += passed;
+    // one who set off across glass zoomed further out than it now shows has far to go, out of
+    // sight: once out of sight, start again, across the glass as it shows now
+    const z = canvas.view.zoom;
     walkers.forEach(function(w, i){
       sizes[i] = 0;             // not on the glass yet, or waiting
-      if (clock < w.from) return;
-      if (place(w, i, clock)) walkers[i] = walk(clock + between(200, 1600));
+      if (clock < w.from){
+        if (Math.abs(w.zoom - z) > 0.05 * z) walkers[i] = walk(w.from);
+        return;
+      }
+      if (place(w, i, clock)){ walkers[i] = walk(clock + between(200, 1600)); return; }
+      if (w.zoom < z * 0.7 && !seen(i, z)){ sizes[i] = 0; walkers[i] = walk(clock + between(200, 1600)); }
     });
     paint();
     if (++tick % 3) return;
+    // the header's up out of sight (Home scroll): reading the glass back stalls a frame, so
+    // not then; once more after it's down, to put the letters right
+    if (html.classList.contains('home-scrolled')){ reached = true; return; }
     const reach = header.getBoundingClientRect().bottom;
     const near = walkers.some((w, i) => sizes[i] > 0 && boxes[i * 4 + 1] < reach);
     if (near || reached) tint();      // once more after, to put the letters back
@@ -2957,72 +2991,56 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
 })();
 
 /* Home scroll (home): the page is still at the top. Scrolling down, the header's letters go
-   up out of their masks at once (html.home-scrolled; the CSS has the move) as the walkers
-   zoom out, and once the header has gone, black closes in from every edge till only a box in
-   the middle is left, the top and bottom coming in slower than the sides. Scrolling back up
-   undoes it all, the other way round: the black goes out, and only once it's gone, back at
-   the top, does the header come down. The zoom and the black trail the scroll a little, so they glide; with
-   reduced motion they follow it exactly. A reload starts at the top. */
+   up out of their masks with the first of the scroll, item by item from the left, and the
+   walkers' glass zooms out, drawn wider and wider across the whole window, so there's never an
+   edge, the walkers shrinking towards the middle, till at the bottom their shadows have faded
+   to nothing and it's pure white. All of it runs on one smoothed scroll, so it's always in
+   step, either way, at any speed: scrolling back up, the glass zooms in and the header comes
+   down with the last of it. With reduced motion it follows the scroll exactly. A reload
+   starts at the top. */
 (function(){
-  const frame = document.querySelector('.home-frame');
-  if (!frame) return;
-  const html = document.documentElement;
+  const stage = document.querySelector('.home-stage');
   const steps = document.querySelector('.home-steps');
+  const header = document.querySelector('header');
+  if (!stage || !steps || !header) return;
+  const html = document.documentElement;
   const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const STARTED = 8;                   // px scrolled that counts as starting
-  const HEADER_MS = calm ? 0 : 1000;   // the header going up (the CSS's 1.1s, all but its tail)
-  const ZOOM = -0.45;                  // the walkers' change of size, all the way down
-  const FADE = 18;                     // % of the canvas its edges fade over, all the way down
-  const WIDE = 0.3, TALL = 0.6;        // the box left at the end, of the window
-  const FOLLOW = 0.1;                  // of the way to the scroll, a frame
+  const HEAD = 0.12;                   // of the way down, the header's gone by
+  const SMALLEST = 0.12;               // how big the glass shows, all the way down
+  const FADE_FROM = 0.55;              // of the way down, where the shadows start to fade
+  const FOLLOW = 0.22;                 // seconds to cover ~63% of the way to the scroll, at any frame rate
   const ease = t => -(Math.cos(Math.PI * t) - 1) / 2;
+  const clamp01 = t => Math.min(1, Math.max(0, t));
+  Array.prototype.forEach.call(header.children, function(item, i){ item.style.setProperty('--i', i); });
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   window.scrollTo(0, 0);
-  let zoom = -1, black = -1, upAt = 0, raf = 0;
+  let shown = -1, raf = 0, last = 0;
   function aim(){
     const room = html.scrollHeight - innerHeight;
-    return room > 0 ? Math.min(1, Math.max(0, scrollY / room)) : 0;
+    return room > 0 ? clamp01(scrollY / room) : 0;
   }
-  function paint(){
-    const w = innerWidth, h = innerHeight, p = black;
-    // the sides on the eased scroll, the top and bottom lagging behind on its square
-    const side = w * (1 - WIDE) / 2 * ease(p);
-    const end = h * (1 - TALL) / 2 * ease(p * p);
-    const l = side.toFixed(1), r = (w - side).toFixed(1), t = end.toFixed(1), b = (h - end).toFixed(1);
-    frame.style.clipPath = p <= 0 ? '' : 'polygon(evenodd, 0 0, ' + w + 'px 0, ' + w + 'px ' + h + 'px, 0 ' + h + 'px, 0 0, ' +
-      l + 'px ' + t + 'px, ' + l + 'px ' + b + 'px, ' + r + 'px ' + b + 'px, ' + r + 'px ' + t + 'px, ' + l + 'px ' + t + 'px)';
-    if (steps){
-      steps.style.transform = zoom <= 0 ? '' : 'scale(' + (1 + ZOOM * ease(zoom)).toFixed(4) + ')';
-      steps.style.setProperty('--fade', (FADE * ease(zoom)).toFixed(2) + '%');
-    }
+  function apply(){
+    html.classList.toggle('home-scrolled', shown > 0);
+    header.style.setProperty('--up', ease(clamp01(shown / HEAD)).toFixed(4));
+    if (!steps.view) return;
+    // zooming out evenly to the eye: the size falls away geometrically
+    steps.view.zoom = Math.pow(SMALLEST, ease(shown));
+    steps.view.ink = 1 - ease(clamp01((shown - FADE_FROM) / (1 - FADE_FROM)));
   }
-  function glide(from, to){
-    if (calm || from < 0) return to;
-    const next = from + (to - from) * FOLLOW;
-    return Math.abs(to - next) < 0.0005 ? to : next;
-  }
-  function tick(){
+  function tick(now){
     raf = 0;
     const to = aim();
-    // the black waits for the header to be gone, and back at the top, the header waits for
-    // the black to be gone
-    const hidden = html.classList.contains('home-scrolled');
-    const atTop = scrollY <= STARTED;
-    const open = hidden && performance.now() - upAt >= HEADER_MS;
-    const blackTo = open && !atTop ? to : 0;
-    zoom = glide(zoom, to);
-    black = glide(black, blackTo);
-    paint();
-    if (hidden && atTop && black <= 0) html.classList.remove('home-scrolled');
-    if (zoom !== to || black !== blackTo || (!open && to > 0)) raf = requestAnimationFrame(tick);
-  }
-  window.addEventListener('scroll', function(){
-    if (scrollY > STARTED && !html.classList.contains('home-scrolled')){
-      upAt = performance.now();
-      html.classList.add('home-scrolled');
+    const dt = last && now ? Math.min((now - last) / 1000, 0.05) : 1 / 60;
+    last = now || 0;
+    if (calm || shown < 0) shown = to;
+    else {
+      shown += (to - shown) * (1 - Math.exp(-dt / FOLLOW));
+      if (Math.abs(to - shown) < 0.0002) shown = to;
     }
-    if (!raf) raf = requestAnimationFrame(tick);
-  }, { passive:true });
-  window.addEventListener('resize', paint);
+    apply();
+    if (shown !== to) raf = requestAnimationFrame(tick);
+    else last = 0;
+  }
+  window.addEventListener('scroll', function(){ if (!raf) raf = requestAnimationFrame(tick); }, { passive:true });
   tick();
 })();
