@@ -560,25 +560,31 @@
   .view-fade{ position:fixed; inset:0; z-index:10000; background:var(--stone); pointer-events:none; }
 
   /* ===== Preloader (home) =====
-     After ning-h.com's, in the header's small type: white over everything, ink words, set by the head
-     script on a fresh arrival (html.preload), and run by main.js. The words wait below their
-     masks; the count's box is as wide as [ 100% ], so nothing shifts as it counts. While it's
-     up the header waits above masks of its own, to come down once the white has gone. */
+     White over everything, set by the head script on a fresh arrival (html.preload) and run by
+     main.js: a little black wind-up toy's scene. While it's up the header waits above masks of
+     its own, to come down once the white has gone. */
   .preloader{ display:none; }
   html.preload .preloader{
     position:fixed; inset:0; z-index:10001;
-    display:flex; justify-content:center; align-items:center; gap:4rem;
+    display:block;
     background:var(--paper); color:var(--ink);
-    font-family:var(--sans);
-    font-size:0.8125rem;
-    font-weight:500;
-    letter-spacing:0.03em;
-    text-transform:uppercase;
-    white-space:nowrap;
   }
-  .pre-item{ display:block; overflow:hidden; padding-bottom:0.12em; margin-bottom:-0.12em; }
-  .pre-mid{ width:9ch; text-align:center; }
-  .pre-word{ display:block; transform:translateY(115%); }
+  /* the wind-up robot, black, cut from straight lines (its SVG; main.js boils the corners),
+     walking on the very foot of the window, its boots on the edge: up from below its edge and back
+     down past it; main.js walks it (.pre-toy-x) and moves its parts */
+  .pre-toy{ position:absolute; left:0; right:0; bottom:0; height:16.5rem; overflow:hidden; pointer-events:none; }
+  .pre-toy-x{ position:absolute; left:50%; bottom:0; width:12rem; margin-left:-6rem; }
+  .pre-toy-y{ display:block; transform:translateY(115%); }
+  .pre-toy svg{ display:block; width:100%; height:auto; overflow:visible; }
+  /* the boom (main.js): the blast, smoke and the robot's bits, in the preloader; then the black
+     that floods out over everything and opens again onto the page */
+  .pre-blast,
+  .pre-puff,
+  .pre-bit{ position:absolute; pointer-events:none; will-change:transform, opacity; }
+  .pre-blast{ border-radius:50%; background:radial-gradient(circle, #0B0B0B 0 38%, rgba(11,11,11,0.85) 55%, rgba(11,11,11,0) 72%); }
+  .pre-puff{ border-radius:50%; background:radial-gradient(circle, rgba(28,29,32,0.9), rgba(28,29,32,0.55) 45%, rgba(28,29,32,0) 70%); }
+  .pre-bit{ background:#0B0B0B; border-radius:2px; }
+  .pre-boom{ position:fixed; inset:0; z-index:10002; background:#0B0B0B; pointer-events:none; }
   html.preload .home-name,
   html.preload .home-nav,
   html.preload .time-badge{ clip-path:inset(0 -0.1em -0.15em -0.1em); }

@@ -89,15 +89,20 @@ markup, so a shared change has to be made in every file.
 - **Home background**: none since 2026-11-05. The owner removed the grainient (and its
   per-letter white/ink text tinting); home is plain paper and every piece of text, the
   lockup words and logo included, is solid ink. grainient.js now only drives contact's Instagram box.
-- **Preloader** (home, added 2026-11-11 at the owner's request, after ning-h.com's): white
-  (the page's paper, ink words, since 2026-11-12; it was black) over everything, VUTHY CHEAM ·
-  [ 00% ] · PORTFOLIO in the header's small type rising through masks, the count running on
-  ning-h.com's halting curve while the name and PORTFOLIO slide out to 16px from the sides,
-  then the words go up and out and the sheet is simply removed (no slide: the owner asked
-  for none), the header slides down in from above its masks, and only then do the walkers
-  set off, in from beyond the edges (they're held while `html.preload` lacks `pre-done`). Shown only on a fresh arrival (head script sets `html.preload`;
-  not after in-site navigation, View all's [CLOSE], Journey's [CLOSE], or reduced motion); a
-  second visit in the tab counts from 75. main.js "Preloader". Two earlier ones were built
+- **Preloader** (home): since 2026-11-13 only a little black wind-up robot on white (an
+  original design: a round body cut from straight-edged polygons, white seam and diamond
+  rivets, a wide white visor with square pupils, a propeller on its head, boot legs, a
+  one-piece two-hole key on a short white-edged neck; the owner first asked for a Nintendo
+  character, which isn't built). Its corners boil (main.js jitters the `.cut` polygons). It
+  rises from below the window's foot and walks on the very bottom edge (legs stepping by
+  distance covered), runs down, gets its key wound (squash, lean back, squint, tremble),
+  boings, walks on, swells and explodes (blast, smoke, bits, window shake); black floods out
+  from the blast and opens again from it onto home as the header slides down, and only then
+  do the walkers set off (held while `html.preload` lacks `pre-done`). Shown only on a fresh
+  arrival (head script sets `html.preload`; not after in-site navigation, View all's [CLOSE],
+  Journey's [CLOSE], or reduced motion). main.js "Preloader". Before it: a ning-h.com-style
+  count (VUTHY CHEAM · [ 00% ] · PORTFOLIO), black then white, removed by the owner; and earlier
+  two more were built
   and removed by the owner (a hellohello.is-style one, and a W A S D gear-shifter console).
 - **No lockup** (2026-11-05): the owner removed the bottom-centre WHO IS / CONTACT · JOURNEY /
   WORK/LAB lockup (and its intro) after removing its logo. Home is now just a header line: the name (top

@@ -36,7 +36,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Vuthy Cheam","url":"https://vuthycheam.com/"}
 </script>
-<link rel="stylesheet" href="src/css/style.css?v=296">
+<link rel="stylesheet" href="src/css/style.css?v=308">
 <link rel="prefetch" href="contact.html">
 <script>
 /* Arrived from another page of the site: mark <html> BEFORE the body renders so
@@ -71,7 +71,7 @@
 </script>
 <script>
 /* A fresh arrival at home (not from another page of the site, nor with reduced motion): the
-   white preloader covers the window before the body renders (main.js, "Preloader"). */
+   white preloader, its wind-up toy, covers the window before the body renders (main.js, "Preloader"). */
 (function(){
   const html = document.documentElement;
   if (/\b(pt-open|view-back|journey-out)\b/.test(html.className)) return;
@@ -82,13 +82,51 @@
 </head>
 <body class="home loaded">
 
-  <!-- the preloader, after ning-h.com's: on white, the name, a count to 100 and the year rise
-       through masks, the name and the year slide out to the window's sides as it counts, the
-       words go up and out, and the white simply goes, the page's own (main.js, "Preloader") -->
+  <!-- the preloader: on white, a little black wind-up tin toy walks, runs down, gets its key
+       wound and walks on, then the white simply goes, the page's own (main.js, "Preloader") -->
   <div class="preloader" aria-hidden="true">
-    <span class="pre-item pre-left"><span class="pre-word">VUTHY CHEAM</span></span>
-    <span class="pre-item pre-mid"><span class="pre-word">[ <span class="pre-count">00</span>% ]</span></span>
-    <span class="pre-item pre-right"><span class="pre-word">PORTFOLIO</span></span>
+    <span class="pre-toy"><span class="pre-toy-x"><span class="pre-toy-y">
+      <svg viewBox="0 0 120 107" fill="#0B0B0B">
+          <g class="toy-rig">
+            <!-- both legs behind the body, so their tops tuck under it -->
+            <g class="toy-leg-b">
+              <polygon class="cut" points="50,82 58,82 58.5,100 50.5,100"/>
+              <polygon class="cut" points="45,99 52,96 61,96.5 67,100 66.5,106 46,106.5"/>
+            </g>
+            <g class="toy-leg-f">
+              <polygon class="cut" points="66,82 74,82 74.5,100 66.5,100"/>
+              <polygon class="cut" points="61,99 68,96 77,96.5 83,100 82.5,106 62,106.5"/>
+            </g>
+            <g class="toy-body">
+              <!-- on its head, just for show: a little propeller, spun by main.js -->
+              <polygon class="cut" points="60,13 64,13 64.5,24 59.5,24"/>
+              <g class="toy-prop">
+                <polygon class="cut" points="62,9.5 45,6.5 44,10.5 62,12.5 80,10.5 79,6.5"/>
+                <polygon class="cut" points="59.5,8 64.5,8 65,13.5 59,13.5"/>
+              </g>
+              <polygon class="cut" points="60.5,22.5 79.3,27.2 91.5,37.3 97.1,49.0 96.7,65.8 87.7,80.2 71.5,92.2 56.7,91.3 36.4,83.8 28.4,68.9 28.3,49.0 34.7,34.8 43.2,28.0"/>
+              <polyline class="cut" points="29.5,65 46,68.5 62,69.8 78,68.5 94.5,65" fill="none" stroke="#FDFDFD" stroke-width="2.2" stroke-linejoin="miter"/>
+              <polygon class="cut" points="46,74 48,76 46,78 44,76" fill="#FDFDFD"/>
+              <polygon class="cut" points="60,75.5 62,77.5 60,79.5 58,77.5" fill="#FDFDFD"/>
+              <polygon class="cut" points="74,75 76,77 74,79 72,77" fill="#FDFDFD"/>
+              <g class="toy-eyes">
+                <!-- one wide visor, straight-edged, and two square pupils looking ahead -->
+                <polygon class="cut" points="61,37 92.5,38.5 96,44 93,49.5 61,48.5 58.5,43" fill="#FDFDFD"/>
+                <polygon class="cut" points="74,40.5 79,40.6 79,46.6 74,46.4"/>
+                <polygon class="cut" points="85,40.8 89.5,41 89.4,46.8 85,46.6"/>
+              </g>
+              <!-- the wind-up key: a neck plugged into its back, edged in white against it, and the
+                   handle, one piece with two holes, flipping over as it's wound (main.js) -->
+              <polygon class="cut" points="13,48.5 28.5,48 30.5,52 30,60.5 13.5,61.5" stroke="#FDFDFD" stroke-width="1.6" stroke-linejoin="miter"/>
+              <g class="toy-key">
+                <polygon class="cut" points="4,35.5 9.5,30.5 16.5,31 20.5,36 21,44.5 17,50.5 15.5,54 16.5,58.5 20,64 20.5,72 16.5,78 9.5,79.5 4,75.5 2,66.5 4.5,58.5 6.5,54 4.5,49.5 2,42"/>
+                <polygon class="cut" points="9.5,38 12.8,37.5 14.6,40.5 13,43.6 9.6,43.8 8,40.8" fill="#FDFDFD"/>
+                <polygon class="cut" points="9.6,65.4 12.9,65 14.7,68 13.1,71.1 9.7,71.3 8.1,68.3" fill="#FDFDFD"/>
+              </g>
+            </g>
+          </g>
+      </svg>
+    </span></span></span>
   </div>
 
   <!-- shadows of people walking on frosted glass (main.js, "Home steps") -->
@@ -193,6 +231,6 @@
     </div>
   </section>
 
-  <script src="src/js/main.js?v=318"></script>
+  <script src="src/js/main.js?v=335"></script>
 </body>
 </html> 

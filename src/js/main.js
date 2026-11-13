@@ -490,12 +490,13 @@
       // left, then ink floods down it until the line has become the dot. Nothing
       // appears out of nowhere — every mark on screen was made by something.
       const LINE  = 1.5;    // px, the struck line's thickness
-      const DRAW  = 760;    // the line strikes left to right
-      const INK   = 420;    // and floods down into the dot
-      const HOLD  = 380;    // which then sits alone
-      const SPLIT = 1780;   // comes apart, squares off and colours up, all as one
-      const PAUSE = 440;    // the resolved column rests
-      const OPEN  = 1760;   // column -> row, zooming the rest of the way
+      // all over a quarter quicker than they first were (the owner asked for faster, twice)
+      const DRAW  = 550;    // the line strikes left to right
+      const INK   = 305;    // and floods down into the dot
+      const HOLD  = 270;    // which then sits alone
+      const SPLIT = 1280;   // comes apart, squares off and colours up, all as one
+      const PAUSE = 315;    // the resolved column rests
+      const OPEN  = 1270;   // column -> row, zooming the rest of the way
       const TOTAL = DRAW + INK + HOLD + SPLIT + PAUSE + OPEN;
 
       let done = false;
@@ -1249,73 +1250,194 @@
   });
 })();
 
-/* Preloader (home): after ning-h.com's. On white, a second in, the name, the count and the
-   year rise through their masks; the count runs to 100 on ning-h.com's own halting curve
-   while the name and the year slide out to the header's sides on it too. Then the words go
-   up and out, the white simply goes (it's the page's own white), the header slides down in through
-   its masks. A second visit in the same tab counts from 75, quicker, as theirs does. Only on
-   a fresh arrival without reduced motion: the head script decides, by html.preload. */
+/* Preloader (home): a little black wind-up robot on the white, a cartoon cut from straight
+   lines, its corners boiling, a propeller on its head. It comes up at the foot of the window and walks along, runs down, gets its key wound,
+   springs up and walks on, then swells, trembling, and explodes: a blast, smoke, its bits
+   flying, the window shaking; black floods out from the blast over everything, and opens again
+   from the same spot onto the home page as the header slides down in through its masks. Only
+   on a fresh arrival without reduced motion: the head script decides, by html.preload. */
 (function(){
   const html = document.documentElement;
   const pre = document.querySelector('.preloader');
   if (!pre) return;
   if (!html.classList.contains('preload')){ pre.remove(); return; }
   const OUT = 'cubic-bezier(0.16, 1, 0.3, 1)';   // expo out
-  const SIDE = 16;                                // the header's own side padding
-  let from = 0, COUNT_MS = 3000;
-  try {
-    if (sessionStorage.getItem('visited')){ from = 75; COUNT_MS = 2000; }
-    sessionStorage.setItem('visited', '1');
-  } catch(e){}
-  const RISE_AT = 1000, SLIDE_AT = 1400, OUT_AT = SLIDE_AT + COUNT_MS + 100;
-  const HEADER_AT = OUT_AT + 700;      // the words have gone up: no sheet to lift, the header comes
-
-  // ning-h.com's curve (a GSAP CustomEase path): quick, a long stall past half, a second surge
-  const PATH = [
-    [0, 0, 0, 0, 0.13, 0.34, 0.238, 0.442],
-    [0.238, 0.442, 0.305, 0.506, 0.322, 0.514, 0.396, 0.54],
-    [0.396, 0.54, 0.478, 0.568, 0.468, 0.56, 0.522, 0.584],
-    [0.522, 0.584, 0.572, 0.606, 0.61, 0.719, 0.714, 0.826],
-    [0.714, 0.826, 0.798, 0.912, 1, 1, 1, 1]
-  ];
-  function bez(a, b, c, d, t){ const u = 1 - t; return u * u * u * a + 3 * u * u * t * b + 3 * u * t * t * c + t * t * t * d; }
-  function ease(x){
-    if (x <= 0) return 0;
-    if (x >= 1) return 1;
-    const s = PATH.find(function(p){ return x <= p[6]; });
-    let lo = 0, hi = 1, t = 0.5;
-    for (let i = 0; i < 24; i++){
-      t = (lo + hi) / 2;
-      if (bez(s[0], s[2], s[4], s[6], t) < x) lo = t; else hi = t;
-    }
-    return bez(s[1], s[3], s[5], s[7], t);
-  }
-  // the slide as keyframes sampled off the curve, so it stays on the compositor
-  function slide(el, dx){
-    const frames = [];
-    for (let i = 0; i <= 60; i++) frames.push({ transform:'translateX(' + ease(i / 60) * dx + 'px)', offset:i / 60 });
-    el.animate(frames, { duration:COUNT_MS, delay:SLIDE_AT, easing:'linear', fill:'both' });
-  }
-
-  const count = pre.querySelector('.pre-count');
-  const left = pre.querySelector('.pre-left'), right = pre.querySelector('.pre-right');
-  function show(n){ count.textContent = n < 10 ? '0' + n : n; }
-  show(from);
-  pre.querySelectorAll('.pre-word').forEach(function(word){
-    word.animate([{ transform:'translateY(115%)' }, { transform:'none' }],
-      { duration:1000, delay:RISE_AT, easing:OUT, fill:'both' });
-    word.animate([{ transform:'none' }, { transform:'translateY(-115%)' }],
-      { duration:1000, delay:OUT_AT, easing:OUT, fill:'forwards' });
-  });
-  slide(left, SIDE - left.getBoundingClientRect().left);
-  slide(right, innerWidth - SIDE - right.getBoundingClientRect().right);
-
+  // the scene, in ms from its start: in and running down, winding, on, swelling, boom
+  const IN_MS = 1300, WIND_MS = 900, ON_MS = 800, SWELL_MS = 450;
+  const BOOM_AT = IN_MS + WIND_MS + ON_MS + SWELL_MS;
+  const FLOOD_AT = 330, FLOOD_MS = 380;           // after the boom, the black floods out over it all
+  const TOY_AT = 250;
+  const HEADER_AT = TOY_AT + BOOM_AT + FLOOD_AT + FLOOD_MS;   // under the black: the header comes
   const start = performance.now();
-  (function tick(now){
-    const p = Math.min(1, Math.max(0, (now - start - RISE_AT) / COUNT_MS));
-    show(Math.round(from + (100 - from) * ease(p)));
-    if (p < 1) requestAnimationFrame(tick);
-  })(start);
+
+  // The wind-up robot, a cartoon: it comes up at the foot of the white and walks along, its legs stepping by the ground it
+  // covers so its feet never slide, bobbing, squashing as each foot lands, waddling, its key
+  // unwinding; it runs down, slower and slower, and stops, and its key is wound: the key
+  // spins, the body squashes and leans back with each twist, eyes squeezed, trembling; then
+  // it springs up, boing, walks on, and swells up, shaking harder and harder, eyes wide, the
+  // key spinning wild, till it blows (boom, below). Now and then it blinks.
+  // Boom, at the robot (its body's box on screen): a dark blast, smoke billowing, its bits and
+  // bolts flying off in arcs, spinning, the window shaking; then black floods out from the
+  // blast over everything (.pre-boom), and once the header is coming, it opens from the same
+  // spot, a hole growing, onto the home page.
+  function boom(at){
+    const cx = at.left + at.width / 2, cy = at.top + at.height / 2;
+    const add = function(cls, size, x, y){
+      const el = document.createElement('span');
+      el.className = cls;
+      el.style.width = el.style.height = size + 'px';
+      el.style.left = (x - size / 2) + 'px';
+      el.style.top = (y - size / 2) + 'px';
+      pre.appendChild(el);
+      return el;
+    };
+    // the blast itself, swelling and gone
+    add('pre-blast', 220, cx, cy).animate([
+      { transform:'scale(0.15)', opacity:1 }, { transform:'scale(1)', opacity:1, offset:0.35 }, { transform:'scale(1.15)', opacity:0 }
+    ], { duration:520, easing:'cubic-bezier(0.16, 1, 0.3, 1)', fill:'forwards' });
+    // smoke
+    for (let i = 0; i < 9; i++){
+      const a = Math.random() * Math.PI * 2, d = 30 + Math.random() * 70, size = 70 + Math.random() * 110;
+      add('pre-puff', size, cx + Math.cos(a) * d * 0.4, cy + Math.sin(a) * d * 0.4).animate([
+        { transform:'translate(0, 0) scale(0.2)', opacity:0.95 },
+        { transform:'translate(' + (Math.cos(a) * d) + 'px, ' + (Math.sin(a) * d - 40) + 'px) scale(1.5)', opacity:0 }
+      ], { duration:800 + Math.random() * 500, delay:Math.random() * 90, easing:'cubic-bezier(0.16, 1, 0.3, 1)', fill:'both' });
+    }
+    // its bits: shards, bolts and rounds, up and out, falling back as they spin
+    for (let i = 0; i < 22; i++){
+      const a = -Math.PI * (0.08 + Math.random() * 0.84), v = 240 + Math.random() * 520;
+      const dx = Math.cos(a) * v, dy = Math.sin(a) * v, spin = (Math.random() - 0.5) * 1080;
+      const size = 5 + Math.random() * 13;
+      const bit = add('pre-bit', size, cx, cy);
+      bit.style.height = (Math.random() < 0.4 ? size * 0.45 : size) + 'px';
+      if (Math.random() < 0.35) bit.style.borderRadius = '50%';
+      if (Math.random() < 0.3) bit.style.background = '#3a3b40';
+      bit.animate([
+        { transform:'translate(0, 0) rotate(0deg)', opacity:1 },
+        { transform:'translate(' + dx * 0.62 + 'px, ' + (dy * 0.62) + 'px) rotate(' + spin * 0.6 + 'deg)', opacity:1, offset:0.45 },
+        { transform:'translate(' + dx + 'px, ' + (dy + 380) + 'px) rotate(' + spin + 'deg)', opacity:0.9 }
+      ], { duration:900 + Math.random() * 400, easing:'cubic-bezier(0.2, 0.7, 0.4, 1)', fill:'forwards' });
+    }
+    // the window shakes
+    const shake = [];
+    for (let i = 0; i <= 8; i++){
+      const k = 1 - i / 8;
+      shake.push({ transform:i === 8 ? 'none' : 'translate(' + ((Math.random() - 0.5) * 22 * k) + 'px, ' + ((Math.random() - 0.5) * 22 * k) + 'px)' });
+    }
+    pre.animate(shake, { duration:340, easing:'linear' });
+    // black floods out from the blast over everything, and later opens from it onto the page
+    const flood = document.createElement('div');
+    flood.className = 'pre-boom';
+    document.body.appendChild(flood);
+    const far = Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy)) + 20;
+    flood.animate([{ clipPath:'circle(0px at ' + cx + 'px ' + cy + 'px)' }, { clipPath:'circle(' + far + 'px at ' + cx + 'px ' + cy + 'px)' }],
+      { duration:FLOOD_MS, delay:FLOOD_AT, easing:'cubic-bezier(0.55, 0, 0.75, 0.2)', fill:'both' });
+    setTimeout(function(){
+      const OPEN_MS = 1000, began = performance.now();
+      (function open(now){
+        const p = Math.min(1, (now - began) / OPEN_MS);
+        const r = far * (1 - Math.pow(1 - p, 4));
+        const hole = 'radial-gradient(circle at ' + cx + 'px ' + cy + 'px, transparent ' + r.toFixed(1) + 'px, #000 ' + (r + 1).toFixed(1) + 'px)';
+        flood.style.webkitMaskImage = flood.style.maskImage = hole;
+        if (p < 1) requestAnimationFrame(open); else flood.remove();
+      })(began);
+    }, FLOOD_AT + FLOOD_MS + 60);
+  }
+
+  const toy = pre.querySelector('.pre-toy');
+  if (toy) (function(){
+    const X = toy.querySelector('.pre-toy-x'), Y = toy.querySelector('.pre-toy-y');
+    const rig = toy.querySelector('.toy-rig'), body = toy.querySelector('.toy-body');
+    const legB = toy.querySelector('.toy-leg-b'), legF = toy.querySelector('.toy-leg-f');
+    const key = toy.querySelector('.toy-key'), eyes = toy.querySelector('.toy-eyes');
+    const prop = toy.querySelector('.toy-prop');
+    // every outline is straight lines, cut paper: a few times a second each corner shifts a
+    // touch, so the lines boil but stay straight
+    const cuts = Array.prototype.map.call(toy.querySelectorAll('.cut'), function(el){
+      return { el:el, at:el.getAttribute('points').trim().split(/\s+/).map(p => p.split(',').map(Number)) };
+    });
+    function reboil(){
+      cuts.forEach(function(c){
+        c.el.setAttribute('points', c.at.map(p => (p[0] + (Math.random() - 0.5) * 0.9).toFixed(1) + ',' + (p[1] + (Math.random() - 0.5) * 0.9).toFixed(1)).join(' '));
+      });
+    }
+    let boiled = 0, spin = 0;
+    const STRIDE = 43;                                 // px a step, at its size (12rem)
+    const FROM_X = -410, STOP_X = 23, END_X = 365;     // px from the middle
+    const sine = t => -(Math.cos(Math.PI * t) - 1) / 2;
+    const clamp01 = t => Math.min(1, Math.max(0, t));
+    function place(t){
+      if (t < IN_MS) return FROM_X + (STOP_X - FROM_X) * (1 - Math.pow(1 - clamp01(t / IN_MS), 2.2));
+      if (t < IN_MS + WIND_MS) return STOP_X;
+      return STOP_X + (END_X - STOP_X) * sine(clamp01((t - IN_MS - WIND_MS) / ON_MS));
+    }
+    Y.animate([{ transform:'translateY(115%)' }, { transform:'none' }],
+      { duration:900, delay:TOY_AT, easing:OUT, fill:'both' });
+    setTimeout(function(){ boom(body.getBoundingClientRect()); toy.remove(); }, TOY_AT + BOOM_AT);
+    let last = 0, lastX = null, walk = 0, turn = 0, freed = -1, blinkAt = 1300;
+    (function frame(now){
+      if (!toy.isConnected) return;
+      requestAnimationFrame(frame);
+      const t = now - start - TOY_AT;
+      if (t < -50) return;
+      const dt = last ? Math.min(50, now - last) : 16;
+      last = now;
+      const winding = t > IN_MS && t < IN_MS + WIND_MS;
+      if (t > IN_MS + WIND_MS && freed < 0) freed = t;
+      const x = place(t);
+      const dx = lastX === null ? 0 : x - lastX;
+      lastX = x;
+      const moving = Math.min(1, (dx / Math.max(dt, 1)) / 0.09);
+      walk += dx / STRIDE * Math.PI;
+      const step = Math.sin(walk);
+      let rot = 0, sx = 1, sy = 1, bob = 0, shake = 0, squint = 1, leg = 0;
+      if (winding){
+        turn += dt * 0.022;                            // the key, cranked round fast
+        const twist = Math.abs(Math.sin(turn));
+        sy = 1 - 0.08 * twist; sx = 1 + 0.06 * twist;
+        rot = -6 * twist;
+        shake = (Math.random() - 0.5) * 0.9;
+        squint = 0.3;
+      } else {
+        turn += dx * 0.04 + dt * 0.0015;               // unwinding as it goes
+        leg = step * 30 * moving;
+        bob = -Math.abs(Math.cos(walk)) * 4.5 * moving;
+        sy = 1 - 0.06 * Math.abs(step) * moving; sx = 1 + 0.05 * Math.abs(step) * moving;
+        rot = (5 + 4 * step) * moving;
+        sy *= 1 + 0.015 * Math.sin(now / 280) * (1 - moving);   // breathing, standing
+      }
+      // let go after the winding: a springy boing
+      const since = t - freed;
+      if (freed > 0 && since < 700){
+        const boing = Math.exp(-since / 160) * Math.cos(since / 38);
+        sy += 0.16 * boing; sx -= 0.1 * boing;
+      }
+      // swelling up to blow: rounder and rounder, shaking harder, the key spinning wild
+      const swell = clamp01((t - (BOOM_AT - SWELL_MS)) / SWELL_MS);
+      if (swell > 0){
+        const k = swell * swell;
+        sx = 1 + 0.32 * k; sy = 1 + 0.26 * k; rot = 0;
+        shake = (Math.random() - 0.5) * 5 * k;
+        bob = (Math.random() - 0.5) * 3 * k;
+        turn += dt * 0.05 * swell;
+        squint = 1 + 0.45 * swell;
+      }
+      if (t > blinkAt + 110) blinkAt = t + 1600 + Math.random() * 1800;
+      const blink = t > blinkAt && !winding && swell <= 0 ? 0.1 : 1;
+
+      X.style.transform = 'translateX(' + x.toFixed(2) + 'px)';
+      rig.setAttribute('transform', 'translate(' + shake.toFixed(2) + ' ' + bob.toFixed(2) + ')');
+      body.setAttribute('transform', 'translate(62 92) rotate(' + rot.toFixed(2) + ') scale(' + sx.toFixed(3) + ' ' + sy.toFixed(3) + ') translate(-62 -92)');
+      legB.setAttribute('transform', 'rotate(' + (-leg).toFixed(2) + ' 54 84)');
+      legF.setAttribute('transform', 'rotate(' + leg.toFixed(2) + ' 70 84)');
+      key.setAttribute('transform', 'translate(0 55) scale(1 ' + (0.14 + 0.86 * Math.abs(Math.cos(turn))).toFixed(3) + ') translate(0 -55)');
+      eyes.setAttribute('transform', 'translate(0 43) scale(1 ' + Math.min(squint, blink) + ') translate(0 -43)');
+      // the propeller on its head: turning as it walks, whirring as it swells
+      spin += dt * (0.004 + 0.02 * moving + (swell > 0 ? 0.06 * swell : 0));
+      prop.setAttribute('transform', 'translate(62 0) scale(' + Math.cos(spin).toFixed(3) + ' 1) translate(-62 0)');
+      if (now - boiled > 120){ boiled = now; reboil(); }
+    })(start);
+  })();
 
   // the header, item by item, its letters (the time and its dot) down from above their masks;
   // gathered only now, as the letters are split once the fonts are in. The preloader is white
