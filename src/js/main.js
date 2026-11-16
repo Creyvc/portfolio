@@ -1777,9 +1777,10 @@
     const vec3 HAZE = vec3(0.58, 0.66, 0.76);
     const vec3 INK = vec3(0.11, 0.16, 0.24);
     const vec3 DEEP = vec3(0.012, 0.018, 0.032);  // where the weight is
-    const float PENUMBRA = 0.16;    // how much blur each px of height brings: frosted, so a lot
-    const float FROST = 2.5;        // cm of blur even on the glass
-    const float JOIN = 2.5;         // how softly the body's parts join: 1 adds them, higher nears the darkest
+    const float PENUMBRA = 0.22;    // how much blur each px of height brings: frosted, so a lot, and the body melts into one
+    const float FROST = 3.6;        // cm of blur even on the glass
+    const float JOIN = 1.4;         // how softly the body's parts join: 1 adds them, higher nears the darkest; low, so a
+                                    // leg runs on into its hip and its shoe with no seam or gap
     uniform vec4 uLimb[WALKERS * LIMBS * 3];  // its two ends on the glass; their heights, how solid and px to a cm; its form
     uniform vec4 uLeg[WALKERS * 2 * 4];       // ankle and hip as seen; the curve's pull at the knee and px to a cm; at ankle, pull and hip how high (as blur) and how near (as size), and how solid at each end
     uniform vec4 uFoot[WALKERS * 2];          // the end of the heel and of the toes, on the glass
@@ -1843,9 +1844,9 @@
         // whole at both ends: down into the foot and up into the hips
         float part = k == 1 ? 1.0 : smoothstep(-1.1, 1.1, past * span * r);
         if (k < PIECES) part -= smoothstep(-1.1, 1.1, (past - 1.0) * span * r);
-        // and darker the nearer the glass it comes, so it runs on into the foot's dark
-        float low = exp(-mix(lift, rise, along) / (bend.z * 5.0));
-        float solid = mix(high.w, near.w, smoothstep(0.2, 0.8, t)) * (1.0 + 1.2 * low);
+        // and lighter down by the shoe, coming in up the shin: it meets the shoe and blends into
+        // it without pooling into a shadow round it
+        float solid = mix(high.w, near.w, smoothstep(0.2, 0.8, t)) * (0.5 + 0.5 * smoothstep(0.0, 0.32, t));
         ink += part * solid * wide * r * exp(-dot(gap, gap) * r * r / 2.0);
         a = b;
         lift = rise;
@@ -1887,11 +1888,11 @@
       // how high each end is: the heel leaving first, the toe last; the sole stiff between
       float hHeel = raised.x, hFore = mix(raised.y, raised.z, 0.45);
       float h = mix(hHeel, hFore, smoothstep(0.15, 0.7, q.x));
-      float soft = 0.025 + 0.3 * h / size;
-      float press = (1.0 - smoothstep(-soft * 0.5, soft * 1.3, shoe)) * exp(-h / (size * 0.12));
-      // and the glass darkens softly round it, where the shoe is nearly touching
-      float close = (1.0 - smoothstep(-0.05, 0.4, shoe)) * exp(-h / (size * 0.3));
-      return 1.05 * press + 0.3 * close;
+      // a soft edge, feathering out into the leg's haze, without a ring of shadow round it;
+      // softening more as it lifts
+      float soft = 0.03 + 0.3 * h / size;
+      float press = (1.0 - smoothstep(-soft * 0.6, soft * 1.4, shoe)) * exp(-h / (size * 0.12));
+      return 1.6 * press;
     }
     float noise(vec2 p){ return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }
 
@@ -2127,8 +2128,9 @@
         near(f.ankle[2]), pull(near(f.ankle[2]), near(joint[2]), near(hip[2])), near(hip[2]), 0.44], (i * 2 + n) * 16);
       reach(from, to, hip[2]);
       reach(by, by, joint[2]);
-      // the foot off the glass: all that's left of it is this smudge
-      stroke(f.heel, f.toes, SMUDGE, 0.35);
+      // the foot off the glass once had a smudge of its own here; in shoes it only ever poked out
+      // of the sole, so it's drawn at nothing (its slot kept): the sole's own blur does it now
+      stroke(f.heel, f.toes, SMUDGE, 0);
       // the print is the whole foot laid flat on the glass under its ball, never the heel and
       // toes where they are: rolling over the ball, the heel rises and the toes tip down,
       // which would squeeze the print shorter, as if it folded in half. A foot bends at the
@@ -2151,10 +2153,10 @@
     sizes[i] = FOOT * w.px;
     return along * w.px > w.length;
   }
-  // the blur: each frame over the last by 1 - e^(-dt / 28ms), so it's the same at any rate;
-  // short, so what moves smears softly rather than leaving a ladder of itself behind
+  // the blur: each frame over the last by 1 - e^(-dt / 14ms), so it's the same at any rate;
+  // short, only a trace, so what moves smears softly rather than beading into copies of itself
   function paint(dt){
-    gl.uniform1f(u.trail, sharp || !dt ? 1 : 1 - Math.exp(-dt / 28));
+    gl.uniform1f(u.trail, sharp || !dt ? 1 : 1 - Math.exp(-dt / 14));
     sharp = false;
     gl.uniform4fv(u.limb, limbs);
     gl.uniform4fv(u.leg, legs);
