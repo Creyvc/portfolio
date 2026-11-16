@@ -1759,6 +1759,7 @@
   const HIP_WIDE = 9, TURN = 0.14, SWAY = 2.5;
   const SHOULDER = 142, SHOULDER_WIDE = 19;
   const REACH = 190;          // cm a body shows beyond its feet
+  const BLUR_PER_PX = 0.22, BLUR_ON_GLASS = 3.6;   // the shader's PENUMBRA and FROST, for the box (reach)
 
   const VERTEX = `#version 300 es
     void main(){
@@ -1777,8 +1778,8 @@
     const vec3 HAZE = vec3(0.58, 0.66, 0.76);
     const vec3 INK = vec3(0.11, 0.16, 0.24);
     const vec3 DEEP = vec3(0.012, 0.018, 0.032);  // where the weight is
-    const float PENUMBRA = 0.22;    // how much blur each px of height brings: frosted, so a lot, and the body melts into one
-    const float FROST = 3.6;        // cm of blur even on the glass
+    const float PENUMBRA = 0.22;    // how much blur each px of height brings: frosted, so a lot, and the body melts into one (BLUR_PER_PX)
+    const float FROST = 3.6;        // cm of blur even on the glass (BLUR_ON_GLASS)
     const float JOIN = 1.4;         // how softly the body's parts join: 1 adds them, higher nears the darkest; low, so a
                                     // leg runs on into its hip and its shoe with no seam or gap
     uniform vec4 uLimb[WALKERS * LIMBS * 3];  // its two ends on the glass; their heights, how solid and px to a cm; its form
@@ -1787,6 +1788,7 @@
     uniform vec4 uRaised[WALKERS * 2];        // how high heel, ball and toes are, and which way is in
     uniform vec4 uBox[WALKERS];               // all of a body's shadow, to skip the rest of the window
     uniform float uSize[WALKERS];             // a foot's length, 0 for nobody there
+    uniform float uFade[WALKERS];             // how much of each shows, faded in and out at its walk's ends
     uniform float uHeight;                    // the window, in drawn pixels
     uniform float uRatio;                     // drawn pixels to a CSS pixel
     uniform vec2 uMid;                        // the middle of the window, in CSS px
@@ -1917,7 +1919,7 @@
           body += pow(max(leg(p, uLeg[at], uLeg[at + 1], uLeg[at + 2], uLeg[at + 3]), 0.0), JOIN);
           body += pow(max(sole(p, uFoot[i * 2 + l], uRaised[i * 2 + l], uSize[i]), 0.0), JOIN);
         }
-        ink += pow(body, 1.0 / JOIN);
+        ink += pow(body, 1.0 / JOIN) * uFade[i];
       }
       ink *= uInk * 1.35;
       // the light: brightest a little above the middle, falling off to the edges and corners
@@ -1949,7 +1951,7 @@
   gl.useProgram(program);
   gl.bindVertexArray(gl.createVertexArray());
   const at = name => gl.getUniformLocation(program, name);
-  const u = { limb:at('uLimb'), leg:at('uLeg'), foot:at('uFoot'), raised:at('uRaised'), box:at('uBox'), size:at('uSize'), height:at('uHeight'), ratio:at('uRatio'), mid:at('uMid'), zoom:at('uZoom'), ink:at('uInk'), trail:at('uTrail') };
+  const u = { limb:at('uLimb'), leg:at('uLeg'), foot:at('uFoot'), raised:at('uRaised'), box:at('uBox'), size:at('uSize'), height:at('uHeight'), ratio:at('uRatio'), mid:at('uMid'), zoom:at('uZoom'), ink:at('uInk'), trail:at('uTrail'), fade:at('uFade') };
   // each frame laid over the last by its own share (uTrail), the rest the last frame showing
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -2084,6 +2086,10 @@
   const raised = new Float32Array(WALKERS * 8);
   const boxes = new Float32Array(WALKERS * 4);
   const sizes = new Float32Array(WALKERS);
+  // each walker faded in over the first of its way and out over the last, so that wherever
+  // its way starts and ends (zoomed out, that can be in sight), it never just appears or goes
+  const fades = new Float32Array(WALKERS);
+  const FADE_ENDS = 0.18;
   // the form of a limb, in cm: wide at each end, and what it swells by, and where (a leg's
   // is in the shader)
   const SMUDGE = [3.5, 4.5, 0, 0.5];      // as broad as the foot, which it is
@@ -2098,8 +2104,12 @@
     const turn = TURN * Math.cos(swing);
     const chest = [along + g.lean, pelvis[1] * 0.5, SHOULDER - (84 - g.hip) - g.bob * Math.cos(swing * 2)];
     let slot = i * LIMBS, left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
+    // the box round all of a body's shadow, which the shader skips outside of, wide enough that
+    // the blur has faded to nothing by its edge, however high a part is: 3.2 of its spread (the
+    // shader's PENUMBRA and FROST) and a broad limb's width beyond it. Any less and a body's
+    // haze is cut off along a straight line, and is dropped as out of sight while it still shows
     function reach(from, to, height){
-      const spread = height * w.px * 0.6 + 60;
+      const spread = 3.2 * (BLUR_PER_PX * height * w.px + BLUR_ON_GLASS * w.px) + 12 * w.px;
       left = Math.min(left, from[0] - spread, to[0] - spread);
       right = Math.max(right, from[0] + spread, to[0] + spread);
       top = Math.min(top, from[1] - spread, to[1] - spread);
@@ -2151,6 +2161,8 @@
     stroke([chest[0], chest[1], chest[2] + 10], [chest[0], chest[1], chest[2] + 28], HEAD, 0.16);
     boxes.set([left, top, right, bottom], i * 4);
     sizes[i] = FOOT * w.px;
+    const u = clamp01(along * w.px / w.length);
+    fades[i] = smooth(clamp01(u / FADE_ENDS)) * smooth(clamp01((1 - u) / FADE_ENDS));
     return along * w.px > w.length;
   }
   // the blur: each frame over the last by 1 - e^(-dt / 14ms), so it's the same at any rate;
@@ -2164,6 +2176,7 @@
     gl.uniform4fv(u.raised, raised);
     gl.uniform4fv(u.box, boxes);
     gl.uniform1fv(u.size, sizes);
+    gl.uniform1fv(u.fade, fades);
     gl.uniform1f(u.zoom, canvas.view.zoom);
     gl.uniform1f(u.ink, canvas.view.ink);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
