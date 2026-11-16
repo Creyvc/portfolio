@@ -559,39 +559,6 @@
   html.view-all .time-badge .dot{ opacity:0; transition:opacity 0.3s ease; }
   .view-fade{ position:fixed; inset:0; z-index:10000; background:var(--stone); pointer-events:none; }
 
-  /* ===== Preloader (home) =====
-     White over everything, set by the head script on a fresh arrival (html.preload) and run by
-     main.js: a little black wind-up toy's scene. While it's up the header waits above masks of
-     its own, to come down once the white has gone. */
-  .preloader{ display:none; }
-  html.preload .preloader{
-    position:fixed; inset:0; z-index:10001;
-    display:block;
-    background:var(--paper); color:var(--ink);
-  }
-  /* the wind-up robot, black, cut from straight lines (its SVG; main.js boils the corners),
-     walking on the very foot of the window, its boots on the edge: up from below its edge and back
-     down past it; main.js walks it (.pre-toy-x) and moves its parts */
-  .pre-toy{ position:absolute; left:0; right:0; bottom:0; height:16.5rem; overflow:hidden; pointer-events:none; }
-  .pre-toy-x{ position:absolute; left:50%; bottom:0; width:12rem; margin-left:-6rem; }
-  .pre-toy-y{ display:block; transform:translateY(115%); }
-  .pre-toy svg{ display:block; width:100%; height:auto; overflow:visible; }
-  /* the boom (main.js): the blast, smoke and the robot's bits, in the preloader; then the black
-     that floods out over everything and opens again onto the page */
-  .pre-blast,
-  .pre-puff,
-  .pre-bit{ position:absolute; pointer-events:none; will-change:transform, opacity; }
-  .pre-blast{ border-radius:50%; background:radial-gradient(circle, #0B0B0B 0 38%, rgba(11,11,11,0.85) 55%, rgba(11,11,11,0) 72%); }
-  .pre-puff{ border-radius:50%; background:radial-gradient(circle, rgba(28,29,32,0.9), rgba(28,29,32,0.55) 45%, rgba(28,29,32,0) 70%); }
-  .pre-bit{ background:#0B0B0B; border-radius:2px; }
-  .pre-boom{ position:fixed; inset:0; z-index:10002; background:#0B0B0B; pointer-events:none; }
-  html.preload .home-name,
-  html.preload .home-nav,
-  html.preload .time-badge{ clip-path:inset(0 -0.1em -0.15em -0.1em); }
-  html.preload header .home-ch,
-  html.preload #bkk-time,
-  html.preload .time-badge .dot{ transform:translateY(-115%); }
-  html.preload .time-badge .dot{ transform:translateY(-1.5rem); }
   .play-pop.is-leaving .play-word{
     transform:translateY(-115%);
     transition:transform 0.45s cubic-bezier(0.7, 0, 0.84, 0);
@@ -735,8 +702,8 @@
     transform:translateY(calc((1 - clamp(0, var(--q, 0) * 1.6 - var(--i) * 0.3, 1)) * 115%));
   }
   /* the scroll cue: SCROLL over a hairline a dash keeps running down, at the foot of the window over
-     the walkers; it comes up into its mask once the header is in (after the preloader), and
-     goes down out of it with the first of the scroll (main.js sets --cue, 0 to 1) */
+     the walkers; it comes up into its mask a beat after the page opens, and goes down out of
+     it with the first of the scroll (main.js sets --cue, 0 to 1) */
   .home-scroll{
     position:fixed; left:50%; bottom:1.25rem; z-index:3;
     transform:translateX(-50%);
@@ -750,7 +717,6 @@
     transform:translateY(calc(var(--cue, 0) * 110%));
     transition:transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.2s;
   }
-  html.preload .home-scroll-in{ transform:translateY(110%); }
   html.home-scrolled .home-scroll-in{ transition:none; }
   .home-scroll-line{
     position:relative;
@@ -788,9 +754,8 @@
   body.home{ overflow:visible; }
   html:has(body.home){ scrollbar-width:none; }
   html:has(body.home)::-webkit-scrollbar{ display:none; }
-  /* nothing scrolls under a pop-up or the preloader */
-  html.whois-open:has(body.home),
-  html.preload{ overflow:hidden; }
+  /* nothing scrolls under a pop-up */
+  html.whois-open:has(body.home){ overflow:hidden; }
 
   .hero{
     position:sticky; top:0;

@@ -89,21 +89,14 @@ markup, so a shared change has to be made in every file.
 - **Home background**: none since 2026-11-05. The owner removed the grainient (and its
   per-letter white/ink text tinting); home is plain paper and every piece of text, the
   lockup words and logo included, is solid ink. grainient.js now only drives contact's Instagram box.
-- **Preloader** (home): since 2026-11-13 only a little black wind-up robot on white (an
-  original design: a round body cut from straight-edged polygons, white seam and diamond
-  rivets, a wide white visor with square pupils, a propeller on its head, boot legs, a
-  one-piece two-hole key on a short white-edged neck; the owner first asked for a Nintendo
-  character, which isn't built). Its corners boil (main.js jitters the `.cut` polygons). It
-  rises from below the window's foot and walks on the very bottom edge (legs stepping by
-  distance covered), runs down, gets its key wound (squash, lean back, squint, tremble),
-  boings, walks on, swells and explodes (blast, smoke, bits, window shake); black floods out
-  from the blast and opens again from it onto home as the header slides down, and only then
-  do the walkers set off (held while `html.preload` lacks `pre-done`). Shown only on a fresh
-  arrival (head script sets `html.preload`; not after in-site navigation, View all's [CLOSE],
-  Journey's [CLOSE], or reduced motion). main.js "Preloader". Before it: a ning-h.com-style
-  count (VUTHY CHEAM · [ 00% ] · PORTFOLIO), black then white, removed by the owner; and earlier
-  two more were built
-  and removed by the owner (a hellohello.is-style one, and a W A S D gear-shifter console).
+- **No live 3D on home**: a live three.js astronaut replaced home's walkers on 2026-11-16 and
+  was removed by the owner the same day; three.js is not vendored any more.
+- **No preloader** (since 2026-11-16, the owner's call): home opens straight onto the page.
+  Before that, in turn: a ning-h.com-style count (black, then white), a black wind-up robot
+  (SVG, then Blender sprites), Blender-sprite astronauts, and a React Three Fiber 3D astronaut
+  in deep space (with a standalone space.html and an r3f/ build). All removed by the owner,
+  with their files (the Blender scripts too; Blender itself is still in ~/Applications). Ask
+  before adding a preloader, a build step or a 3D library again.
 - **No lockup** (2026-11-05): the owner removed the bottom-centre WHO IS / CONTACT · JOURNEY /
   WORK/LAB lockup (and its intro) after removing its logo. Home is now just a header line: the name (top
   left) with "WORK," (lab.html; comma included) and "PLAYGROUND," (plain text, no page yet; a size down at 2rem, capitals topping out level with the rest) 4rem after it (WORK, big: Space Grotesk 500 3rem, capitals topping out at 16px like the rest) 4rem after it, and JOURNEY, ABOUT, CONTACT, then the time (top right). JOURNEY is a plain link to
