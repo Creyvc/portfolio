@@ -122,6 +122,22 @@ markup, so a shared change has to be made in every file.
 - **Body class**: every page, home included, starts as `loaded`, which shows its
   `.reveal` elements immediately. The old white progress-bar preloader is gone; the home
   page's only intro is the lockup's.
+- **Space** (2026-11-16, the owner's sketch): the whole site is one plane inside home, no page
+  loads: journey above home, work (lab.html) left, playground right, about below, contact below
+  playground (right of about). main.js "Space" (home, top window only) puts each page in a
+  `.room-panel` the size of the window, as a frame of `page.html?room` (loaded when first
+  wanted), laid round home. Panning slides home's own layers (every body child but the panels)
+  and the panels by their `translate`, animated in JS so their own transitions stay theirs.
+  No click: `.room-strip`s along the window's sides and corners (children of <html>, outside the
+  panning page) show a `.room-hint` (name, arrow, a line along the edge) when the pointer's on
+  them, and if it stays 650ms (the line fills) the plane pans. Home's JOURNEY link and the
+  pop-ups' links to room pages pan instead of navigating; a room's [CLOSE] posts
+  {room:'go', to:'index'} to home (the room-embed module), and a project or pop-up open in a
+  room posts {room:'lock'} to hold the strips. The address keeps the room (#journey), and opening
+  index.html#playground starts there. Rooms open only onto those DOORS lists in "Space" (the
+  sketch's shared sides: contact only onto about, no diagonals). The walkers wait while home's
+  away (html.away). The inner
+  pages still work on their own, with their own [CLOSE] to home. The map is ROOMS in "Space".
 - **No page transition** (2026-11-05): the owner removed the View Transitions slide (old page
   sinking, new page rising), so changing page is an instant cut. Pages arrived at from inside
   the site still skip their `.reveal` fade-ins (`pt-open`). main.js still prefetches pages on

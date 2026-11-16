@@ -1223,3 +1223,63 @@
   .glitch-red{ color:var(--glitch-red) !important; }
   .glitch-blue{ color:var(--glitch-blue) !important; }
 
+  /* ===== Space =====
+     The whole site as one plane in home (main.js, "Space"): each page a room the size of the
+     window, in a frame, laid round home after the owner's map. Panning moves home's own layers
+     (every child of body but the rooms) and the rooms by their translate, together (main.js
+     animates it, leaving their own transitions alone). The strips along the window's sides, outside the page, are where the pointer
+     goes to move on; each has a hint, a name and an arrow up through a mask, and a line along
+     its edge that fills while the pointer stays, then the plane pans. */
+  .room-panel{ position:fixed; inset:0; z-index:10000; background:var(--paper); }
+  .room-panel iframe{ display:block; width:100%; height:100%; border:0; }
+  html.away{ overflow:hidden; }
+
+  .room-strip{ position:fixed; z-index:10003; display:none; }
+  .room-strip.is-live{ display:block; }
+  html.whois-open .room-strip,
+  html.room-lock .room-strip{ display:none; }
+  .room-strip[data-dir="-1,0"]{ left:0; top:15vh; width:1.75rem; height:70vh; }
+  .room-strip[data-dir="1,0"]{ right:0; top:15vh; width:1.75rem; height:70vh; }
+  .room-strip[data-dir="0,-1"]{ top:0; left:20vw; width:60vw; height:0.75rem; }
+  .room-strip[data-dir="0,1"]{ bottom:0; left:20vw; width:60vw; height:1.75rem; }
+  .room-strip[data-dir="1,1"]{ right:0; bottom:0; width:4.5rem; height:4.5rem; }
+  .room-strip[data-dir="-1,1"]{ left:0; bottom:0; width:4.5rem; height:4.5rem; }
+  .room-strip[data-dir="1,-1"]{ right:0; top:0; width:4.5rem; height:0.75rem; }
+  .room-strip[data-dir="-1,-1"]{ left:0; top:0; width:4.5rem; height:0.75rem; }
+
+  /* white, as a difference: dark on the light rooms, light on journey's dark */
+  .room-hint{
+    position:fixed; z-index:10002; pointer-events:none;
+    font-family:var(--sans); font-size:0.8125rem; font-weight:500; letter-spacing:0.03em;
+    text-transform:uppercase; white-space:nowrap; color:#fff; mix-blend-mode:difference;
+  }
+  .room-hint-mask{ display:block; overflow:hidden; padding-bottom:0.12em; margin-bottom:-0.12em; }
+  .room-hint-word{ display:block; transform:translateY(110%); transition:transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+  .room-hint.is-on .room-hint-word{ transform:none; }
+  .room-hint[data-dir="-1,0"]{ left:1rem; top:calc(50% - 0.6em); }
+  .room-hint[data-dir="1,0"]{ right:1rem; top:calc(50% - 0.6em); }
+  .room-hint[data-dir="0,-1"]{ left:0; right:0; margin:0 auto; width:max-content; top:4.75rem; }
+  .room-hint[data-dir="0,1"]{ left:0; right:0; margin:0 auto; width:max-content; bottom:5.5rem; }
+  .room-hint[data-dir="1,1"]{ right:1rem; bottom:5.5rem; }
+  .room-hint[data-dir="-1,1"]{ left:1rem; bottom:5.5rem; }
+  .room-hint[data-dir="1,-1"]{ right:1rem; top:4.75rem; }
+  .room-hint[data-dir="-1,-1"]{ left:1rem; top:4.75rem; }
+  /* the line: along the edge, filling while the pointer stays (as long as the wait), back fast */
+  .room-hint::after{
+    content:''; position:fixed; background:currentColor;
+    transition:transform 0.25s ease;
+  }
+  .room-hint.is-on::after{ transition:transform 0.65s linear; }
+  .room-hint[data-dir="-1,0"]::after{ left:0; top:15vh; width:2px; height:70vh; transform:scaleY(0); }
+  .room-hint[data-dir="1,0"]::after{ right:0; top:15vh; width:2px; height:70vh; transform:scaleY(0); }
+  .room-hint[data-dir="0,-1"]::after{ top:0; left:20vw; height:2px; width:60vw; transform:scaleX(0); }
+  .room-hint[data-dir="0,1"]::after{ bottom:0; left:20vw; height:2px; width:60vw; transform:scaleX(0); }
+  .room-hint[data-dir="1,1"]::after{ right:0; bottom:0; width:4.5rem; height:2px; transform:scaleX(0); transform-origin:100% 50%; }
+  .room-hint[data-dir="-1,1"]::after{ left:0; bottom:0; width:4.5rem; height:2px; transform:scaleX(0); transform-origin:0 50%; }
+  .room-hint[data-dir="1,-1"]::after{ right:0; top:0; width:4.5rem; height:2px; transform:scaleX(0); transform-origin:100% 50%; }
+  .room-hint[data-dir="-1,-1"]::after{ left:0; top:0; width:4.5rem; height:2px; transform:scaleX(0); transform-origin:0 50%; }
+  .room-hint.is-on::after{ transform:none; }
+  @media (prefers-reduced-motion: reduce){
+    .room-hint-word, .room-hint::after, .room-hint.is-on::after{ transition:none; }
+  }
+

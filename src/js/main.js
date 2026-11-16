@@ -2230,7 +2230,8 @@
     requestAnimationFrame(frame);
     const passed = Math.min(now - last, 100);
     last = now;
-    if (html.classList.contains('steps-off')) return;
+    // hidden, or home panned away to another room ("Space"): they wait
+    if (html.classList.contains('steps-off') || html.classList.contains('away')) return;
     clock += passed;
     // one who set off across glass zoomed further out than it now shows has far to go, out of
     // sight: once out of sight, start again, across the glass as it shows now
@@ -3030,3 +3031,188 @@ document.querySelectorAll('.play-pop').forEach(function(panel){
   window.addEventListener('scroll', function(){ if (!raf) raf = requestAnimationFrame(tick); }, { passive:true });
   tick();
 })();
+
+/* Space (home): the whole site as one plane, after the owner's map, all of it in home: journey
+   above home, work (lab.html) to its left, playground to its right, about below it, contact
+   below playground (about's right), but opening only onto about. Each page is a room the size
+   of the window, beside home,
+   the page itself in a frame (page.html?room, loaded when first wanted). Moving between rooms
+   pans the plane: home's own layers and the rooms slide together, one space, nothing loads.
+   No click: bring the pointer to a side (or a corner) of the window with a room beyond it, and
+   its name shows there with a line along the edge filling towards it; stay, as if pushing past
+   the edge, and once it's full the plane pans there; leave before and nothing happens. Home's
+   JOURNEY link and the pop-ups' links to the rooms pan there too, and a room's [CLOSE] pans
+   home. Not while a pop-up or a project is open. The address keeps the room (#journey). The
+   walkers wait while home's away. Reduced motion: the plane jumps, it doesn't slide. */
+(function(){
+  const html = document.documentElement;
+  if (!document.body || !document.body.classList.contains('home') || window.top !== window) return;
+  const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ROOMS = {
+    index:[1, 1, 'HOME', ''], journey:[1, 0, 'JOURNEY', 'journey.html'], lab:[0, 1, 'WORK', 'lab.html'],
+    playground:[2, 1, 'PLAYGROUND', 'playground.html'], about:[1, 2, 'ABOUT', 'about.html'], contact:[2, 2, 'CONTACT', 'contact.html']
+  };
+  const PAGES = {};
+  Object.keys(ROOMS).forEach(n => { if (ROOMS[n][3]) PAGES[ROOMS[n][3]] = n; });
+  // which rooms open onto which, as the owner's map joins them: through shared sides only, and
+  // contact only by about (not playground, though it lies below it)
+  const DOORS = {
+    index:['journey', 'lab', 'playground', 'about'], journey:['index'], lab:['index'],
+    playground:['index'], about:['index', 'contact'], contact:['about']
+  };
+  const DWELL_MS = 650;
+  html.classList.add('space');
+
+  // the rooms, each a frame the size of the window, laid out round home
+  const panels = {};
+  Object.keys(ROOMS).forEach(function(name){
+    if (name === 'index') return;
+    const panel = document.createElement('div');
+    panel.className = 'room-panel';
+    panel.setAttribute('data-room', name);
+    document.body.appendChild(panel);
+    panels[name] = { el:panel, frame:null, hash:'' };
+  });
+  function load(name, hash){
+    const p = panels[name]; if (!p) return;
+    hash = hash || '';
+    if (p.frame && p.hash === hash) return;
+    if (!p.frame){
+      p.frame = document.createElement('iframe');
+      p.frame.title = ROOMS[name][2].toLowerCase();
+      p.el.appendChild(p.frame);
+    }
+    p.hash = hash;
+    p.frame.src = ROOMS[name][3] + '?room' + hash;
+  }
+
+  // the sides: a strip along each (above everything, outside the panning page) and a hint
+  const ARROW = { '-1,0':'←', '1,0':'→', '0,-1':'↑', '0,1':'↓', '1,1':'↘', '-1,1':'↙', '1,-1':'↗', '-1,-1':'↖' };
+  const sides = {};
+  Object.keys(ARROW).forEach(function(key){
+    const strip = document.createElement('div');
+    strip.className = 'room-strip';
+    strip.setAttribute('data-dir', key);
+    const hint = document.createElement('div');
+    hint.className = 'room-hint';
+    hint.setAttribute('data-dir', key);
+    hint.setAttribute('aria-hidden', 'true');
+    hint.innerHTML = '<span class="room-hint-mask"><span class="room-hint-word"></span></span>';
+    html.appendChild(strip);
+    html.appendChild(hint);
+    sides[key] = { strip:strip, hint:hint, to:null, timer:0 };
+    strip.addEventListener('pointerenter', function(){ near(key); });
+    strip.addEventListener('pointerleave', function(){ away(key); });
+  });
+
+  let cur = 'index';
+  function neighbour(key){
+    const d = key.split(',').map(Number), c = ROOMS[cur];
+    return DOORS[cur].find(n => ROOMS[n][0] === c[0] + d[0] && ROOMS[n][1] === c[1] + d[1]) || null;
+  }
+  function setSides(){
+    Object.keys(sides).forEach(function(key){
+      const s = sides[key], to = neighbour(key);
+      s.to = to;
+      s.strip.classList.toggle('is-live', !!to);
+      if (to){
+        const name = ROOMS[to][2], d = key.split(',').map(Number);
+        s.hint.querySelector('.room-hint-word').textContent = d[0] < 0 ? ARROW[key] + ' ' + name : name + ' ' + ARROW[key];
+      }
+    });
+  }
+  // near a side: its hint, its line filling; full, and the plane pans
+  function near(key){
+    const s = sides[key];
+    if (!s.to || html.classList.contains('room-lock') || html.classList.contains('whois-open')) return;
+    if (s.to !== 'index') load(s.to, panels[s.to] && panels[s.to].hash);
+    s.hint.classList.add('is-on');
+    clearTimeout(s.timer);
+    s.timer = setTimeout(function(){ s.hint.classList.remove('is-on'); pan(s.to); }, DWELL_MS);
+  }
+  function away(key){
+    const s = sides[key];
+    clearTimeout(s.timer);
+    s.hint.classList.remove('is-on');
+  }
+
+  // an element slid to a translate, from wherever it is, animated (its own transitions left
+  // alone), then left there
+  const EASE = 'cubic-bezier(0.76, 0, 0.24, 1)', PAN_MS = 1100;
+  let still = true;
+  function slide(el, to){
+    const from = el.style.translate || '0vw 0vh';
+    el.style.translate = to;
+    if (still || calm || from === to) return;
+    el.animate([{ translate:from }, { translate:to }], { duration:PAN_MS, easing:EASE });
+  }
+  function pan(name){
+    if (!ROOMS[name]) return;
+    cur = name;
+    const c = ROOMS[name];
+    if (name !== 'index') load(name, panels[name].hash);
+    // home's own layers, every child of body but the rooms, and the rooms, all together
+    Array.prototype.forEach.call(document.body.children, function(el){
+      if (el.tagName === 'SCRIPT' || el.classList.contains('room-panel')) return;
+      slide(el, (1 - c[0]) * 100 + 'vw ' + (1 - c[1]) * 100 + 'vh');
+    });
+    Object.keys(panels).forEach(function(n){
+      const r = ROOMS[n];
+      slide(panels[n].el, (r[0] - c[0]) * 100 + 'vw ' + (r[1] - c[1]) * 100 + 'vh');
+      panels[n].el.classList.toggle('is-here', n === name);
+    });
+    html.classList.toggle('away', name !== 'index');
+    Object.keys(sides).forEach(away);
+    setSides();
+    try { history.replaceState(null, '', name === 'index' ? location.pathname + location.search : '#' + name); } catch(e){}
+  }
+
+  // where it opens: the room in the address, without a slide
+  pan(ROOMS[location.hash.slice(1)] ? location.hash.slice(1) : 'index');
+  still = false;
+
+  // links to the rooms (JOURNEY, the pop-ups' VIEW ALL and projects) pan there instead
+  document.addEventListener('click', function(e){
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a || a.hasAttribute('data-pop')) return;
+    const url = new URL(a.getAttribute('href'), location.href);
+    if (url.origin !== location.origin) return;
+    const room = PAGES[url.pathname.split('/').pop()];
+    if (!room) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    // a pop-up open: shut it as Esc would
+    if (html.classList.contains('whois-open')) document.dispatchEvent(new KeyboardEvent('keydown', { key:'Escape', bubbles:true }));
+    load(room, url.hash);
+    setTimeout(function(){ pan(room); }, html.classList.contains('whois-open') ? 450 : 0);
+  }, true);
+
+  // from the rooms: [CLOSE] (go home), and a project or a pop-up open in one (hold the sides)
+  window.addEventListener('message', function(e){
+    if (e.origin !== location.origin || !e.data || typeof e.data !== 'object') return;
+    if (e.data.room === 'go' && ROOMS[e.data.to]) pan(e.data.to);
+    if (e.data.room === 'lock') html.classList.toggle('room-lock', !!e.data.on);
+  });
+})();
+
+/* A room of the plane (an inner page in home's frame, page.html?room; "Space"): its [CLOSE]
+   pans home rather than leaving, and while a project or pop-up is open in it, home's sides are
+   held, so they don't pan away from under it. */
+(function(){
+  const html = document.documentElement;
+  if (window.parent === window || !/[?&]room\b/.test(location.search)) return;
+  html.classList.add('room-embed');
+  const tell = msg => window.parent.postMessage(msg, location.origin);
+  document.addEventListener('click', function(e){
+    const close = e.target.closest && e.target.closest('.close-btn');
+    if (!close) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    tell({ room:'go', to:'index' });
+  }, true);
+  let locked = false;
+  new MutationObserver(function(){
+    const now = /\b(view-open|view-going|whois-open)\b/.test(html.className);
+    if (now !== locked){ locked = now; tell({ room:'lock', on:now }); }
+  }).observe(html, { attributes:true, attributeFilter:['class'] });
+})();
+
