@@ -671,8 +671,9 @@
   
 
   /* ===== Home steps =====
-     The walking shadows (main.js), over the empty page and under the header, whose
-     letters go white as a shadow crosses them. PLAYGROUND and CONTACT hide them */
+     The walking shadows (main.js), shod, blue-black in cold frosted light, over the page and
+     under the header, whose letters go white as a shadow crosses them. PLAYGROUND and CONTACT
+     hide them */
   .home-steps{ position:fixed; inset:0; z-index:1; width:100%; height:100%; pointer-events:none; transition:opacity 0.3s ease; }
   html.steps-off .home-steps{ opacity:0; }
 

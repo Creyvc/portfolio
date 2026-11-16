@@ -1707,15 +1707,18 @@
   ]).then(rise);
 })();
 
-/* Home steps: after the menu on fromanother.love: people walking over a frosted glass
+/* Home steps: in cold light, after long-exposure photographs of people walking past (blue-black
+   figures in shoes, haloed in blue where they blur, light through frost going steel blue to
+   the edges; each frame laid half over the last, so what moves smears). After the menu on
+   fromanother.love: people walking over a frosted glass
    floor, watched from underneath it. Each is a jointed body walking (or now and then
    running) in 3D, worked out here in centimetres, and seen in perspective from an eye below
    the glass: what's pressed on the glass is full size, and the higher a part of the body,
    the smaller it is, the nearer the middle of the window it draws, and the more the frost
    blurs and pales it, so the legs rise from the feet as soft glowing columns towards a body
-   that's only a haze. A bare foot strikes on the heel, rolls flat, peels up from the heel
-   and leaves off the toes; only what's on the glass presses dark, a soft bean with no toes
-   or lines, coming and going part by part. Legs go thin and thick as legs do; knees are
+   that's only a haze. Shod: a shoe strikes on the heel, rolls flat, peels up from the heel
+   and leaves off the toe; only what's on the glass presses dark, the sole's forepart and heel
+   apart, the arch only a paler shadow, coming and going part by part. Legs go thin and thick as legs do; knees are
    solved from hip and ankle, the pelvis turns and sways, and the arms swing against the
    legs. Up to three walk at once, no two alike: each has their own pace, stride
    and turn of the foot, no two of their steps fall quite the same, and they wander a little
@@ -1727,7 +1730,8 @@
   const canvas = document.querySelector('.home-steps');
   if (!canvas) return;
   const html = document.documentElement;
-  const gl = canvas.getContext('webgl2', { alpha:false, depth:false, stencil:false, antialias:false });
+  // the last frame kept, so each new one can be laid over it, half seen: a long exposure's blur
+  const gl = canvas.getContext('webgl2', { alpha:false, depth:false, stencil:false, antialias:false, preserveDrawingBuffer:true });
   if (!gl) return;
   const WALKERS = 3;
   const LIMBS = 8;            // feet, arms, hips, trunk, shoulders, head (legs are drawn apart)
@@ -1765,10 +1769,14 @@
     precision highp float;
     #define WALKERS ${WALKERS}
     #define LIMBS ${LIMBS}
-    const vec3 PAPER = vec3(0.992);
-    const vec3 HAZE = vec3(0.94, 0.52, 0.49);
-    const vec3 RED = vec3(0.79, 0.07, 0.1);
-    const vec3 DEEP = vec3(0.56, 0.03, 0.07);     // where the weight is
+    // cold light through frosted glass, after long-exposure photographs of people walking:
+    // bright in the middle, going steel blue to the edges; the figures blue-black, haloed in a
+    // cold blue where they blur
+    const vec3 LIGHT = vec3(0.955, 0.966, 0.978);
+    const vec3 EDGE = vec3(0.64, 0.7, 0.77);
+    const vec3 HAZE = vec3(0.58, 0.66, 0.76);
+    const vec3 INK = vec3(0.11, 0.16, 0.24);
+    const vec3 DEEP = vec3(0.012, 0.018, 0.032);  // where the weight is
     const float PENUMBRA = 0.16;    // how much blur each px of height brings: frosted, so a lot
     const float FROST = 2.5;        // cm of blur even on the glass
     const float JOIN = 2.5;         // how softly the body's parts join: 1 adds them, higher nears the darkest
@@ -1783,6 +1791,7 @@
     uniform vec2 uMid;                        // the middle of the window, in CSS px
     uniform float uZoom;                      // how big the glass shows (Home scroll zooms out)
     uniform float uInk;                       // how much of the shadows shows (gone as it does)
+    uniform float uTrail;                     // how much of this frame goes over the last (1: all)
     out vec4 colour;
 
     float sq(float x){ return x * x; }   // pow() of a number below 0 is no number on some GPUs
@@ -1843,52 +1852,46 @@
       }
       return ink;
     }
+    // a smooth union: the nearer of two shapes, the seam between them rounded over k
+    float smin(float a, float b, float k){ float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0); return mix(b, a, h) - k * h * (1.0 - h); }
+    // how far outside an ellipse (roughly, in its smaller radius's units)
+    float ell(vec2 q, vec2 c, vec2 r){ return (length((q - c) / r) - 1.0) * min(r.x, r.y); }
     float capsule(vec2 q, vec2 a, vec2 b, float r0, float r1){
       vec2 e = b - a;
       float t = clamp(dot(q - a, e) / dot(e, e), 0.0, 1.0);
       return length(q - a - e * t) - mix(r0, r1, t);
     }
-    const vec3 TOES[5] = vec3[5](vec3(1.08, 0.1, 0.048), vec3(1.085, -0.04, 0.029), vec3(1.05, -0.13, 0.026),
-      vec3(0.995, -0.21, 0.023), vec3(0.925, -0.27, 0.02));   // where each sits, and how big
-    // a foot pressed on frosted glass, after fromanother.love: no lines, only a soft dark
-    // bean, narrower at the heel and broader at the ball, and five little soft toes just
-    // beyond it, all one colour, fading part by part as it lifts, heel first and toes last. Measured in foot
-    // lengths from the heel, y running towards the big toe's side
+    // a shoe's sole pressed on frosted glass, from below: the forepart a long dark oval with a
+    // rounded toe, reaching a little past where the toes would be, the heel a smaller one
+    // apart from it, and between them the waist, held off the glass by the arch, only a paler
+    // shadow. All one colour, soft only at the edge; the heel leaving first as it lifts, the
+    // toe last. Measured in foot lengths from the heel, y running towards the big toe's side
     float sole(vec2 p, vec4 ends, vec4 raised, float size){
       vec2 axis = ends.zw - ends.xy;
       float span = max(dot(axis, axis), 1e-4);
       vec2 q = vec2(dot(p - ends.xy, axis) / span, dot(p - ends.xy, vec2(-axis.y, axis.x)) * inversesqrt(span) / size * raised.w);
-      // nothing past a foot and a half from the heel (measured on the window: a foot tipped up
+      // nothing past a foot and a half from the heel (measured on the window: a shoe tipped up
       // looks short, and a bound in its own lengths would cut straight across it)
       vec2 off = p - (ends.xy + ends.zw) * 0.5;
       if (dot(off, off) > sq(1.5 * size) || abs(q.y) > 0.9) return 0.0;
-      // curved like a foot: bowing out along the outer edge, heel and ball turned in, and
-      // narrowing at the arch on the inner side
-      float arc = 0.07 * (sq((q.x - 0.45) / 0.42) - 0.6);
+      // a shoe's curve: the outer edge bowing out a little, the toe turned in
+      float arc = 0.05 * (sq((q.x - 0.5) / 0.5) - 0.6);
       vec2 qc = vec2(q.x, q.y - arc);
-      float bean = capsule(qc, vec2(0.14, 0.0), vec2(0.76, 0.0), 0.085, 0.14);
-      bean += 0.035 * exp(-sq((q.x - 0.46) / 0.14)) * smoothstep(-0.02, 0.06, qc.y);
-      float x = clamp(q.x, 0.0, 1.0);
-      float height = x < 0.68 ? mix(raised.x, raised.y, x / 0.68) : mix(raised.y, raised.z, (x - 0.68) / 0.32);
-      // one even colour all through, foot and toes alike: full inside, soft only at the edge
-      float soft = 0.1 + 0.35 * height / size;
-      float press = (1.0 - smoothstep(-soft * 0.4, soft * 1.6, bean)) * exp(-height / (size * 0.12));
-      // the toes, the big one leading, the rest getting smaller round the ball's edge, each
-      // apart from the next and the foot clear of them all; each brought up to the foot's own
-      // colour, which the small ones would otherwise never reach inside their soft edges
-      float tipSoft = 0.045 + 0.35 * raised.z / size;
-      float toes = 0.0, toe = 1.0;
-      for (int k = 0; k < 5; k++){
-        float d = length(q - TOES[k].xy) - TOES[k].z;
-        float full = 1.0 - smoothstep(-tipSoft * 0.4, tipSoft * 1.4, -TOES[k].z);
-        toes = max(toes, (1.0 - smoothstep(-tipSoft * 0.4, tipSoft * 1.4, d)) / full);
-        toe = min(toe, d);
-      }
-      // and they leave with the ball of the foot, never lingering on their own once it's up
-      toes *= exp(-max(raised.z, raised.y) / (size * 0.12));
-      // and the glass darkens softly round it, where the foot is nearly touching
-      float close = (1.0 - smoothstep(-0.05, 0.3, min(bean, toe))) * exp(-height / (size * 0.3));
-      return 1.05 * max(press, toes) + 0.25 * close;
+      // one smooth piece, a sneaker's sole: the forepart broad and fully rounded at the toe, the
+      // heel rounded, and between them the waist, its outer edge near straight and its inner
+      // one drawn in deep under the arch; the parts run into each other on smooth curves
+      float fore = ell(qc, vec2(0.71, 0.01), vec2(0.3, 0.2));
+      float heel = ell(qc, vec2(0.18, -0.01), vec2(0.18, 0.15));
+      float waist = ell(qc, vec2(0.44, -0.045), vec2(0.26, 0.13));
+      float shoe = smin(smin(fore, heel, 0.06), waist, 0.05);
+      // how high each end is: the heel leaving first, the toe last; the sole stiff between
+      float hHeel = raised.x, hFore = mix(raised.y, raised.z, 0.45);
+      float h = mix(hHeel, hFore, smoothstep(0.15, 0.7, q.x));
+      float soft = 0.025 + 0.3 * h / size;
+      float press = (1.0 - smoothstep(-soft * 0.5, soft * 1.3, shoe)) * exp(-h / (size * 0.12));
+      // and the glass darkens softly round it, where the shoe is nearly touching
+      float close = (1.0 - smoothstep(-0.05, 0.4, shoe)) * exp(-h / (size * 0.3));
+      return 1.05 * press + 0.3 * close;
     }
     float noise(vec2 p){ return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }
 
@@ -1915,12 +1918,20 @@
         }
         ink += pow(body, 1.0 / JOIN);
       }
-      ink *= uInk;
-      vec3 c = mix(PAPER, HAZE, 1.0 - exp(-ink * 2.1));
-      c = mix(c, RED, smoothstep(0.5, 1.5, ink));
-      c = mix(c, DEEP, smoothstep(1.4, 2.7, ink));
+      ink *= uInk * 1.35;
+      // the light: brightest a little above the middle, falling off to the edges and corners
+      vec2 uv = gl_FragCoord.xy / vec2(uMid.x * 2.0 * uRatio, uHeight);
+      float fall = smoothstep(0.25, 1.05, length((uv - vec2(0.5, 0.56)) * vec2(1.25, 1.0)));
+      vec3 c = mix(LIGHT, EDGE, fall * 0.85);
+      // the haze comes quickly and the figure darkens early, so a whole body reads, not only
+      // what's pressed on the glass
+      c = mix(c, HAZE, 1.0 - exp(-ink * 3.2));
+      c = mix(c, INK, smoothstep(0.22, 0.95, ink));
+      c = mix(c, DEEP, smoothstep(0.8, 1.9, ink));
+      // the frost itself: a fine grain that stays put as the shadows pass behind it
+      c *= 1.0 + (noise(floor(gl_FragCoord.xy / uRatio) * 1.37 + 3.1) - 0.5) * 0.022;
       // a triangular dither of two noises, so the long soft gradients don't band into steps
-      colour = vec4(c + (noise(gl_FragCoord.xy) + noise(gl_FragCoord.xy + vec2(17.0, 59.0)) - 1.0) / 255.0, 1.0);
+      colour = vec4(c + (noise(gl_FragCoord.xy) + noise(gl_FragCoord.xy + vec2(17.0, 59.0)) - 1.0) / 255.0, uTrail);
     }`;
 
   function compile(type, source){
@@ -1937,7 +1948,11 @@
   gl.useProgram(program);
   gl.bindVertexArray(gl.createVertexArray());
   const at = name => gl.getUniformLocation(program, name);
-  const u = { limb:at('uLimb'), leg:at('uLeg'), foot:at('uFoot'), raised:at('uRaised'), box:at('uBox'), size:at('uSize'), height:at('uHeight'), ratio:at('uRatio'), mid:at('uMid'), zoom:at('uZoom'), ink:at('uInk') };
+  const u = { limb:at('uLimb'), leg:at('uLeg'), foot:at('uFoot'), raised:at('uRaised'), box:at('uBox'), size:at('uSize'), height:at('uHeight'), ratio:at('uRatio'), mid:at('uMid'), zoom:at('uZoom'), ink:at('uInk'), trail:at('uTrail') };
+  // each frame laid over the last by its own share (uTrail), the rest the last frame showing
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  let sharp = true;               // the next frame drawn whole: the first, and after a resize
   // how much of the glass shows and how dark its shadows are: Home scroll sets these
   canvas.view = { zoom:1, ink:1 };
 
@@ -1953,6 +1968,7 @@
     gl.uniform1f(u.ratio, ratio);
     gl.uniform2f(u.mid, innerWidth / 2, innerHeight / 2);
     strip = null;
+    sharp = true;
   }
 
   const between = (a, b) => a + Math.random() * (b - a);
@@ -2135,7 +2151,11 @@
     sizes[i] = FOOT * w.px;
     return along * w.px > w.length;
   }
-  function paint(){
+  // the blur: each frame over the last by 1 - e^(-dt / 28ms), so it's the same at any rate;
+  // short, so what moves smears softly rather than leaving a ladder of itself behind
+  function paint(dt){
+    gl.uniform1f(u.trail, sharp || !dt ? 1 : 1 - Math.exp(-dt / 28));
+    sharp = false;
     gl.uniform4fv(u.limb, limbs);
     gl.uniform4fv(u.leg, legs);
     gl.uniform4fv(u.foot, soles);
@@ -2209,7 +2229,7 @@
       if (place(w, i, clock)){ walkers[i] = walk(clock + between(200, 1600)); return; }
       if (w.zoom < z * 0.7 && !seen(i, z)){ sizes[i] = 0; walkers[i] = walk(clock + between(200, 1600)); }
     });
-    paint();
+    paint(passed);
     if (++tick % 3) return;
     // the header's up out of sight (Home scroll): reading the glass back stalls a frame, so
     // not then; once more after it's down, to put the letters right
